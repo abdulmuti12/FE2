@@ -10,17 +10,22 @@ export default function TermsPage() {
     <div className="min-h-screen bg-background text-foreground dark">
       <Header />
 
-      {/* Hero Section */}
-      <div className="relative w-full h-64 md:h-96 bg-gradient-to-r from-[#020817] via-[#0d1f3a] to-[#020817] overflow-hidden">
-        {/* Background overlay */}
-        <div className="absolute inset-0 bg-black/30"></div>
+      {/* Hero Section with Background Image */}
+      <div 
+        className="relative w-full h-64 md:h-96 overflow-hidden bg-cover bg-center bg-no-repeat"
+        style={{
+          backgroundImage: 'url(/images/privacy-header.jpg)'
+        }}
+      >
+        {/* Dark blue overlay for readability */}
+        <div className="absolute inset-0 bg-blue-950/60"></div>
 
         {/* Content */}
         <div className="relative h-full flex flex-col justify-center items-center px-4 md:px-12 text-center">
-          <h1 className="text-4xl md:text-5xl font-bold text-white mb-4">Terms Of Use</h1>
-          <div className="flex items-center justify-center gap-2 text-sm md:text-base text-gray-400">
-            <a href="/dashboard" className="hover:text-white transition-colors">Home</a>
-            <ChevronRight className="w-4 h-4" />
+          <h1 className="text-5xl md:text-6xl font-bold text-white mb-6">Terms Of Use</h1>
+          <div className="flex items-center justify-center gap-2 text-sm md:text-base">
+            <a href="/dashboard" className="text-gray-300 hover:text-white transition-colors">Usky.Ai</a>
+            <ChevronRight className="w-4 h-4 text-gray-300" />
             <span className="text-white">Terms of Use</span>
           </div>
         </div>
