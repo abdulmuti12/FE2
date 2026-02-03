@@ -1,9 +1,12 @@
 'use client'
 
+import { Calendar } from "@/components/ui/calendar"
+import { User, Ticket, CreditCard, Settings, LogOut, Search, X, Menu } from 'lucide-react'
 import Image from 'next/image'
 import { useState, useRef, useEffect } from 'react'
-import { ChevronLeft, ChevronRight, Menu, X, Search, Settings, User, Calendar, Ticket, CreditCard, LogOut } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { Header } from '@/components/header'
+import { Footer } from '@/components/footer'
 
 const mockFilms = [
   { id: 1, title: '[Judul Film]', image: '/login-hero.jpg', description: 'Watch groundbreaking films crafted by human creativity and artificial intelligence.', category: 'Action', rating: '8.5/10' },
@@ -64,34 +67,34 @@ function CarouselSection({ title, viewAllLink = '#', items = mockFilms, layout =
   const handlePrev = () => currentIndex > 0 && setCurrentIndex(currentIndex - 1)
 
   return (
-    <section className="px-6 lg:px-12 py-8 border-t border-border">
-      <div className="flex items-center justify-between mb-6">
-        <h2 className="text-2xl font-bold text-foreground">{title}</h2>
-        <a href={viewAllLink} className="text-accent text-sm hover:opacity-80">View All</a>
+    <section className="px-4 md:px-6 lg:px-12 py-6 md:py-8 border-t border-border">
+      <div className="flex items-center justify-between mb-4 md:mb-6">
+        <h2 className="text-lg md:text-2xl font-bold text-foreground">{title}</h2>
+        <a href={viewAllLink} className="text-accent text-xs md:text-sm hover:opacity-80">View All</a>
       </div>
       <div className="relative">
         <div className="overflow-hidden">
           <div className="flex transition-transform duration-300 gap-4" style={{ transform: `translateX(-${currentIndex * (100 / itemsPerView)}%)` }}>
             {layout === 'category' ? categoryData.map((item, idx) => (
-              <div key={idx} className="flex-shrink-0 w-1/4 lg:w-1/7 text-center">
-                <div className="w-full aspect-square rounded-full bg-gradient-to-br from-[#4c7c3f] to-[#2a4a2a] mb-3 flex items-center justify-center"><span className="text-4xl text-white">🎬</span></div>
-                <p className="text-sm font-medium text-foreground">{item.name}</p>
-                <p className="text-xs text-muted-foreground">{item.count} Movies</p>
+              <div key={idx} className="flex-shrink-0 w-1/3 sm:w-1/4 lg:w-1/7 text-center">
+                <div className="w-full aspect-square rounded-full bg-gradient-to-br from-[#4c7c3f] to-[#2a4a2a] mb-2 md:mb-3 flex items-center justify-center"><span className="text-2xl md:text-4xl text-white">🎬</span></div>
+                <p className="text-xs md:text-sm font-medium text-foreground">{item.name}</p>
+                <p className="text-xs text-muted-foreground">{item.count}</p>
               </div>
             )) : layout === 'creator' ? creatorData.map((item, idx) => (
-              <div key={idx} className="flex-shrink-0 w-1/4 lg:w-1/7 text-center">
-                <div className="w-full aspect-square rounded-full bg-gradient-to-br from-[#7c4c9f] to-[#4a2a6a] mb-3 flex items-center justify-center"><span className="text-4xl text-white">👤</span></div>
-                <p className="text-sm font-medium text-foreground">{item.name}</p>
-                <p className="text-xs text-muted-foreground">{item.count} Movies</p>
+              <div key={idx} className="flex-shrink-0 w-1/3 sm:w-1/4 lg:w-1/7 text-center">
+                <div className="w-full aspect-square rounded-full bg-gradient-to-br from-[#7c4c9f] to-[#4a2a6a] mb-2 md:mb-3 flex items-center justify-center"><span className="text-2xl md:text-4xl text-white">👤</span></div>
+                <p className="text-xs md:text-sm font-medium text-foreground">{item.name}</p>
+                <p className="text-xs text-muted-foreground">{item.count}</p>
               </div>
             )) : items.map((film) => (
-              <div key={film.id} className="flex-shrink-0 w-1/4 lg:w-1/4">
-                <div className="relative h-60 mb-4 rounded-lg overflow-hidden group">
+              <div key={film.id} className="flex-shrink-0 w-1/2 md:w-1/4 lg:w-1/4">
+                <div className="relative h-40 md:h-60 mb-2 md:mb-4 rounded-lg overflow-hidden group">
                   <Image src={film.image || "/placeholder.svg"} alt={film.title} fill className="object-cover hover:scale-105 transition-transform duration-300" />
                 </div>
-                <p className="font-semibold text-foreground mb-1">{film.title}</p>
+                <p className="font-semibold text-sm md:text-base text-foreground mb-1">{film.title}</p>
                 {(film as any).year && <p className="text-xs text-muted-foreground">{(film as any).year}</p>}
-                <p className="text-xs text-muted-foreground mb-3 line-clamp-2">{film.description}</p>
+                <p className="text-xs text-muted-foreground mb-2 md:mb-3 line-clamp-2">{film.description}</p>
                 <div className="flex gap-2 flex-wrap">
                   {(film as any).categories?.map((cat: string, idx: number) => (
                     <Button key={idx} size="sm" className="text-xs bg-transparent" variant="outline">{cat}</Button>
@@ -106,152 +109,29 @@ function CarouselSection({ title, viewAllLink = '#', items = mockFilms, layout =
             ))}
           </div>
         </div>
-        {currentIndex > 0 && <button onClick={handlePrev} className="absolute left-0 top-1/3 -translate-y-1/2 -translate-x-12 lg:-translate-x-6 z-10 bg-accent/20 hover:bg-accent/40 p-2 rounded-full transition-colors"><ChevronLeft className="w-5 h-5 text-white" /></button>}
-        {currentIndex < maxIndex && <button onClick={handleNext} className="absolute right-0 top-1/3 -translate-y-1/2 translate-x-12 lg:translate-x-6 z-10 bg-accent/20 hover:bg-accent/40 p-2 rounded-full transition-colors"><ChevronRight className="w-5 h-5 text-white" /></button>}
+        {currentIndex > 0 && <button onClick={handlePrev} className="absolute left-0 top-1/3 -translate-y-1/2 -translate-x-12 lg:-translate-x-6 z-10 bg-accent/20 hover:bg-accent/40 p-2 rounded-full transition-colors"><X className="w-5 h-5 text-white" /></button>}
+        {currentIndex < maxIndex && <button onClick={handleNext} className="absolute right-0 top-1/3 -translate-y-1/2 translate-x-12 lg:translate-x-6 z-10 bg-accent/20 hover:bg-accent/40 p-2 rounded-full transition-colors"><Menu className="w-5 h-5 text-white" /></button>}
       </div>
     </section>
   )
 }
 
 export default function DashboardPage() {
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
-  const [userDropdownOpen, setUserDropdownOpen] = useState(false)
-  const [isSearchActive, setIsSearchActive] = useState(false) // State untuk mode search
-  const dropdownRef = useRef<HTMLDivElement>(null)
-  const searchInputRef = useRef<HTMLInputElement>(null)
-
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
-        setUserDropdownOpen(false)
-      }
-    }
-    document.addEventListener('mousedown', handleClickOutside)
-    return () => document.removeEventListener('mousedown', handleClickOutside)
-  }, [])
-
-  // Fokus otomatis ke input saat search aktif
-  useEffect(() => {
-    if (isSearchActive && searchInputRef.current) {
-      searchInputRef.current.focus()
-    }
-  }, [isSearchActive])
-
   return (
     <div className="min-h-screen bg-background text-foreground dark">
-      <nav className="sticky top-0 z-50 bg-[#020817]/95 backdrop-blur-md border-b border-white/5 h-20 flex items-center">
-        <div className="w-full px-6 lg:px-12">
-          {!isSearchActive ? (
-            // TAMPILAN NORMAL (Figma / fe.png style)
-            <div className="flex items-center justify-between animate-in fade-in duration-300">
-              <div className="flex items-center">
-                <Image src="/usky-logo.png" alt="USKY Logo" width={70} height={30} className="h-7 w-auto object-contain" />
-              </div>
-
-              <div className="flex items-center gap-6">
-                <div className="hidden lg:flex items-center bg-[#111827] border border-white/5 rounded-full px-8 py-2.5 gap-10 shadow-lg">
-                  <a href="#" className="text-sm font-semibold text-white hover:text-blue-400 transition-colors">Films</a>
-                  <a href="#" className="text-sm font-semibold text-white hover:text-blue-400 transition-colors">Clips</a>
-                  <a href="#" className="text-sm font-semibold text-white hover:text-blue-400 transition-colors">Events</a>
-                  <a href="#" className="text-sm font-semibold text-white hover:text-blue-400 transition-colors">Awards</a>
-                </div>
-
-                <div className="flex items-center gap-3 relative">
-                  <div ref={dropdownRef} className="relative">
-                    <button onClick={() => setUserDropdownOpen(!userDropdownOpen)} className="flex items-center justify-center w-10 h-10 bg-[#D9D9D9] hover:bg-white transition-all rounded-full border border-white/20">
-                      <User className="w-6 h-6 text-black" />
-                    </button>
-                    {userDropdownOpen && (
-                      <div className="absolute right-0 mt-2 w-64 bg-[#1a1a2e] border border-white/10 rounded-lg shadow-2xl overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
-                        <div className="px-6 py-4 border-b border-white/10">
-                          <div className="flex items-center gap-4">
-                            <div className="w-12 h-12 bg-gradient-to-br from-gray-300 to-gray-400 rounded-full flex items-center justify-center"><User className="w-6 h-6 text-gray-700" /></div>
-                            <div><p className="font-semibold text-white text-sm">leerob</p><p className="text-xs text-gray-400">leerob@example.com</p></div>
-                          </div>
-                        </div>
-                        <div className="py-2">
-                          <button className="w-full flex items-center gap-4 px-6 py-3 text-sm text-gray-300 hover:bg-white/5 transition-colors"><Calendar className="w-5 h-5 text-gray-500" />My Event</button>
-                          <button className="w-full flex items-center gap-4 px-6 py-3 text-sm text-gray-300 hover:bg-white/5 transition-colors"><Ticket className="w-5 h-5 text-gray-500" />My Referral</button>
-                          <button className="w-full flex items-center gap-4 px-6 py-3 text-sm text-gray-300 hover:bg-white/5 transition-colors"><CreditCard className="w-5 h-5 text-gray-500" />My Account</button>
-                          <button className="w-full flex items-center gap-4 px-6 py-3 text-sm text-gray-300 hover:bg-white/5 transition-colors"><User className="w-5 h-5 text-gray-500" />Profile</button>
-                          <button className="w-full flex items-center gap-4 px-6 py-3 text-sm text-gray-300 hover:bg-white/5 transition-colors"><Settings className="w-5 h-5 text-gray-500" />Change Password</button>
-                        </div>
-                        <div className="border-t border-white/10 py-2">
-                          <button className="w-full flex items-center gap-4 px-6 py-3 text-sm text-gray-300 hover:bg-white/5 transition-colors"><LogOut className="w-5 h-5 text-gray-500" />Sign Out</button>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-
-                  <button onClick={() => setIsSearchActive(true)} className="flex items-center justify-center p-2 text-white/70 hover:text-white transition-colors">
-                    <Search className="w-5 h-5" />
-                  </button>
-
-                  <button onClick={() => setMobileMenuOpen(!mobileMenuOpen)} className="lg:hidden flex items-center justify-center p-2 text-white">
-                    {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
-                  </button>
-                </div>
-              </div>
-            </div>
-          ) : (
-            // TAMPILAN SEARCH AKTIF (Sesuai research.png)
-            <div className="flex items-center gap-4 animate-in slide-in-from-right duration-300">
-              <div className="flex items-center flex-shrink-0">
-                <Image src="/usky-logo.png" alt="USKY Logo" width={70} height={30} className="h-7 w-auto object-contain" />
-              </div>
-              
-              <div className="hidden lg:flex items-center bg-[#111827] border border-white/5 rounded-full px-8 py-2.5 gap-10 shadow-lg flex-shrink-0">
-                <a href="#" className="text-sm font-semibold text-white/40 cursor-default">Films</a>
-                <a href="#" className="text-sm font-semibold text-white/40 cursor-default">Clips</a>
-                <a href="#" className="text-sm font-semibold text-white/40 cursor-default">Events</a>
-                <a href="#" className="text-sm font-semibold text-white/40 cursor-default">Awards</a>
-              </div>
-
-              <div className="flex items-center justify-center w-10 h-10 bg-[#D9D9D9] rounded-full flex-shrink-0">
-                <User className="w-6 h-6 text-black" />
-              </div>
-
-              {/* SEARCH INPUT FIELD (research.png style) */}
-              <div className="flex-1 relative flex items-center bg-[#0d121f] border border-white/10 rounded-lg px-4 h-11">
-                <Search className="w-5 h-5 text-gray-500 mr-3" />
-                <input 
-                  ref={searchInputRef}
-                  type="text" 
-                  placeholder="Search..." 
-                  className="bg-transparent border-none outline-none text-white w-full text-sm placeholder:text-gray-500"
-                />
-              </div>
-
-              {/* TOMBOL CLOSE SEARCH */}
-              <button 
-                onClick={() => setIsSearchActive(false)}
-                className="w-10 h-10 bg-white/5 hover:bg-white/10 rounded-full flex items-center justify-center transition-colors flex-shrink-0"
-              >
-                <X className="w-5 h-5 text-white" />
-              </button>
-            </div>
-          )}
-        </div>
-
-        {/* Mobile Menu Dropdown */}
-        {mobileMenuOpen && !isSearchActive && (
-          <div className="absolute top-20 left-0 w-full lg:hidden bg-[#020817] border-t border-white/5 px-6 py-8 flex flex-col gap-6 animate-in slide-in-from-top duration-300">
-            {['Films', 'Clips', 'Events', 'Awards'].map((item) => (
-              <a key={item} href="#" className="text-lg font-medium text-white/90 hover:text-white">{item}</a>
-            ))}
-          </div>
-        )}
-      </nav>
+      <Header />
 
       {/* Hero Section */}
-      <section className="relative h-96 lg:h-[500px] overflow-hidden">
+      <section className="relative h-screen overflow-hidden">
         <Image src="/login-hero.jpg" alt="Hero" fill className="object-cover" />
         <div className="absolute inset-0 bg-gradient-to-t from-background via-transparent to-transparent" />
-        <div className="absolute bottom-8 left-6 lg:left-12 right-6 lg:right-12">
-          <h1 className="text-3xl lg:text-4xl font-bold text-white mb-2">[Judul Film]</h1>
-          <p className="text-sm lg:text-base text-gray-300 mb-4 max-w-2xl">Watch groundbreaking films crafted by human creativity and artificial intelligence.</p>
+        <div className="absolute top-1/2 translate-y-12 left-4 md:left-6 lg:left-12 right-4 md:right-6 lg:right-12">
+          <h1 className="text-xl md:text-3xl lg:text-4xl font-bold text-white mb-2">[Judul Film]</h1>
+          <p className="text-xs md:text-sm lg:text-base text-gray-300 mb-3 md:mb-4 max-w-2xl">Watch groundbreaking films crafted by human creativity and artificial intelligence.</p>
           <Button className="bg-white text-background hover:bg-gray-200">▶ Watch Now</Button>
-          <div className="flex gap-1 mt-4">
+        </div>
+        <div className="absolute bottom-20 left-1/2 -translate-x-1/2">
+          <div className="flex gap-1">
             <div className="w-6 h-1 bg-white rounded-full" /><div className="w-1 h-1 bg-gray-400 rounded-full" /><div className="w-1 h-1 bg-gray-400 rounded-full" /><div className="w-1 h-1 bg-gray-400 rounded-full" />
           </div>
         </div>
@@ -268,8 +148,8 @@ export default function DashboardPage() {
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-2xl font-bold text-foreground">Creator</h2>
           <div className="flex gap-2">
-            <button className="bg-accent/20 hover:bg-accent/40 p-2 rounded-full transition-colors"><ChevronLeft className="w-5 h-5 text-white" /></button>
-            <button className="bg-accent/20 hover:bg-accent/40 p-2 rounded-full transition-colors"><ChevronRight className="w-5 h-5 text-white" /></button>
+            <button className="bg-accent/20 hover:bg-accent/40 p-2 rounded-full transition-colors"><X className="w-5 h-5 text-white" /></button>
+            <button className="bg-accent/20 hover:bg-accent/40 p-2 rounded-full transition-colors"><Menu className="w-5 h-5 text-white" /></button>
           </div>
         </div>
 
@@ -296,7 +176,7 @@ export default function DashboardPage() {
         </div>
       </section>
 
-      <section className="mt-12 mb-8">
+      <section className="mt-8 md:mt-12 mb-6 md:mb-8 mx-4 md:mx-6 lg:mx-12">
         <div className="relative rounded-lg overflow-hidden bg-gradient-to-r from-gray-900 via-gray-800 to-gray-900 border border-white/10">
           <div className="absolute inset-0 opacity-20">
             <Image 
@@ -307,15 +187,15 @@ export default function DashboardPage() {
             />
           </div>
           
-          <div className="relative flex flex-col lg:flex-row items-center justify-between px-6 lg:px-12 py-8 lg:py-12 gap-8">
+          <div className="relative flex flex-col lg:flex-row items-center justify-between px-4 md:px-6 lg:px-12 py-6 md:py-8 lg:py-12 gap-4 md:gap-8">
             <div className="flex-1 max-w-md">
-              <div className="inline-block bg-foreground text-background text-xs font-semibold px-3 py-1 rounded-full mb-4">
+              <div className="inline-block bg-foreground text-background text-xs font-semibold px-3 py-1 rounded-full mb-3 md:mb-4">
                 Coming Soon
               </div>
-              <h2 className="text-3xl lg:text-4xl font-bold text-foreground mb-4 leading-tight">
+              <h2 className="text-2xl md:text-3xl lg:text-4xl font-bold text-foreground mb-3 md:mb-4 leading-tight">
                 Get the USKY TV for free
               </h2>
-              <ul className="space-y-2 text-muted-foreground text-sm">
+              <ul className="space-y-1.5 md:space-y-2 text-muted-foreground text-xs md:text-sm">
                 <li className="flex items-start gap-2">
                   <span className="text-accent mt-1">•</span>
                   <span>Live events, films and shows</span>
@@ -332,7 +212,7 @@ export default function DashboardPage() {
             </div>
             
             <div className="flex-1 flex justify-center lg:justify-end">
-              <div className="w-full max-w-sm">
+              <div className="w-full max-w-xs md:max-w-sm">
                 <Image 
                   src="/images/pc.png" 
                   alt="USKY TV Display" 
@@ -346,15 +226,7 @@ export default function DashboardPage() {
         </div>
       </section>
 
-      <footer className="bg-black/50 border-t border-border px-6 lg:px-12 py-8">
-        <div className="flex flex-col lg:flex-row justify-between items-center gap-4">
-          <p className="text-xs text-muted-foreground">© 2024 USKY. All rights reserved.</p>
-          <div className="flex gap-4">
-            <a href="#" className="text-muted-foreground hover:text-accent">Twitter</a>
-            <a href="#" className="text-muted-foreground hover:text-accent">Instagram</a>
-          </div>
-        </div>
-      </footer>
+      <Footer />
     </div>
   )
 }
