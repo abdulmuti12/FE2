@@ -68,7 +68,7 @@ export function Header() {
               {['Films', 'Clips', 'Events', 'Awards'].map((item) => (
                 <a 
                   key={item} 
-                  href="#" 
+                  href="/dashboard/clip" 
                   className="text-sm md:text-base font-bold text-white hover:text-blue-400 transition-colors whitespace-nowrap"
                 >
                   {item}
