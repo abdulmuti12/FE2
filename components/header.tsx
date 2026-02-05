@@ -27,7 +27,7 @@ export function Header() {
   }, [isSearchActive])
 
   const navItems = [
-    { label: 'Films', href: '/dashboard/film' },
+    { label: 'Films', href: '/dashboard' },
     { label: 'Clips', href: '/dashboard/clip' },
     { label: 'Events', href: '/dashboard/event' },
     { label: 'Awards', href: '#' }, // biarin seperti sekarang karena kamu belum minta route-nya
