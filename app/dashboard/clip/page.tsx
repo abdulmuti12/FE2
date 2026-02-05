@@ -6,7 +6,8 @@ import { Heart, Plus, Share2, Play, MessageCircle, ChevronDown, ChevronUp, Music
 import { Header } from '@/components/header'
 import { Footer } from '@/components/footer'
 
-// Data Kategori
+// --- DATA DUMMY ---
+
 const sidebarCategories = [
   { icon: '/images/icon/clippp.png', label: 'All Clips' },
   { icon: '/images/icon/action4.png', label: 'Action' },
@@ -22,7 +23,6 @@ const sidebarCategories = [
   { icon: '/images/icon/fantasy.png', label: 'Fantasy' },
 ]
 
-// Data Clips
 const mockClips = [
   {
     id: 1,
@@ -65,6 +65,8 @@ const mockClips = [
   },
 ]
 
+// --- KOMPONEN UTAMA (Wajib pakai export default) ---
+
 export default function ClipsPage() {
   const [activeCategory, setActiveCategory] = useState('All Clips')
 
@@ -93,7 +95,14 @@ export default function ClipsPage() {
                 }`}
               >
                 <div className={`p-1 rounded ${activeCategory === item.label ? 'bg-blue-600/20' : 'bg-transparent'}`}>
-                   <Image src={item.icon || "/placeholder.svg"} alt={item.label} width={20} height={20} className="w-5 h-5 opacity-80 group-hover:opacity-100" />
+                   {/* Gunakan Image component untuk icon */}
+                   <Image 
+                     src={item.icon} 
+                     alt={item.label} 
+                     width={20} 
+                     height={20} 
+                     className="w-5 h-5 opacity-80 group-hover:opacity-100 object-contain" 
+                   />
                 </div>
                 <span className="text-sm font-medium">{item.label}</span>
               </button>
@@ -101,7 +110,7 @@ export default function ClipsPage() {
           </div>
         </aside>
 
-        {/* --- MAIN FEED --- */}
+        {/* --- MAIN FEED (SCROLLABLE) --- */}
         <main className="flex-1 h-full overflow-y-scroll snap-y snap-mandatory scroll-smooth no-scrollbar relative">
             
           {mockClips.map((clip, index) => (
@@ -115,7 +124,7 @@ export default function ClipsPage() {
                     {index < mockClips.length - 1 && <ChevronDown className="w-10 h-10 animate-bounce" />}
                 </div>
 
-                {/* --- DESKTOP LAYOUT (TETAP SESUAI PERMINTAAN) --- */}
+                {/* --- DESKTOP LAYOUT (GRID) --- */}
                 <div className="hidden lg:grid grid-cols-12 gap-8 items-center w-full max-w-6xl h-full">
                   <div className="col-span-3 flex flex-col justify-center space-y-6 animate-in slide-in-from-left duration-700 fade-in mt-24">
                     <div className="flex items-center gap-3 bg-white/5 p-3 rounded-xl border border-white/10 w-fit backdrop-blur-sm">
@@ -163,8 +172,7 @@ export default function ClipsPage() {
                   </div>
                 </div>
 
-                {/* --- MOBILE LAYOUT (DIPERBAIKI) --- */}
-                {/* Tampilan TikTok/Reels Style */}
+                {/* --- MOBILE LAYOUT (TIKTOK STYLE) --- */}
                 <div className="lg:hidden w-full h-full relative bg-black">
                    
                    {/* Background Image/Video */}
@@ -176,18 +184,12 @@ export default function ClipsPage() {
                      priority={index === 0}
                    />
                    
-                   {/* Gradient Overlay: Atas (Tipis) & Bawah (Tebal) */}
+                   {/* Gradient Overlay */}
                    <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-transparent to-black/90 pointer-events-none" />
 
-                   {/* Center Play Icon (Optional, biasanya di video pendek hilang saat play) */}
-                   <div className="absolute inset-0 flex items-center justify-center pointer-events-none opacity-0">
-                      <Play className="w-16 h-16 text-white/50 fill-white/50" />
-                   </div>
-
-                   {/* --- RIGHT SIDE ACTIONS --- */}
+                   {/* Right Side Actions */}
                    <div className="absolute right-2 bottom-20 flex flex-col items-center gap-5 z-20 pb-4">
-                      
-                      {/* Avatar Profile */}
+                      {/* Avatar */}
                       <div className="relative mb-2">
                         <div className="w-10 h-10 rounded-full border border-white p-0.5 overflow-hidden">
                            <Image src={clip.creatorAvatar} width={40} height={40} alt="Creator" className="rounded-full" />
@@ -197,33 +199,24 @@ export default function ClipsPage() {
                         </div>
                       </div>
 
-                      {/* Like */}
                       <div className="flex flex-col items-center gap-1 drop-shadow-md">
                         <Heart className="w-8 h-8 text-white" strokeWidth={1.5} />
                         <span className="text-xs font-semibold text-white">{clip.likes}</span>
                       </div>
-
-                      {/* Comment */}
                       <div className="flex flex-col items-center gap-1 drop-shadow-md">
                         <MessageCircle className="w-8 h-8 text-white" strokeWidth={1.5} />
                         <span className="text-xs font-semibold text-white">{clip.comments}</span>
                       </div>
-
-                      {/* Bookmark/Save */}
                       <div className="flex flex-col items-center gap-1 drop-shadow-md">
                         <div className="bg-white/10 p-1.5 rounded-full backdrop-blur-sm">
                            <Bookmark className="w-6 h-6 text-white fill-white/20" strokeWidth={1.5} />
                         </div>
                         <span className="text-xs font-semibold text-white">{clip.saves}</span>
                       </div>
-
-                      {/* Share */}
                       <div className="flex flex-col items-center gap-1 drop-shadow-md">
                         <Share2 className="w-8 h-8 text-white" strokeWidth={1.5} />
                         <span className="text-xs font-semibold text-white">{clip.shares}</span>
                       </div>
-
-                      {/* Music Disc Animation */}
                       <div className="mt-4 animate-[spin_4s_linear_infinite]">
                          <div className="w-10 h-10 rounded-full bg-gray-900 border-4 border-gray-800 flex items-center justify-center overflow-hidden">
                             <Image src={clip.creatorAvatar} width={24} height={24} alt="music" className="rounded-full w-6 h-6" />
@@ -231,19 +224,15 @@ export default function ClipsPage() {
                       </div>
                    </div>
 
-                   {/* --- BOTTOM LEFT INFO --- */}
+                   {/* Bottom Left Info */}
                    <div className="absolute bottom-0 left-0 w-[80%] p-4 z-20 pb-6">
                       <div className="flex items-center gap-2 mb-2">
                          <h3 className="text-white font-bold text-base shadow-black drop-shadow-md">@{clip.creator.replace(' ', '')}</h3>
                          <span className="bg-white/20 backdrop-blur-md px-2 py-0.5 rounded text-[10px] font-semibold text-white">Follow</span>
                       </div>
-                      
                       <p className="text-white text-sm leading-snug mb-3 drop-shadow-md">
-                        {clip.description} 
-                        <span className="font-bold ml-1">#fyp #viral</span>
+                        {clip.description} <span className="font-bold ml-1">#fyp #viral</span>
                       </p>
-
-                      {/* Music Ticker */}
                       <div className="flex items-center gap-2">
                          <Music className="w-3 h-3 text-white" />
                          <div className="overflow-hidden w-40">
@@ -253,7 +242,6 @@ export default function ClipsPage() {
                          </div>
                       </div>
                    </div>
-
                 </div>
 
             </div>
