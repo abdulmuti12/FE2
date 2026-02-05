@@ -1,6 +1,7 @@
 'use client'
 
 import Image from 'next/image'
+import Link from 'next/link' // Import Link untuk navigasi
 import { useState, useRef, useEffect } from 'react'
 import { Search, User, Calendar, Ticket, CreditCard, Settings, LogOut, X } from 'lucide-react'
 
@@ -30,7 +31,7 @@ export function Header() {
     { label: 'Films', href: '/dashboard' },
     { label: 'Clips', href: '/dashboard/clip' },
     { label: 'Events', href: '/dashboard/event' },
-    { label: 'Awards', href: '#' }, // biarin seperti sekarang karena kamu belum minta route-nya
+    { label: 'Awards', href: '#' },
   ]
 
   return (
@@ -70,16 +71,16 @@ export function Header() {
           {/* SISI KANAN (Web/Desktop) */}
           <div className="hidden md:flex items-center gap-5">
             
-            {/* Navigasi Kapsul - Tetap terlihat saat search aktif sesuai Screenshot 15.01.30 */}
+            {/* Navigasi Kapsul */}
             <div className="flex items-center bg-[#111827]/80 border border-white/10 rounded-full px-6 py-2 md:py-2.5 gap-6 md:gap-10 shadow-lg">
               {navItems.map((item) => (
-                <a 
+                <Link 
                   key={item.label} 
                   href={item.href}
                   className="text-sm md:text-base font-bold text-white hover:text-blue-400 transition-colors whitespace-nowrap"
                 >
                   {item.label}
-                </a>
+                </Link>
               ))}
             </div>
 
@@ -99,13 +100,35 @@ export function Header() {
                     <p className="text-xs text-gray-400">leerob@example.com</p>
                   </div>
                   <div className="py-2">
-                    <button className="w-full flex items-center gap-4 px-6 py-3 text-sm text-gray-300 hover:bg-white/5 transition-colors"><Calendar className="w-5 h-5" /> My Event</button>
-                    <button className="w-full flex items-center gap-4 px-6 py-3 text-sm text-gray-300 hover:bg-white/5 transition-colors"><Ticket className="w-5 h-5" /> My Referral</button>
-                    <button className="w-full flex items-center gap-4 px-6 py-3 text-sm text-gray-300 hover:bg-white/5 transition-colors"><CreditCard className="w-5 h-5" /> My Account</button>
-                    <button className="w-full flex items-center gap-4 px-6 py-3 text-sm text-gray-300 hover:bg-white/5 transition-colors"><Settings className="w-5 h-5" /> Settings</button>
+                    <button className="w-full flex items-center gap-4 px-6 py-3 text-sm text-gray-300 hover:bg-white/5 transition-colors">
+                        <Calendar className="w-5 h-5" /> My Event
+                    </button>
+                    <button className="w-full flex items-center gap-4 px-6 py-3 text-sm text-gray-300 hover:bg-white/5 transition-colors">
+                        <Ticket className="w-5 h-5" /> My Referral
+                    </button>
+                    
+                    {/* LINK MY ACCOUNT DI SINI */}
+                    <Link 
+                        href="/dashboard/profile" 
+                        className="w-full flex items-center gap-4 px-6 py-3 text-sm text-gray-300 hover:bg-white/5 transition-colors"
+                    >
+                        <CreditCard className="w-5 h-5" /> My Account
+                    </Link>
+                    
+                    <button className="w-full flex items-center gap-4 px-6 py-3 text-sm text-gray-300 hover:bg-white/5 transition-colors">
+                        <Settings className="w-5 h-5" /> Settings
+                    </button>
                   </div>
                   <div className="border-t border-white/10 py-2">
-                    <button className="w-full flex items-center gap-4 px-6 py-3 text-sm text-gray-300 hover:bg-white/5 transition-colors"><LogOut className="w-5 h-5" /> Sign Out</button>
+                    
+                    {/* LINK SIGN OUT DI SINI */}
+                    <Link 
+                        href="/" 
+                        className="w-full flex items-center gap-4 px-6 py-3 text-sm text-gray-300 hover:bg-white/5 transition-colors"
+                    >
+                        <LogOut className="w-5 h-5" /> Sign Out
+                    </Link>
+
                   </div>
                 </div>
               )}
@@ -142,9 +165,9 @@ export function Header() {
             <div className="flex items-center justify-center md:hidden">
               <div className="flex items-center bg-[#111827]/80 border border-white/10 rounded-full px-6 py-2 gap-6 w-full overflow-x-auto no-scrollbar">
                 {navItems.map((item) => (
-                  <a key={item.label} href={item.href} className="text-sm font-bold text-white whitespace-nowrap">
+                  <Link key={item.label} href={item.href} className="text-sm font-bold text-white whitespace-nowrap">
                     {item.label}
-                  </a>
+                  </Link>
                 ))}
               </div>
             </div>
