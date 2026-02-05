@@ -26,6 +26,13 @@ export function Header() {
     }
   }, [isSearchActive])
 
+  const navItems = [
+    { label: 'Films', href: '/dashboard/film' },
+    { label: 'Clips', href: '/dashboard/clip' },
+    { label: 'Events', href: '/dashboard/event' },
+    { label: 'Awards', href: '#' }, // biarin seperti sekarang karena kamu belum minta route-nya
+  ]
+
   return (
     <nav className="sticky top-0 z-50 bg-[#020817] border-b border-white/5 py-4 md:h-20 flex items-center">
       <div className="w-full px-4 md:px-6 lg:px-12">
@@ -65,13 +72,13 @@ export function Header() {
             
             {/* Navigasi Kapsul - Tetap terlihat saat search aktif sesuai Screenshot 15.01.30 */}
             <div className="flex items-center bg-[#111827]/80 border border-white/10 rounded-full px-6 py-2 md:py-2.5 gap-6 md:gap-10 shadow-lg">
-              {['Films', 'Clips', 'Events', 'Awards'].map((item) => (
+              {navItems.map((item) => (
                 <a 
-                  key={item} 
-                  href="/dashboard/clip" 
+                  key={item.label} 
+                  href={item.href}
                   className="text-sm md:text-base font-bold text-white hover:text-blue-400 transition-colors whitespace-nowrap"
                 >
-                  {item}
+                  {item.label}
                 </a>
               ))}
             </div>
@@ -134,8 +141,10 @@ export function Header() {
           {!isSearchActive && (
             <div className="flex items-center justify-center md:hidden">
               <div className="flex items-center bg-[#111827]/80 border border-white/10 rounded-full px-6 py-2 gap-6 w-full overflow-x-auto no-scrollbar">
-                {['Films', 'Clips', 'Events', 'Awards'].map((item) => (
-                  <a key={item} href="#" className="text-sm font-bold text-white whitespace-nowrap">{item}</a>
+                {navItems.map((item) => (
+                  <a key={item.label} href={item.href} className="text-sm font-bold text-white whitespace-nowrap">
+                    {item.label}
+                  </a>
                 ))}
               </div>
             </div>
