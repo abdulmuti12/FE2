@@ -4,6 +4,7 @@ import { Header } from '@/components/header'
 import { Footer } from '@/components/footer'
 import { ChevronRight, ChevronLeft, Calendar, Play, Filter, ChevronDown } from 'lucide-react'
 import { useState } from 'react'
+import { useRouter } from 'next/navigation'
 
 // Mock Data
 const upcomingEvents = [
@@ -12,7 +13,7 @@ const upcomingEvents = [
     title: 'BALAIRUNG UI MOVIE NIGHT',
     subtitle: 'Legacy of Heroes',
     date: '22-11-2025',
-    image: '/images/event/example.png', // Ganti dengan path gambar Anda
+    image: '/images/event/example.png', 
     price: 'GRATIS!'
   },
   {
@@ -74,6 +75,7 @@ const recapEvents = [
 ]
 
 export default function EventPage() {
+  const router = useRouter()
   const [activeFilter, setActiveFilter] = useState('All')
   const [sortBy, setSortBy] = useState('Latest')
 
@@ -121,7 +123,8 @@ export default function EventPage() {
                 {upcomingEvents.map((event) => (
                   <div 
                     key={event.id} 
-                    className="relative w-[220px] md:w-[240px] aspect-[2/3] rounded-xl overflow-hidden cursor-pointer border border-white/10 group/card"
+                    onClick={() => router.push('/dashboard/event/detail')}
+                    className="relative w-[220px] md:w-[240px] aspect-[2/3] rounded-xl overflow-hidden cursor-pointer border border-white/10 group/card hover:border-yellow-500 transition-colors"
                   >
                     <img 
                       src={event.image || "/placeholder.svg"} 
@@ -293,7 +296,8 @@ export default function EventPage() {
             {allEvents.map((event, index) => (
               <div 
                 key={`${event.id}-${index}`}
-                className="group cursor-pointer flex flex-col"
+                onClick={() => router.push('/dashboard/event/detail')}
+                className="group cursor-pointer flex flex-col hover:opacity-80 transition-opacity"
               >
                 {/* Poster Card */}
                 <div className="relative w-full aspect-[2/3] bg-gray-800 rounded-lg overflow-hidden mb-3 border border-white/5">

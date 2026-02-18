@@ -7,7 +7,7 @@ const _geist = Geist({ subsets: ["latin"] });
 const _geistMono = Geist_Mono({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: 'Dashobard',
+  title: 'Dashboard',
   description: '',
   generator: 'Next.js',
   icons: {
