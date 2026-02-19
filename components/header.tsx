@@ -29,6 +29,7 @@ export function Header() {
 
   const navItems = [
     { label: 'Films', href: '/dashboard' },
+    { label: 'Series', href: '/dashboard/series' },
     { label: 'Clips', href: '/dashboard/clip' },
     { label: 'Events', href: '/dashboard/event' },
     { label: 'Awards', href: '#' },
@@ -114,10 +115,11 @@ export function Header() {
                     >
                         <CreditCard className="w-5 h-5" /> My Account
                     </Link>
-                    
+                      <Link href="/dashboard/changepass" >
                     <button className="w-full flex items-center gap-4 px-6 py-3 text-sm text-gray-300 hover:bg-white/5 transition-colors">
-                        <Settings className="w-5 h-5" /> Settings
+                        <Settings className="w-5 h-5" /> Change Password
                     </button>
+                    </Link>
                   </div>
                   <div className="border-t border-white/10 py-2">
                     

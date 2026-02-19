@@ -176,6 +176,123 @@ export default function DashboardPage() {
         </div>
       </section>
 
+      {/* Banner Section */}
+      <section className="px-4 md:px-6 lg:px-12 py-8 md:py-12 border-t border-border">
+        <div className="relative rounded-xl overflow-hidden min-h-96 md:min-h-[500px]">
+          {/* Background Image */}
+          <div className="absolute inset-0">
+            <Image 
+              src="/images/design-mode/a.png" 
+              alt="Banner Background" 
+              fill 
+              className="object-cover"
+            />
+          </div>
+          
+          {/* Dark Overlay */}
+          <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/60 to-transparent" />
+          
+          {/* Content */}
+          <div className="relative flex items-center h-full px-6 md:px-8 lg:px-12 py-8 md:py-12">
+            <div className="w-full max-w-2xl">
+              {/* Header */}
+              <div className="mb-8 md:mb-10">
+                <h2 className="text-2xl md:text-3xl lg:text-4xl font-bold text-white mb-2 md:mb-3">
+                  The Future of Filmmaking Starts Here
+                </h2>
+                <p className="text-sm md:text-base text-gray-300">
+                  Connect with AI-powered creators. Make short films, promos, or stories in a whole new way.
+                </p>
+              </div>
+              
+              {/* Feature Cards Grid */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6 mb-8">
+              {/* Card 1 */}
+              <div className="bg-black/40 backdrop-blur-sm border border-white/10 rounded-lg p-4 md:p-6 hover:bg-black/60 transition-colors">
+                <div className="flex items-start gap-4">
+                  <div className="flex-shrink-0 w-10 h-10 md:w-12 md:h-12">
+                    <Image 
+                      src="/images/design-mode/start.png" 
+                      alt="AI Video Icon" 
+                      width={48} 
+                      height={48}
+                      className="w-full h-full object-contain"
+                    />
+                  </div>
+                  <div>
+                    <h3 className="text-sm md:text-base font-bold text-white mb-1">Focused on AI Video Only</h3>
+                    <p className="text-xs md:text-sm text-gray-400">We specialize in one thing – AI-generated videos. That means better quality, faster delivery, and creators who truly know the tools.</p>
+                  </div>
+                </div>
+              </div>
+              
+              {/* Card 2 */}
+              <div className="bg-black/40 backdrop-blur-sm border border-white/10 rounded-lg p-4 md:p-6 hover:bg-black/60 transition-colors">
+                <div className="flex items-start gap-4">
+                  <div className="flex-shrink-0 w-10 h-10 md:w-12 md:h-12">
+                    <Image 
+                      src="/images/design-mode/times.png" 
+                      alt="Fast Delivery Icon" 
+                      width={48} 
+                      height={48}
+                      className="w-full h-full object-contain"
+                    />
+                  </div>
+                  <div>
+                    <h3 className="text-sm md:text-base font-bold text-white mb-1">Fast & Hassle-Free</h3>
+                    <p className="text-xs md:text-sm text-gray-400">No need to hire a full video team. Just send your idea and get a film delivered within days.</p>
+                  </div>
+                </div>
+              </div>
+              
+              {/* Card 3 */}
+              <div className="bg-black/40 backdrop-blur-sm border border-white/10 rounded-lg p-4 md:p-6 hover:bg-black/60 transition-colors">
+                <div className="flex items-start gap-4">
+                  <div className="flex-shrink-0 w-10 h-10 md:w-12 md:h-12">
+                    <Image 
+                      src="/images/design-mode/world.png" 
+                      alt="Secure Payment Icon" 
+                      width={48} 
+                      height={48}
+                      className="w-full h-full object-contain"
+                    />
+                  </div>
+                  <div>
+                    <h3 className="text-sm md:text-base font-bold text-white mb-1">Secure Payment, Always Protected</h3>
+                    <p className="text-xs md:text-sm text-gray-400">Your money is held safely until your video is delivered – pay only when you're happy with the result.</p>
+                  </div>
+                </div>
+              </div>
+              
+              {/* Card 4 */}
+              <div className="bg-black/40 backdrop-blur-sm border border-white/10 rounded-lg p-4 md:p-6 hover:bg-black/60 transition-colors">
+                <div className="flex items-start gap-4">
+                  <div className="flex-shrink-0 w-10 h-10 md:w-12 md:h-12">
+                    <Image 
+                      src="/images/design-mode/image.png" 
+                      alt="Client-Centric Icon" 
+                      width={48} 
+                      height={48}
+                      className="w-full h-full object-contain"
+                    />
+                  </div>
+                  <div>
+                    <h3 className="text-sm md:text-base font-bold text-white mb-1">Client-Centric Workflow</h3>
+                    <p className="text-xs md:text-sm text-gray-400">Simple briefs, clear delivery timelines, revision options – built for clients who just want great results without back-and-forth.</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+              
+              {/* CTA Button */}
+              <Button className="bg-white text-black hover:bg-gray-200 font-semibold text-sm md:text-base">
+                Explore Skydio.AI
+              </Button>
+            </div>
+          </div>
+        </div>
+      </section>
+
       <section className="mt-8 md:mt-12 mb-6 md:mb-8 mx-4 md:mx-6 lg:mx-12">
         <div className="relative rounded-lg overflow-hidden bg-gradient-to-r from-gray-900 via-gray-800 to-gray-900 border border-white/10">
           <div className="absolute inset-0 opacity-20">
