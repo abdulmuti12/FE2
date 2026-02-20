@@ -43,7 +43,7 @@ export function Header() {
   }, [mobileUserMenuOpen])
 
   const navItems = [
-    { label: 'Films', href: '/dashboard' },
+    { label: 'Films', href: '/dashboard/film' },
     { label: 'Series', href: '/dashboard/series' },
     { label: 'Clips', href: '/dashboard/clip' },
     { label: 'Events', href: '/dashboard/event' },
