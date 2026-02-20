@@ -26,7 +26,6 @@ const GENRES = [
 ]
 
 const CREATORS = ['All Creator', 'Creator A', 'Creator B', 'Creator C']
-
 const SORT_OPTIONS = ['Latest', 'Oldest', 'Popular', 'A-Z']
 
 export default function SeriesPage() {
@@ -44,71 +43,84 @@ export default function SeriesPage() {
     {
       id: 1,
       title: '[Judul Series]',
-      genre: 'Genre',
-      status: 'In Dev',
+      synopsis:
+        '[Brief Synopsis] Watch groundbreaking films crafted by human creativity and arti...',
+      genre: '[Genre]',
+      duration: '1h 0m',
       image: '/film/film2.png',
     },
     {
       id: 2,
       title: '[Judul Series]',
-      genre: 'Genre',
-      status: 'In Dev',
+      synopsis:
+        '[Brief Synopsis] Watch groundbreaking films crafted by human creativity and arti...',
+      genre: '[Genre]',
+      duration: '1h 0m',
       image:
         'https://hebbkx1anhila5yf.public.blob.vercel-storage.com/0938af323a7fb3c821e2c95b6766a49090cd1e0b-M2XYI31in3J9xgYB1jeAqN6qUyAvW6.png',
     },
     {
       id: 3,
       title: '[Judul Series]',
-      genre: 'Genre',
-      status: 'In Dev',
+      synopsis:
+        '[Brief Synopsis] Watch groundbreaking films crafted by human creativity and arti...',
+      genre: '[Genre]',
+      duration: '1h 0m',
       image: '/film/film2.png',
     },
     {
       id: 4,
       title: '[Judul Series]',
-      genre: 'Genre',
-      status: 'In Dev',
+      synopsis:
+        '[Brief Synopsis] Watch groundbreaking films crafted by human creativity and arti...',
+      genre: '[Genre]',
+      duration: '1h 0m',
       image: '/film/film2.png',
     },
     {
       id: 5,
       title: '[Judul Series]',
-      genre: 'Genre',
-      status: 'In Dev',
+      synopsis:
+        '[Brief Synopsis] Watch groundbreaking films crafted by human creativity and arti...',
+      genre: '[Genre]',
+      duration: '1h 0m',
       image:
         'https://hebbkx1anhila5yf.public.blob.vercel-storage.com/0938af323a7fb3c821e2c95b6766a49090cd1e0b-M2XYI31in3J9xgYB1jeAqN6qUyAvW6.png',
     },
     {
       id: 6,
       title: '[Judul Series]',
-      genre: 'Genre',
-      status: 'In Dev',
+      synopsis:
+        '[Brief Synopsis] Watch groundbreaking films crafted by human creativity and arti...',
+      genre: '[Genre]',
+      duration: '1h 0m',
       image:
         'https://hebbkx1anhila5yf.public.blob.vercel-storage.com/0938af323a7fb3c821e2c95b6766a49090cd1e0b-M2XYI31in3J9xgYB1jeAqN6qUyAvW6.png',
     },
     {
       id: 7,
       title: '[Judul Series]',
-      genre: 'Genre',
-      status: 'In Dev',
+      synopsis:
+        '[Brief Synopsis] Watch groundbreaking films crafted by human creativity and arti...',
+      genre: '[Genre]',
+      duration: '1h 0m',
       image:
         'https://hebbkx1anhila5yf.public.blob.vercel-storage.com/0938af323a7fb3c821e2c95b6766a49090cd1e0b-M2XYI31in3J9xgYB1jeAqN6qUyAvW6.png',
     },
     {
       id: 8,
       title: '[Judul Series]',
-      genre: 'Genre',
-      status: 'In Dev',
+      synopsis:
+        '[Brief Synopsis] Watch groundbreaking films crafted by human creativity and arti...',
+      genre: '[Genre]',
+      duration: '1h 0m',
       image:
         'https://hebbkx1anhila5yf.public.blob.vercel-storage.com/0938af323a7fb3c821e2c95b6766a49090cd1e0b-M2XYI31in3J9xgYB1jeAqN6qUyAvW6.png',
     },
   ])
 
   const [displayCount, setDisplayCount] = useState(8)
-
-  const handleLoadMore = () => {
-    setDisplayCount((prev) => prev + 4)
-  }
+  const handleLoadMore = () => setDisplayCount((prev) => prev + 4)
 
   return (
     <div className="min-h-screen bg-[#020817] text-white font-sans">
@@ -116,14 +128,11 @@ export default function SeriesPage() {
 
       {/* Hero Section */}
       <div className="relative w-full h-[240px] md:h-[400px] overflow-hidden">
-        {/* Background Image */}
         <div
           className="absolute inset-0 bg-cover bg-center"
           style={{ backgroundImage: 'url("/images/privacy-header.jpg")' }}
         />
-        {/* Dark Overlay */}
         <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-[#020817]/60 to-[#020817]" />
-
         <div className="relative h-full flex flex-col justify-center items-center text-center px-4">
           <h1 className="text-3xl md:text-5xl font-bold mb-4">Series</h1>
         </div>
@@ -298,24 +307,34 @@ export default function SeriesPage() {
                   className="object-cover group-hover:scale-105 transition-transform duration-300"
                 />
 
-                {/* Overlay */}
-                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
+                {/* ALWAYS-ON overlay like target */}
+                <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/35 to-transparent" />
+
+                {/* Text overlay */}
+                <div className="absolute inset-0 flex flex-col justify-end p-4">
+                  <h3 className="text-2xl font-bold text-white leading-tight mb-2 line-clamp-2">
+                    {series.title}
+                  </h3>
+
+                  <p className="text-white/75 text-base leading-snug mb-6 line-clamp-3">
+                    {series.synopsis}
+                  </p>
+
+                  <div className="flex items-end justify-between text-white/70">
+                    <span className="text-xl font-medium">{series.genre}</span>
+                    <span className="text-xl font-medium">{series.duration}</span>
+                  </div>
+                </div>
+
+                {/* Hover Play (optional tetap ada) */}
+                <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
                   <button className="w-12 h-12 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center hover:bg-white/30 transition-colors">
                     <Play className="w-6 h-6 text-white fill-white" />
                   </button>
                 </div>
               </div>
 
-              {/* Content */}
-              <div className="p-3 md:p-5">
-                <h3 className="text-sm md:text-base font-semibold text-white mb-2 line-clamp-2">
-                  {series.title}
-                </h3>
-                <div className="flex items-center justify-between text-xs md:text-sm text-gray-400">
-                  <span>{series.genre}</span>
-                  <span className="text-yellow-400">{series.status}</span>
-                </div>
-              </div>
+            
             </div>
           ))}
         </div>
