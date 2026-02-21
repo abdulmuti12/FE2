@@ -3,9 +3,11 @@
 import Image from 'next/image'
 import Link from 'next/link'
 import { useState, useRef, useEffect } from 'react'
+import { usePathname } from 'next/navigation'
 import { Search, User, Calendar, Ticket, CreditCard, Settings, LogOut, X } from 'lucide-react'
 
 export function Header() {
+  const pathname = usePathname()
   const [userDropdownOpen, setUserDropdownOpen] = useState(false) // desktop dropdown
   const [mobileUserMenuOpen, setMobileUserMenuOpen] = useState(false) // mobile drawer
   const [isSearchActive, setIsSearchActive] = useState(false)
@@ -49,6 +51,11 @@ export function Header() {
     { label: 'Events', href: '/dashboard/event' },
     { label: 'Awards', href: '#' },
   ]
+
+  const isActive = (href: string) => {
+    if (href === '#') return false
+    return pathname.startsWith(href)
+  }
 
   const closeMobileMenu = () => setMobileUserMenuOpen(false)
 
@@ -198,7 +205,11 @@ export function Header() {
                   <Link
                     key={item.label}
                     href={item.href}
-                    className="text-sm font-bold text-white whitespace-nowrap"
+                    className={`text-sm font-bold whitespace-nowrap transition-colors ${
+                      isActive(item.href)
+                        ? 'text-yellow-400'
+                        : 'text-white'
+                    }`}
                   >
                     {item.label}
                   </Link>
@@ -241,7 +252,11 @@ export function Header() {
                 <Link
                   key={item.label}
                   href={item.href}
-                  className="text-sm md:text-base font-bold text-white hover:text-blue-400 transition-colors whitespace-nowrap"
+                  className={`text-sm md:text-base font-bold whitespace-nowrap transition-colors ${
+                    isActive(item.href)
+                      ? 'text-yellow-400'
+                      : 'text-white hover:text-blue-400'
+                  }`}
                 >
                   {item.label}
                 </Link>

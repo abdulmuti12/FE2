@@ -53,7 +53,7 @@ const filmData: FilmCard[] = [
     description:
       'Watch groundbreaking films crafted by human creativity and artificial intelligence.',
     genres: ['Action'],
-    image: '/images/icon/action4.png',
+    image: '/film/film6.png',
     type: 'film',
     category: 'Action',
   },
@@ -65,7 +65,7 @@ const filmData: FilmCard[] = [
     description:
       'Watch groundbreaking films crafted by human creativity and artificial intelligence.',
     genres: ['Action'],
-    image: '/images/icon/fantasy.png',
+    image: '/film/film5.png',
     type: 'film',
     category: 'Action',
   },
@@ -113,9 +113,9 @@ const filmData: FilmCard[] = [
     description:
       'Watch groundbreaking films crafted by human creativity and artificial intelligence.',
     genres: ['Adventure'],
-    image: '/images/icon/horror.png',
+    image: '/film/film4.png',
     type: 'film',
-    category: 'Adventure',
+    category: 'Horror',
   },
   {
     id: 9,
@@ -125,7 +125,7 @@ const filmData: FilmCard[] = [
     description:
       'Watch groundbreaking films crafted by human creativity and artificial intelligence.',
     genres: ['Adventure'],
-    image: '/images/icon/mystery.png',
+    image: '/film/film5.png',
     type: 'film',
     category: 'Adventure',
   },
@@ -137,7 +137,7 @@ const filmData: FilmCard[] = [
     description:
       'Watch groundbreaking films crafted by human creativity and artificial intelligence.',
     genres: ['Adventure'],
-    image: '/images/icon/comedy.png',
+    image: '/film/film6.png',
     type: 'film',
     category: 'Adventure',
   },

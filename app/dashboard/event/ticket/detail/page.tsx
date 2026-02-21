@@ -31,7 +31,7 @@ export default function TicketDetailPage() {
         {/* Ganti src dengan path QR Code Anda */}
         <div className="relative aspect-square w-full">
            <Image 
-            src="/images/qr-code-placeholder.png" 
+            src="/images/qr.png" 
             alt="QR Code Ticket" 
             fill
             className="object-contain"
