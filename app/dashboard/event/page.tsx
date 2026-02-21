@@ -91,7 +91,7 @@ export default function EventPage() {
       <div className="relative w-full h-[450px] md:h-[400px] overflow-hidden">
         <div 
           className="absolute inset-0 bg-cover bg-center"
-          style={{ backgroundImage: 'url(/images/imageheader.png)' }}
+          style={{ backgroundImage: 'url(/images/privacy-header.jpg)' }}
         >
           <div className="absolute inset-0 bg-gradient-to-r from-[#050B14] via-[#050B14]/80 to-transparent"></div>
           <div className="absolute inset-0 bg-gradient-to-t from-[#050B14] via-transparent to-transparent"></div>

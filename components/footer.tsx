@@ -10,10 +10,10 @@ export function Footer() {
           
           {/* Menu Kiri */}
           <div className="flex flex-wrap gap-x-4 md:gap-x-8 gap-y-2 md:gap-y-4 text-xs md:text-sm font-medium text-white/90">
-            <a href="#" className="hover:text-white transition-colors">Terms Of Use</a>
-            <a href="#" className="hover:text-white transition-colors">Privacy-Policy</a>
-            <a href="#" className="hover:text-white transition-colors">About Us</a>
-            <a href="#" className="hover:text-white transition-colors">Contact Support</a>
+            <a href="/dashboard/term" className="hover:text-white transition-colors">Terms Of Use</a>
+            <a href="/dashboard/privacy" className="hover:text-white transition-colors">Privacy-Policy</a>
+            <a href="/dashboard/about" className="hover:text-white transition-colors">About Us</a>
+            <a href="/dashboard/contact" className="hover:text-white transition-colors">Contact Support</a>
             <a href="#" className="hover:text-white transition-colors">Legal Notice</a>
           </div>
 
