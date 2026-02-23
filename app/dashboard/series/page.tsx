@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react'
 import Image from 'next/image'
+import Link from 'next/link'
 import { Header } from '@/components/header'
 import { Footer } from '@/components/footer'
 import { Play, Search, ChevronDown } from 'lucide-react'
@@ -130,7 +131,7 @@ export default function SeriesPage() {
       <div className="relative w-full h-[240px] md:h-[400px] overflow-hidden">
         <div
           className="absolute inset-0 bg-cover bg-center"
-          style={{ backgroundImage: 'url("/images/privacy-header.jpg")' }}
+          style={{ backgroundImage: 'url("/images/imageheader.png")' }}
         />
         <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-[#020817]/60 to-[#020817]" />
         <div className="relative h-full flex flex-col justify-center items-center text-center px-4">
@@ -294,8 +295,9 @@ export default function SeriesPage() {
         {/* Series Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 md:gap-6">
           {seriesData.slice(0, displayCount).map((series) => (
-            <div
+            <Link 
               key={series.id}
+              href={`/dashboard/series/detail?id=${series.id}`}
               className="group relative overflow-hidden rounded-2xl md:rounded-lg bg-[#1e293b] hover:shadow-lg transition-all duration-300"
             >
               {/* Image Container */}
@@ -335,7 +337,7 @@ export default function SeriesPage() {
               </div>
 
             
-            </div>
+            </Link>
           ))}
         </div>
 
