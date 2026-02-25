@@ -113,7 +113,7 @@ export function Header() {
               </Link>
 
               <Link
-                href="/dashboard/profile"
+                href="/dashboard/myaccount"
                 onClick={closeMobileMenu}
                 className="flex items-center gap-4 px-5 py-4 text-white/90 hover:bg-white/5 transition-colors"
               >
