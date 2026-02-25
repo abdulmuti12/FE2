@@ -288,7 +288,7 @@ export function Header() {
                     </button>
 
                     <Link
-                      href="/dashboard/profile"
+                      href="/dashboard/myaccount"
                       className="w-full flex items-center gap-4 px-6 py-3 text-sm text-gray-300 hover:bg-white/5 transition-colors"
                     >
                       <CreditCard className="w-5 h-5" /> My Account

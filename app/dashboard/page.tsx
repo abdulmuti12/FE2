@@ -4,10 +4,14 @@ import { Calendar } from "@/components/ui/calendar"
 import { User, Ticket, CreditCard, Settings, LogOut, Search, X, Menu, Play, Info } from 'lucide-react'
 import Image from 'next/image'
 import Link from 'next/link'
+import categoriesData from '@/data/categories.json'
+import { CategorySection } from '@/components/category-section'
 import { useState, useRef, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { Header } from '@/components/header'
 import { Footer } from '@/components/footer'
+import { LatestAwards } from '@/components/latest-awards'
+import { FutureFilmmaking } from '@/components/future-filmmaking'
 
 const mockFilms = [
   { id: 1, title: '[Judul Film]', year: '2025 • 1h 0m', image: '/login-hero.jpg', description: '[Brief Synopsis] Watch groundbreaking films crafted by human creativity and artificial intelligence.', category: 'Action', rating: '8.5/10', categories: ['Films', 'Genre'] },
@@ -87,7 +91,7 @@ function CarouselSection({
   return (
     <section className="px-4 md:px-6 lg:px-12 py-6 md:py-8 border-t border-border">
       <div className="flex items-center justify-between mb-4 md:mb-6">
-        <h2 className="text-lg md:text-2xl font-bold text-foreground">{title}</h2>
+        <h2 className="text-sm md:text-2xl font-bold text-foreground">{title}</h2>
         <a href={viewAllLink} className="text-white text-xs md:text-sm font-medium hover:text-gray-300 transition-colors">
           View All
         </a>
@@ -95,14 +99,14 @@ function CarouselSection({
 
       <div className="relative">
         <div className="overflow-hidden">
-          <div className="flex transition-transform duration-300 gap-4" style={{ transform: `translateX(-${currentIndex * (100 / itemsPerView)}%)` }}>
+          <div className="flex transition-transform duration-300 gap-2 md:gap-4" style={{ transform: `translateX(-${currentIndex * (100 / itemsPerView)}%)` }}>
             {layout === 'category'
               ? categoryData.map((item, idx) => (
                   <div key={idx} className="flex-shrink-0 w-1/3 sm:w-1/4 lg:w-1/7 text-center">
                     <div className="w-full aspect-square rounded-full bg-gradient-to-br from-[#4c7c3f] to-[#2a4a2a] mb-2 md:mb-3 flex items-center justify-center">
-                      <span className="text-2xl md:text-4xl text-white">🎬</span>
+                      <span className="text-xl md:text-4xl text-white">🎬</span>
                     </div>
-                    <p className="text-xs md:text-sm font-medium text-foreground">{item.name}</p>
+                    <p className="text-xs md:text-sm font-medium text-foreground line-clamp-1">{item.name}</p>
                     <p className="text-xs text-muted-foreground">{item.count}</p>
                   </div>
                 ))
@@ -110,21 +114,21 @@ function CarouselSection({
               ? creatorData.map((item, idx) => (
                   <div key={idx} className="flex-shrink-0 w-1/3 sm:w-1/4 lg:w-1/7 text-center">
                     <div className="w-full aspect-square rounded-full bg-gradient-to-br from-[#7c4c9f] to-[#4a2a6a] mb-2 md:mb-3 flex items-center justify-center">
-                      <span className="text-2xl md:text-4xl text-white">👤</span>
+                      <span className="text-xl md:text-4xl text-white">👤</span>
                     </div>
-                    <p className="text-xs md:text-sm font-medium text-foreground">{item.name}</p>
+                    <p className="text-xs md:text-sm font-medium text-foreground line-clamp-1">{item.name}</p>
                     <p className="text-xs text-muted-foreground">{item.count}</p>
                   </div>
                 ))
               : items.map((film) => (
                   <div key={film.id} className="flex-shrink-0 w-1/2 md:w-1/4 lg:w-1/4">
-                    <div className="relative h-40 md:h-60 mb-2 md:mb-4 rounded-lg overflow-hidden group">
+                    <div className="relative h-32 md:h-60 mb-2 md:mb-4 rounded-lg overflow-hidden group">
                       <Image src={film.image || "/placeholder.svg"} alt={film.title} fill className="object-cover hover:scale-105 transition-transform duration-300" />
                     </div>
-                    <p className="font-semibold text-sm md:text-base text-foreground mb-1">{film.title}</p>
-                    {(film as any).year && <p className="text-xs text-muted-foreground">{(film as any).year}</p>}
-                    <p className="text-xs text-muted-foreground mb-2 md:mb-3 line-clamp-2">{film.description}</p>
-                    <div className="flex gap-2 flex-wrap">
+                    <p className="font-semibold text-xs md:text-base text-foreground mb-1 line-clamp-1">{film.title}</p>
+                    {(film as any).year && <p className="text-xs text-muted-foreground hidden md:block">{(film as any).year}</p>}
+                    <p className="text-xs text-muted-foreground mb-2 md:mb-3 line-clamp-2 hidden md:block">{film.description}</p>
+                    <div className="flex gap-2 flex-wrap hidden md:flex">
                       {(film as any).categories?.map((cat: string, idx: number) => (
                         <Button key={idx} size="sm" className="text-xs bg-gray-200 text-black hover:bg-gray-300 rounded-full px-4" variant="default">
                           {cat}
@@ -146,13 +150,13 @@ function CarouselSection({
         </div>
 
         {currentIndex > 0 && (
-          <button onClick={handlePrev} className="absolute left-0 top-1/3 -translate-y-1/2 -translate-x-12 lg:-translate-x-6 z-10 bg-accent/20 hover:bg-accent/40 p-2 rounded-full transition-colors">
-            <X className="w-5 h-5 text-white" />
+          <button onClick={handlePrev} className="absolute left-0 top-1/3 -translate-y-1/2 -translate-x-8 md:-translate-x-12 lg:-translate-x-6 z-10 bg-accent/20 hover:bg-accent/40 p-1.5 md:p-2 rounded-full transition-colors">
+            <X className="w-4 h-4 md:w-5 md:h-5 text-white" />
           </button>
         )}
         {currentIndex < maxIndex && (
-          <button onClick={handleNext} className="absolute right-0 top-1/3 -translate-y-1/2 translate-x-12 lg:translate-x-6 z-10 bg-accent/20 hover:bg-accent/40 p-2 rounded-full transition-colors">
-            <Menu className="w-5 h-5 text-white" />
+          <button onClick={handleNext} className="absolute right-0 top-1/3 -translate-y-1/2 translate-x-8 md:translate-x-12 lg:translate-x-6 z-10 bg-accent/20 hover:bg-accent/40 p-1.5 md:p-2 rounded-full transition-colors">
+            <Menu className="w-4 h-4 md:w-5 md:h-5 text-white" />
           </button>
         )}
       </div>
@@ -180,29 +184,29 @@ function LatestClipSection({
 
   return (
     <section className="px-4 md:px-6 lg:px-12 py-6 md:py-8 border-t border-white/10">
-      <div className="flex items-center justify-between mb-4">
+      <div className="flex items-center justify-between mb-4 md:mb-6">
         <Link href={viewAllLink} className="inline-flex items-center gap-2 text-white font-semibold">
-          <span className="text-sm md:text-base">{title}</span>
+          <span className="text-xs md:text-base">{title}</span>
           <span className="text-white/70">›</span>
         </Link>
 
         <div className="flex items-center gap-1">
-          <span className="w-3 h-[2px] rounded-full bg-white/80" />
-          <span className="w-3 h-[2px] rounded-full bg-white/40" />
-          <span className="w-3 h-[2px] rounded-full bg-white/30" />
+          <span className="w-2 h-[2px] md:w-3 rounded-full bg-white/80" />
+          <span className="w-2 h-[2px] md:w-3 rounded-full bg-white/40" />
+          <span className="w-2 h-[2px] md:w-3 rounded-full bg-white/30" />
         </div>
       </div>
 
       <div className="relative">
         <div
           ref={scrollerRef}
-          className="flex gap-6 overflow-x-auto scroll-smooth pb-2 pr-12"
+          className="flex gap-3 md:gap-6 overflow-x-auto scroll-smooth pb-2 pr-8 md:pr-12"
           style={{ scrollbarWidth: "none" }}
         >
           {items.map((film) => (
-            <div key={film.id} className="flex-shrink-0 w-[240px] md:w-[260px] lg:w-[280px]">
-              <div className="relative rounded-2xl overflow-hidden bg-black group">
-                <div className="relative w-full h-[320px] md:h-[360px]">
+            <div key={film.id} className="flex-shrink-0 w-[200px] md:w-[260px] lg:w-[280px]">
+              <div className="relative rounded-xl md:rounded-2xl overflow-hidden bg-black group">
+                <div className="relative w-full h-[260px] md:h-[360px]">
                   <Image
                     src={film.image || "/placeholder.svg"}
                     alt={film.title}
@@ -211,21 +215,21 @@ function LatestClipSection({
                   />
 
                   <div className="absolute inset-0 flex items-center justify-center">
-                    <div className="w-10 h-10 rounded-full bg-black/35 border border-white/20 flex items-center justify-center backdrop-blur-sm">
-                      <Play className="w-4 h-4 text-white fill-white" />
+                    <div className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-black/35 border border-white/20 flex items-center justify-center backdrop-blur-sm">
+                      <Play className="w-3 h-3 md:w-4 md:h-4 text-white fill-white" />
                     </div>
                   </div>
 
-                  <div className="absolute inset-x-0 bottom-0 h-44 bg-gradient-to-t from-black/90 via-black/55 to-transparent" />
+                  <div className="absolute inset-x-0 bottom-0 h-40 md:h-44 bg-gradient-to-t from-black/90 via-black/55 to-transparent" />
                 </div>
 
-                <div className="absolute left-0 right-0 bottom-0 p-4">
-                  <p className="text-white font-semibold text-sm mb-1 line-clamp-1">{film.title}</p>
-                  <p className="text-white/70 text-[11px] leading-relaxed line-clamp-2 mb-3">
+                <div className="absolute left-0 right-0 bottom-0 p-3 md:p-4">
+                  <p className="text-white font-semibold text-xs md:text-sm mb-1 line-clamp-1">{film.title}</p>
+                  <p className="text-white/70 text-[10px] md:text-[11px] leading-relaxed line-clamp-2 mb-2 md:mb-3 hidden md:block">
                     {film.description}
                   </p>
 
-                  <div className="flex items-center justify-between text-[11px] text-white/60">
+                  <div className="flex items-center justify-between text-[10px] md:text-[11px] text-white/60">
                     <span>[Genre]</span>
                     <span>1h 0m</span>
                   </div>
@@ -237,10 +241,10 @@ function LatestClipSection({
 
         <button
           onClick={() => scrollByAmount("right")}
-          className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-4 md:translate-x-6 w-10 h-10 rounded-lg bg-white/95 text-black shadow-md hover:bg-white transition-colors flex items-center justify-center"
+          className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-2 md:translate-x-4 lg:translate-x-6 w-8 h-8 md:w-10 md:h-10 rounded-lg bg-white/95 text-black shadow-md hover:bg-white transition-colors flex items-center justify-center"
           aria-label="Next"
         >
-          <span className="text-xl leading-none">›</span>
+          <span className="text-lg md:text-xl leading-none">›</span>
         </button>
       </div>
     </section>
@@ -254,31 +258,31 @@ export default function DashboardPage() {
 
       {/* Hero Section */}
      {/* Hero Section (responsive + turun ~3cm) */}
-<section className="relative overflow-hidden min-h-[70vh] md:min-h-screen">
+<section className="relative overflow-hidden min-h-[50vh] md:min-h-[70vh] lg:min-h-screen">
   <Image src="/login-hero.jpg" alt="Hero" fill priority className="object-cover" />
 
   {/* overlay */}
   <div className="absolute inset-0 bg-gradient-to-t from-background via-black/20 to-transparent" />
 
-  {/* CONTENT: turun ~3cm (≈112px) */}
+  {/* CONTENT: turun ~3cm (≈112px) - Mobile: 60px */}
   <div className="absolute inset-0 flex items-end">
-    <div className="w-full px-4 md:px-6 lg:px-12 pb-[112px] md:pb-[112px]">
-      <h1 className="text-2xl md:text-4xl lg:text-5xl font-bold text-white mb-3">
+    <div className="w-full px-4 md:px-6 lg:px-12 pb-[60px] md:pb-[112px] lg:pb-[112px]">
+      <h1 className="text-xl md:text-4xl lg:text-5xl font-bold text-white mb-2 md:mb-3">
         [Judul Film]
       </h1>
 
-      <p className="text-sm md:text-base lg:text-lg text-gray-300 mb-5 max-w-2xl">
+      <p className="text-xs md:text-base lg:text-lg text-gray-300 mb-4 md:mb-5 max-w-2xl line-clamp-2 md:line-clamp-none">
         Watch groundbreaking films crafted by human creativity and artificial intelligence.
       </p>
 
-      <Button className="bg-white text-background hover:bg-gray-200">
+      <Button className="bg-white text-background hover:bg-gray-200 text-sm md:text-base py-2 md:py-2.5">
         ▶ Watch Now
       </Button>
     </div>
   </div>
 
-  {/* INDICATOR: ikut turun ~3cm juga */}
-  <div className="absolute left-1/2 -translate-x-1/2 bottom-[112px] md:bottom-[112px]">
+  {/* INDICATOR: ikut turun ~3cm juga - Mobile: 60px */}
+  <div className="absolute left-1/2 -translate-x-1/2 bottom-[60px] md:bottom-[112px] lg:bottom-[112px]">
     <div className="flex gap-1">
       <div className="w-6 h-1 bg-white rounded-full" />
       <div className="w-1 h-1 bg-gray-400 rounded-full" />
@@ -288,21 +292,25 @@ export default function DashboardPage() {
   </div>
 </section>
 
-      <CarouselSection title="Latest Films" items={mockFilms} />
+      {/* Latest Films - Hidden on Mobile, shown on MD+ */}
+      <div className="hidden md:block">
+        <CarouselSection title="Latest Films" items={mockFilms} />
+      </div>
 
       {/* Latest Series Section */}
-      <section className="px-4 md:px-6 lg:px-12 py-10 border-t border-white/10">
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-base md:text-lg font-semibold text-white">Latest Series</h2>
-          <Link href="/dashboard/series" className="text-xs font-medium text-white/90 bg-white/10 hover:bg-white/15 border border-white/10 rounded-full px-4 py-1.5 transition-colors">
+      <section className="px-4 md:px-6 lg:px-12 py-6 md:py-10 border-t border-white/10">
+        <div className="flex items-center justify-between mb-4 md:mb-6">
+          <h2 className="text-sm md:text-lg font-semibold text-white">Latest Series</h2>
+          <Link href="/dashboard/series" className="text-xs font-medium text-white/90 bg-white/10 hover:bg-white/15 border border-white/10 rounded-full px-3 md:px-4 py-1 md:py-1.5 transition-colors">
             View All
           </Link>
         </div>
 
-        <div className="grid gap-6 lg:grid-cols-[1fr_340px]">
+        {/* Mobile: Stack vertically, Desktop: Grid */}
+        <div className="grid gap-4 md:gap-6 grid-cols-1 lg:grid-cols-[1fr_340px]">
           {mockSeries[0] && (
             <Link href={`/dashboard/series/detail?id=${mockSeries[0].id}`} className="group block">
-              <div className="relative w-full aspect-[1066/660] rounded-3xl overflow-hidden bg-black">
+              <div className="relative w-full aspect-[16/10] md:aspect-[1066/660] rounded-xl md:rounded-3xl overflow-hidden bg-black">
                 <Image
                   src="/login-hero.jpg"
                   alt={mockSeries[0].title}
@@ -313,15 +321,15 @@ export default function DashboardPage() {
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/30 to-transparent" />
 
-                <div className="absolute bottom-6 left-6 right-6">
-                  <h3 className="text-white font-semibold text-xl mb-4">{mockSeries[0].title}</h3>
-                  <div className="flex items-center gap-3">
-                    <button className="inline-flex items-center gap-2 bg-white text-black hover:bg-gray-200 rounded-full px-5 py-2 text-sm font-semibold transition-colors">
-                      <Play className="w-4 h-4 fill-black" />
+                <div className="absolute bottom-4 md:bottom-6 left-4 md:left-6 right-4 md:right-6">
+                  <h3 className="text-white font-semibold text-base md:text-xl mb-3 md:mb-4">{mockSeries[0].title}</h3>
+                  <div className="flex items-center gap-2 md:gap-3">
+                    <button className="inline-flex items-center gap-2 bg-white text-black hover:bg-gray-200 rounded-full px-4 md:px-5 py-1.5 md:py-2 text-xs md:text-sm font-semibold transition-colors">
+                      <Play className="w-3 h-3 md:w-4 md:h-4 fill-black" />
                       Watch Now
                     </button>
-                    <button className="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 border border-white/10 flex items-center justify-center text-white transition-colors">
-                      <Info className="w-5 h-5" />
+                    <button className="w-9 h-9 md:w-10 md:h-10 rounded-full bg-white/10 hover:bg-white/20 border border-white/10 flex items-center justify-center text-white transition-colors">
+                      <Info className="w-4 h-4 md:w-5 md:h-5" />
                     </button>
                   </div>
                 </div>
@@ -329,10 +337,10 @@ export default function DashboardPage() {
             </Link>
           )}
 
-          <div className="flex flex-col gap-6">
+          <div className="flex flex-col gap-3 md:gap-6">
             {mockSeries.slice(1, 4).map((series) => (
-              <Link key={series.id} href={`/dashboard/series/detail?id=${series.id}`} className="relative rounded-2xl overflow-hidden group">
-                <div className="relative w-full aspect-[302/160] bg-black">
+              <Link key={series.id} href={`/dashboard/series/detail?id=${series.id}`} className="relative rounded-lg md:rounded-2xl overflow-hidden group">
+                <div className="relative w-full aspect-[16/9] md:aspect-[302/160] bg-black">
                   <Image
                     src={series.image || "/placeholder.svg"}
                     alt={series.title}
@@ -343,9 +351,9 @@ export default function DashboardPage() {
 
                 <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/30 to-transparent" />
 
-                <div className="absolute bottom-4 left-4 right-4">
-                  <p className="text-white font-semibold text-sm truncate">{series.title}</p>
-                  <p className="text-white/70 text-xs mt-1">
+                <div className="absolute bottom-3 left-3 right-3 md:bottom-4 md:left-4 md:right-4">
+                  <p className="text-white font-semibold text-xs md:text-sm truncate">{series.title}</p>
+                  <p className="text-white/70 text-[10px] md:text-xs mt-0.5 md:mt-1">
                     {series.episode} • {series.duration}
                   </p>
                 </div>
@@ -358,28 +366,30 @@ export default function DashboardPage() {
       {/* Latest Clip Section (baru, presisi seperti screenshot) */}
       <LatestClipSection title="Latest Clip" items={mockFilms} />
 
-      <CarouselSection title="Latest Awards" items={mockAwards} />
-      <CarouselSection title="Category" items={categoryData as any} layout="category" />
-      <CarouselSection title="Most Watching Film" items={mockMostWatching as any} />
+      <LatestAwards title="Latest Awards" viewAllLink="#" items={mockAwards} />
+<CategorySection title="Category" viewAllLink="#" items={categoriesData} />      {/* Most Watching - Hidden on Mobile, shown on MD+ */}
+      <div className="hidden md:block">
+        <CarouselSection title="Most Watching Film" items={mockMostWatching as any} />
+      </div>
 
       {/* Creator Section */}
-      <section className="px-6 lg:px-12 py-8 border-t border-border">
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-2xl font-bold text-foreground">Creator</h2>
+      <section className="px-4 md:px-6 lg:px-12 py-6 md:py-8 border-t border-border">
+        <div className="flex items-center justify-between mb-4 md:mb-6">
+          <h2 className="text-lg md:text-2xl font-bold text-foreground">Creator</h2>
           <div className="flex gap-2">
-            <button className="bg-accent/20 hover:bg-accent/40 p-2 rounded-full transition-colors">
-              <X className="w-5 h-5 text-white" />
+            <button className="bg-accent/20 hover:bg-accent/40 p-1.5 md:p-2 rounded-full transition-colors">
+              <X className="w-4 h-4 md:w-5 md:h-5 text-white" />
             </button>
-            <button className="bg-accent/20 hover:bg-accent/40 p-2 rounded-full transition-colors">
-              <Menu className="w-5 h-5 text-white" />
+            <button className="bg-accent/20 hover:bg-accent/40 p-1.5 md:p-2 rounded-full transition-colors">
+              <Menu className="w-4 h-4 md:w-5 md:h-5 text-white" />
             </button>
           </div>
         </div>
 
-        <div className="flex gap-6 overflow-x-auto pb-4">
+        <div className="flex gap-3 md:gap-6 overflow-x-auto pb-4">
           {mockCreators.map((creator) => (
             <div key={creator.id} className="flex-shrink-0 flex flex-col items-center">
-              <div className="w-24 h-24 rounded-full mb-4 overflow-hidden">
+              <div className="w-16 h-16 md:w-24 md:h-24 rounded-full mb-2 md:mb-4 overflow-hidden">
                 <Image src="/images/pngs.png" alt={creator.name} width={100} height={100} className="w-full h-full object-cover" />
               </div>
               <p className="font-semibold text-foreground text-center text-sm">{creator.name}</p>
@@ -410,103 +420,7 @@ export default function DashboardPage() {
           <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/60 to-transparent" />
           
           {/* Content */}
-          <div className="relative flex items-center h-full px-6 md:px-8 lg:px-12 py-8 md:py-12">
-            <div className="w-full max-w-2xl">
-              {/* Header */}
-              <div className="mb-8 md:mb-10">
-                <h2 className="text-2xl md:text-3xl lg:text-4xl font-bold text-white mb-2 md:mb-3">
-                  The Future of Filmmaking Starts Here
-                </h2>
-                <p className="text-sm md:text-base text-gray-300">
-                  Connect with AI-powered creators. Make short films, promos, or stories in a whole new way.
-                </p>
-              </div>
-              
-              {/* Feature Cards Grid */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6 mb-8">
-              {/* Card 1 */}
-              <div className="bg-black/40 backdrop-blur-sm border border-white/10 rounded-lg p-4 md:p-6 hover:bg-black/60 transition-colors">
-                <div className="flex items-start gap-4">
-                  <div className="flex-shrink-0 w-10 h-10 md:w-12 md:h-12">
-                    <Image 
-                      src="/images/design-mode/start.png" 
-                      alt="AI Video Icon" 
-                      width={48} 
-                      height={48}
-                      className="w-full h-full object-contain"
-                    />
-                  </div>
-                  <div>
-                    <h3 className="text-sm md:text-base font-bold text-white mb-1">Focused on AI Video Only</h3>
-                    <p className="text-xs md:text-sm text-gray-400">We specialize in one thing – AI-generated videos. That means better quality, faster delivery, and creators who truly know the tools.</p>
-                  </div>
-                </div>
-              </div>
-              
-              {/* Card 2 */}
-              <div className="bg-black/40 backdrop-blur-sm border border-white/10 rounded-lg p-4 md:p-6 hover:bg-black/60 transition-colors">
-                <div className="flex items-start gap-4">
-                  <div className="flex-shrink-0 w-10 h-10 md:w-12 md:h-12">
-                    <Image 
-                      src="/images/design-mode/times.png" 
-                      alt="Fast Delivery Icon" 
-                      width={48} 
-                      height={48}
-                      className="w-full h-full object-contain"
-                    />
-                  </div>
-                  <div>
-                    <h3 className="text-sm md:text-base font-bold text-white mb-1">Fast & Hassle-Free</h3>
-                    <p className="text-xs md:text-sm text-gray-400">No need to hire a full video team. Just send your idea and get a film delivered within days.</p>
-                  </div>
-                </div>
-              </div>
-              
-              {/* Card 3 */}
-              <div className="bg-black/40 backdrop-blur-sm border border-white/10 rounded-lg p-4 md:p-6 hover:bg-black/60 transition-colors">
-                <div className="flex items-start gap-4">
-                  <div className="flex-shrink-0 w-10 h-10 md:w-12 md:h-12">
-                    <Image 
-                      src="/images/design-mode/world.png" 
-                      alt="Secure Payment Icon" 
-                      width={48} 
-                      height={48}
-                      className="w-full h-full object-contain"
-                    />
-                  </div>
-                  <div>
-                    <h3 className="text-sm md:text-base font-bold text-white mb-1">Secure Payment, Always Protected</h3>
-                    <p className="text-xs md:text-sm text-gray-400">Your money is held safely until your video is delivered – pay only when you're happy with the result.</p>
-                  </div>
-                </div>
-              </div>
-              
-              {/* Card 4 */}
-              <div className="bg-black/40 backdrop-blur-sm border border-white/10 rounded-lg p-4 md:p-6 hover:bg-black/60 transition-colors">
-                <div className="flex items-start gap-4">
-                  <div className="flex-shrink-0 w-10 h-10 md:w-12 md:h-12">
-                    <Image 
-                      src="/images/design-mode/image.png" 
-                      alt="Client-Centric Icon" 
-                      width={48} 
-                      height={48}
-                      className="w-full h-full object-contain"
-                    />
-                  </div>
-                  <div>
-                    <h3 className="text-sm md:text-base font-bold text-white mb-1">Client-Centric Workflow</h3>
-                    <p className="text-xs md:text-sm text-gray-400">Simple briefs, clear delivery timelines, revision options – built for clients who just want great results without back-and-forth.</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-              
-              {/* CTA Button */}
-              <Button className="bg-white text-black hover:bg-gray-200 font-semibold text-sm md:text-base">
-                Explore Skydio.AI
-              </Button>
-            </div>
-          </div>
+      <FutureFilmmaking />
         </div>
       </section>
 

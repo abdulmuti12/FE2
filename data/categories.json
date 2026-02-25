@@ -1,0 +1,9 @@
+[
+  { "name": "Genre", "count": "3.2K", "icon": "/film/categories/category01.png" },
+  { "name": "Drama", "count": "2.8K", "icon": "/film/categories/category02.png" },
+  { "name": "Action", "count": "2.1K", "icon": "/film/categories/category03.png" },
+  { "name": "Sci-Fi", "count": "1.9K", "icon": "/film/categories/category04.png"  },
+  { "name": "Comedy", "count": "1.5K", "icon": "/film/categories/category05.png"  },
+  { "name": "Horror", "count": "1.2K", "icon":  "/film/categories/category06.png"  },
+  { "name": "Anime", "count": "1.8K", "icon": "/film/categories/category07.png"  }
+]
