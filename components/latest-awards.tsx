@@ -5,10 +5,15 @@ import Image from 'next/image'
 
 interface AwardItem {
   id: string
-  title: string
+  title?: string
+  name?: string
   description?: string
   image?: string
+  image_url?: string
   genre?: string
+  synopsis?: string
+  category?: string
+  cats?: string
 }
 
 interface LatestAwardsProps {
@@ -43,8 +48,8 @@ export function LatestAwards({ title, viewAllLink = '#', items = [] }: LatestAwa
       {/* Poster */}
       <div className="relative w-full h-[320px] md:h-[360px] bg-gray-900 rounded-2xl overflow-hidden mb-4">
         <Image
-          src={film.image || '/placeholder.svg'}
-          alt={film.title}
+          src={film.image_url || film.image || '/placeholder.svg'}
+          alt={film.title || film.name || 'Film'}
           fill
           className="object-cover"
         />
@@ -52,18 +57,18 @@ export function LatestAwards({ title, viewAllLink = '#', items = [] }: LatestAwa
 
       {/* Title */}
       <h3 className="text-white font-semibold text-sm text-center mb-2">
-        {film.title}
+        {film.title || film.name}
       </h3>
 
       {/* Description */}
       <p className="text-gray-400 text-xs text-center line-clamp-2 mb-3 px-2">
-        {film.description}
+        {film.description || film.synopsis}
       </p>
 
       {/* Genre Button - DI BAWAH DESCRIPTION */}
-    {(film.genre || (film as any).category) && (
+    {(film.genre || film.category || film.cats) && (
   <button className="inline-block bg-white text-black text-[11px] px-4 py-1 rounded-full font-medium hover:bg-gray-200 transition-colors">
-    {film.genre || (film as any).category}
+    {film.genre || film.category || film.cats}
   </button>
 )}
 

@@ -3,17 +3,25 @@
 import Image from 'next/image'
 import Link from 'next/link'
 import { useState, useRef, useEffect } from 'react'
-import { usePathname } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 import { Search, User, Calendar, Ticket, CreditCard, Settings, LogOut, X } from 'lucide-react'
 
 export function Header() {
   const pathname = usePathname()
+  const router = useRouter()
   const [userDropdownOpen, setUserDropdownOpen] = useState(false) // desktop dropdown
   const [mobileUserMenuOpen, setMobileUserMenuOpen] = useState(false) // mobile drawer
   const [isSearchActive, setIsSearchActive] = useState(false)
 
   const dropdownRef = useRef<HTMLDivElement>(null)
   const searchInputRef = useRef<HTMLInputElement>(null)
+
+  const handleSignOut = () => {
+    localStorage.removeItem('user_token')
+    setUserDropdownOpen(false)
+    setMobileUserMenuOpen(false)
+    router.push('/')
+  }
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -113,7 +121,7 @@ export function Header() {
               </Link>
 
               <Link
-                href="/dashboard/myaccount"
+                href="/dashboard/profile"
                 onClick={closeMobileMenu}
                 className="flex items-center gap-4 px-5 py-4 text-white/90 hover:bg-white/5 transition-colors"
               >
@@ -141,14 +149,13 @@ export function Header() {
             </div>
 
             <div className="border-t border-white/10 py-2">
-              <Link
-                href="/"
-                onClick={closeMobileMenu}
-                className="flex items-center gap-4 px-5 py-4 text-white/90 hover:bg-white/5 transition-colors"
+              <button
+                onClick={handleSignOut}
+                className="w-full flex items-center gap-4 px-5 py-4 text-white/90 hover:bg-white/5 transition-colors"
               >
                 <LogOut className="w-5 h-5 text-white/70" />
                 <span>Sign Out</span>
-              </Link>
+              </button>
             </div>
           </div>
         </div>
@@ -288,7 +295,7 @@ export function Header() {
                     </button>
 
                     <Link
-                      href="/dashboard/myaccount"
+                      href="/dashboard/profile"
                       className="w-full flex items-center gap-4 px-6 py-3 text-sm text-gray-300 hover:bg-white/5 transition-colors"
                     >
                       <CreditCard className="w-5 h-5" /> My Account
@@ -302,12 +309,12 @@ export function Header() {
                   </div>
 
                   <div className="border-t border-white/10 py-2">
-                    <Link
-                      href="/"
+                    <button
+                      onClick={handleSignOut}
                       className="w-full flex items-center gap-4 px-6 py-3 text-sm text-gray-300 hover:bg-white/5 transition-colors"
                     >
                       <LogOut className="w-5 h-5" /> Sign Out
-                    </Link>
+                    </button>
                   </div>
                 </div>
               )}

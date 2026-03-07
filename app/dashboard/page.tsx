@@ -1,9 +1,9 @@
 'use client'
 
-import { Calendar } from "@/components/ui/calendar"
-import { User, Ticket, CreditCard, Settings, LogOut, Search, X, Menu, Play, Info } from 'lucide-react'
+import { User, Ticket, CreditCard, Settings, LogOut, Search, X, Menu, Play, Info, AlertCircle } from 'lucide-react'
 import Image from 'next/image'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import categoriesData from '@/data/categories.json'
 import { CategorySection } from '@/components/category-section'
 import { useState, useRef, useEffect } from 'react'
@@ -13,32 +13,138 @@ import { Footer } from '@/components/footer'
 import { LatestAwards } from '@/components/latest-awards'
 import { FutureFilmmaking } from '@/components/future-filmmaking'
 
-const mockFilms = [
-  { id: 1, title: '[Judul Film]', year: '2025 • 1h 0m', image: '/login-hero.jpg', description: '[Brief Synopsis] Watch groundbreaking films crafted by human creativity and artificial intelligence.', category: 'Action', rating: '8.5/10', categories: ['Films', 'Genre'] },
-  { id: 2, title: '[Judul Film]', year: '2025 • 1h 0m', image: '/login-hero.jpg', description: '[Brief Synopsis] Discover amazing cinematic experiences.', category: 'Drama', rating: '9.0/10', categories: ['Films', 'Genre'] },
-  { id: 3, title: '[Judul Film]', year: '2025 • 1h 0m', image: '/login-hero.jpg', description: '[Brief Synopsis] Experience AI-powered storytelling.', category: 'Sci-Fi', rating: '8.8/10', categories: ['Films', 'Genre'] },
-  { id: 4, title: '[Judul Film]', year: '2025 • 1h 0m', image: '/login-hero.jpg', description: '[Brief Synopsis] Journey through immersive worlds.', category: 'Fantasy', rating: '8.3/10', categories: ['Films', 'Genre'] },
-]
+interface FilmData {
+  id: string
+  name: string
+  image_url?: string
+  image?: string
+  synopsis?: string
+  description?: string
+  cats?: string
+  run_time_format?: string
+  years?: string
+  rates?: string | null
+  favorit?: string
+  my_favorit?: string
+}
+
+interface SeriesData {
+  id: string
+  name: string
+  asset_name?: string
+  run_time_format?: string
+  image?: string
+  image_url?: string
+  image_landscape?: string
+  image_landscape_url?: string
+  title?: string
+  episode?: string
+  duration?: string
+}
 
 const mockAwards = [
-  { id: 1, title: '[Judul Film]', image: '/login-hero.jpg', description: '[Brief Synopsis] Watch groundbreaking films crafted by human creativity and artificial intelligence.', category: 'Genre', rating: '8.5/10' },
-  { id: 2, title: '[Judul Film]', image: '/login-hero.jpg', description: '[Brief Synopsis] Watch groundbreaking films crafted by human creativity and artificial intelligence.', category: 'Genre', rating: '9.0/10' },
-  { id: 3, title: '[Judul Film]', image: '/login-hero.jpg', description: '[Brief Synopsis] Watch groundbreaking films crafted by human creativity and artificial intelligence.', category: 'Genre', rating: '8.8/10' },
-  { id: 4, title: '[Judul Film]', image: '/login-hero.jpg', description: '[Brief Synopsis] Watch groundbreaking films crafted by human creativity and artificial intelligence.', category: 'Genre', rating: '8.3/10' },
+  {
+    id: 1,
+    title: '[Judul Film]',
+    image: '/login-hero.jpg',
+    description: '[Brief Synopsis] Watch groundbreaking films crafted by human creativity and artificial intelligence.',
+    category: 'Genre',
+    rating: '8.5/10',
+  },
+  {
+    id: 2,
+    title: '[Judul Film]',
+    image: '/login-hero.jpg',
+    description: '[Brief Synopsis] Watch groundbreaking films crafted by human creativity and artificial intelligence.',
+    category: 'Genre',
+    rating: '9.0/10',
+  },
+  {
+    id: 3,
+    title: '[Judul Film]',
+    image: '/login-hero.jpg',
+    description: '[Brief Synopsis] Watch groundbreaking films crafted by human creativity and artificial intelligence.',
+    category: 'Genre',
+    rating: '8.8/10',
+  },
+  {
+    id: 4,
+    title: '[Judul Film]',
+    image: '/login-hero.jpg',
+    description: '[Brief Synopsis] Watch groundbreaking films crafted by human creativity and artificial intelligence.',
+    category: 'Genre',
+    rating: '8.3/10',
+  },
 ]
 
 const mockMostWatching = [
-  { id: 1, title: '[Judul Film]', year: '2025 • 1h 0m', image: '/login-hero.jpg', description: '[Brief Synopsis] Watch groundbreaking films crafted by human creativity and artificial intelligence.', categories: ['Genre', 'Genre'], viewers: 4 },
-  { id: 2, title: '[Judul Film]', year: '2025 • 1h 0m', image: '/login-hero.jpg', description: '[Brief Synopsis] Watch groundbreaking films crafted by human creativity and artificial intelligence.', categories: ['Genre', 'Genre'], viewers: 3 },
-  { id: 3, title: '[Judul Film]', year: '2025 • 1h 0m', image: '/login-hero.jpg', description: '[Brief Synopsis] Watch groundbreaking films crafted by human creativity and artificial intelligence.', categories: ['Genre', 'Genre'], viewers: 3 },
-  { id: 4, title: '[Judul Film]', year: '2025 • 1h 0m', image: '/login-hero.jpg', description: '[Brief Synopsis] Watch groundbreaking films crafted by human creativity and artificial intelligence.', categories: ['Genre', 'Genre'], viewers: 2 },
+  {
+    id: 1,
+    title: '[Judul Film]',
+    year: '2025 • 1h 0m',
+    image: '/login-hero.jpg',
+    description: '[Brief Synopsis] Watch groundbreaking films crafted by human creativity and artificial intelligence.',
+    categories: ['Genre', 'Genre'],
+    viewers: 4,
+  },
+  {
+    id: 2,
+    title: '[Judul Film]',
+    year: '2025 • 1h 0m',
+    image: '/login-hero.jpg',
+    description: '[Brief Synopsis] Watch groundbreaking films crafted by human creativity and artificial intelligence.',
+    categories: ['Genre', 'Genre'],
+    viewers: 3,
+  },
+  {
+    id: 3,
+    title: '[Judul Film]',
+    year: '2025 • 1h 0m',
+    image: '/login-hero.jpg',
+    description: '[Brief Synopsis] Watch groundbreaking films crafted by human creativity and artificial intelligence.',
+    categories: ['Genre', 'Genre'],
+    viewers: 3,
+  },
+  {
+    id: 4,
+    title: '[Judul Film]',
+    year: '2025 • 1h 0m',
+    image: '/login-hero.jpg',
+    description: '[Brief Synopsis] Watch groundbreaking films crafted by human creativity and artificial intelligence.',
+    categories: ['Genre', 'Genre'],
+    viewers: 2,
+  },
 ]
 
-const mockSeries = [
-  { id: 1, title: '[Judul Series]', episode: 'Episode 1', duration: '1h 0m', image: '/images/featured-series.png', featured: true },
-  { id: 2, title: '[Judul Series]', episode: 'Episode 2', duration: '1h 0m', image: '/film/film1.png' },
-  { id: 3, title: '[Judul Series]', episode: 'Episode 3', duration: '1h 0m', image: '/film/film2.png' },
-  { id: 4, title: '[Judul Series]', episode: 'Episode 4', duration: '1h 0m', image: '/images/imageheader.png' },
+const mockSeries: SeriesData[] = [
+  {
+    id: '1',
+    name: '[Judul Series]',
+    asset_name: 'Episode 1',
+    run_time_format: '1h 0m',
+    image: '/images/featured-series.png',
+  },
+  {
+    id: '2',
+    name: '[Judul Series]',
+    asset_name: 'Episode 2',
+    run_time_format: '1h 0m',
+    image: '/film/film1.png',
+  },
+  {
+    id: '3',
+    name: '[Judul Series]',
+    asset_name: 'Episode 3',
+    run_time_format: '1h 0m',
+    image: '/film/film2.png',
+  },
+  {
+    id: '4',
+    name: '[Judul Series]',
+    asset_name: 'Episode 4',
+    run_time_format: '1h 0m',
+    image: '/images/imageheader.png',
+  },
 ]
 
 const categoryData = [
@@ -74,17 +180,18 @@ const creatorData = [
 function CarouselSection({
   title,
   viewAllLink = '#',
-  items = mockFilms,
+  items = [],
   layout = 'default',
 }: {
   title: string
   viewAllLink?: string
-  items?: typeof mockFilms
+  items?: any[]
   layout?: 'default' | 'category' | 'creator'
 }) {
   const [currentIndex, setCurrentIndex] = useState(0)
   const itemsPerView = layout === 'creator' ? 7 : layout === 'default' ? 4 : 7
   const maxIndex = Math.max(0, items.length - itemsPerView)
+
   const handleNext = () => currentIndex < maxIndex && setCurrentIndex(currentIndex + 1)
   const handlePrev = () => currentIndex > 0 && setCurrentIndex(currentIndex - 1)
 
@@ -99,7 +206,10 @@ function CarouselSection({
 
       <div className="relative">
         <div className="overflow-hidden">
-          <div className="flex transition-transform duration-300 gap-2 md:gap-4" style={{ transform: `translateX(-${currentIndex * (100 / itemsPerView)}%)` }}>
+          <div
+            className="flex transition-transform duration-300 gap-2 md:gap-4"
+            style={{ transform: `translateX(-${currentIndex * (100 / itemsPerView)}%)` }}
+          >
             {layout === 'category'
               ? categoryData.map((item, idx) => (
                   <div key={idx} className="flex-shrink-0 w-1/3 sm:w-1/4 lg:w-1/7 text-center">
@@ -123,13 +233,18 @@ function CarouselSection({
               : items.map((film) => (
                   <div key={film.id} className="flex-shrink-0 w-1/2 md:w-1/4 lg:w-1/4">
                     <div className="relative h-32 md:h-60 mb-2 md:mb-4 rounded-lg overflow-hidden group">
-                      <Image src={film.image || "/placeholder.svg"} alt={film.title} fill className="object-cover hover:scale-105 transition-transform duration-300" />
+                      <Image
+                        src={film.image || '/placeholder.svg'}
+                        alt={film.title}
+                        fill
+                        className="object-cover hover:scale-105 transition-transform duration-300"
+                      />
                     </div>
                     <p className="font-semibold text-xs md:text-base text-foreground mb-1 line-clamp-1">{film.title}</p>
-                    {(film as any).year && <p className="text-xs text-muted-foreground hidden md:block">{(film as any).year}</p>}
+                    {film.year && <p className="text-xs text-muted-foreground hidden md:block">{film.year}</p>}
                     <p className="text-xs text-muted-foreground mb-2 md:mb-3 line-clamp-2 hidden md:block">{film.description}</p>
                     <div className="flex gap-2 flex-wrap hidden md:flex">
-                      {(film as any).categories?.map((cat: string, idx: number) => (
+                      {film.categories?.map((cat: string, idx: number) => (
                         <Button key={idx} size="sm" className="text-xs bg-gray-200 text-black hover:bg-gray-300 rounded-full px-4" variant="default">
                           {cat}
                         </Button>
@@ -150,12 +265,19 @@ function CarouselSection({
         </div>
 
         {currentIndex > 0 && (
-          <button onClick={handlePrev} className="absolute left-0 top-1/3 -translate-y-1/2 -translate-x-8 md:-translate-x-12 lg:-translate-x-6 z-10 bg-accent/20 hover:bg-accent/40 p-1.5 md:p-2 rounded-full transition-colors">
+          <button
+            onClick={handlePrev}
+            className="absolute left-0 top-1/3 -translate-y-1/2 -translate-x-8 md:-translate-x-12 lg:-translate-x-6 z-10 bg-accent/20 hover:bg-accent/40 p-1.5 md:p-2 rounded-full transition-colors"
+          >
             <X className="w-4 h-4 md:w-5 md:h-5 text-white" />
           </button>
         )}
+
         {currentIndex < maxIndex && (
-          <button onClick={handleNext} className="absolute right-0 top-1/3 -translate-y-1/2 translate-x-8 md:translate-x-12 lg:translate-x-6 z-10 bg-accent/20 hover:bg-accent/40 p-1.5 md:p-2 rounded-full transition-colors">
+          <button
+            onClick={handleNext}
+            className="absolute right-0 top-1/3 -translate-y-1/2 translate-x-8 md:translate-x-12 lg:translate-x-6 z-10 bg-accent/20 hover:bg-accent/40 p-1.5 md:p-2 rounded-full transition-colors"
+          >
             <Menu className="w-4 h-4 md:w-5 md:h-5 text-white" />
           </button>
         )}
@@ -165,21 +287,21 @@ function CarouselSection({
 }
 
 function LatestClipSection({
-  title = "Latest Clip",
-  viewAllLink = "/dashboard/clips",
-  items = mockFilms,
+  title = 'Latest Clip',
+  viewAllLink = '/dashboard/clips',
+  items = [],
 }: {
   title?: string
   viewAllLink?: string
-  items?: typeof mockFilms
+  items?: any[]
 }) {
   const scrollerRef = useRef<HTMLDivElement | null>(null)
 
-  const scrollByAmount = (dir: "left" | "right") => {
+  const scrollByAmount = (dir: 'left' | 'right') => {
     const el = scrollerRef.current
     if (!el) return
     const amount = Math.round(el.clientWidth * 0.85)
-    el.scrollBy({ left: dir === "right" ? amount : -amount, behavior: "smooth" })
+    el.scrollBy({ left: dir === 'right' ? amount : -amount, behavior: 'smooth' })
   }
 
   return (
@@ -201,14 +323,14 @@ function LatestClipSection({
         <div
           ref={scrollerRef}
           className="flex gap-3 md:gap-6 overflow-x-auto scroll-smooth pb-2 pr-8 md:pr-12"
-          style={{ scrollbarWidth: "none" }}
+          style={{ scrollbarWidth: 'none' }}
         >
           {items.map((film) => (
             <div key={film.id} className="flex-shrink-0 w-[200px] md:w-[260px] lg:w-[280px]">
               <div className="relative rounded-xl md:rounded-2xl overflow-hidden bg-black group">
                 <div className="relative w-full h-[260px] md:h-[360px]">
                   <Image
-                    src={film.image || "/placeholder.svg"}
+                    src={film.image || '/placeholder.svg'}
                     alt={film.title}
                     fill
                     className="object-cover object-center group-hover:scale-105 transition-transform duration-500"
@@ -240,7 +362,7 @@ function LatestClipSection({
         </div>
 
         <button
-          onClick={() => scrollByAmount("right")}
+          onClick={() => scrollByAmount('right')}
           className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-2 md:translate-x-4 lg:translate-x-6 w-8 h-8 md:w-10 md:h-10 rounded-lg bg-white/95 text-black shadow-md hover:bg-white transition-colors flex items-center justify-center"
           aria-label="Next"
         >
@@ -252,68 +374,139 @@ function LatestClipSection({
 }
 
 export default function DashboardPage() {
+  const [latestFilms, setLatestFilms] = useState<FilmData[]>([])
+  const [seriesData, setSeriesData] = useState<SeriesData[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const router = useRouter()
+
+  useEffect(() => {
+    const fetchDashboardData = async () => {
+      try {
+        setLoading(true)
+        const token = localStorage.getItem('user_token')
+
+        if (!token) {
+          router.push('/')
+          return
+        }
+
+        const response = await fetch('/api/home', {
+          method: 'GET',
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+        })
+
+        const data = await response.json()
+
+        if (data.status === true || data.status !== false) {
+          if (data.list?.latest && Array.isArray(data.list.latest)) {
+            setLatestFilms(data.list.latest)
+          }
+
+          if (data.list?.series && Array.isArray(data.list.series)) {
+            setSeriesData(data.list.series)
+          }
+
+          setError(null)
+        } else {
+          setError(data.message || 'Failed to fetch data')
+        }
+      } catch (err) {
+        console.error('[v0] Dashboard fetch error:', err)
+        setError('Failed to fetch dashboard data')
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchDashboardData()
+  }, [router])
+
+  const transformFilmData = (films: FilmData[]) => {
+    return films.map((film) => ({
+      id: film.id,
+      title: film.name,
+      image: film.image_url || '/login-hero.jpg',
+      description: film.synopsis || film.description || 'Watch groundbreaking films crafted by human creativity and artificial intelligence.',
+      category: film.cats || 'Films',
+      rating: film.rates ? `${film.rates}/10` : '8.5/10',
+      year: `${film.years || '2025'} • ${film.run_time_format || '1h 0m'}`,
+      categories: [film.cats || 'Genre', 'AI'],
+      genre: film.cats || 'Films',
+    }))
+  }
+
+  const displayFilms = latestFilms.length > 0 ? transformFilmData(latestFilms) : []
+  const displaySeries = seriesData.length > 0 ? seriesData : mockSeries
+
   return (
     <div className="min-h-screen bg-[#0a1628] text-foreground dark">
       <Header />
 
-      {/* Hero Section */}
-     {/* Hero Section (responsive + turun ~3cm) */}
-<section className="relative overflow-hidden min-h-[50vh] md:min-h-[70vh] lg:min-h-screen">
-  <Image src="/login-hero.jpg" alt="Hero" fill priority className="object-cover" />
+      {error && (
+        <div className="px-4 md:px-6 lg:px-12 py-4 bg-red-950/30 border border-red-500/30 rounded-lg mx-4 md:mx-6 lg:mx-12 mt-4 flex items-center gap-3">
+          <AlertCircle className="w-5 h-5 text-red-500" />
+          <p className="text-sm text-red-300">{error}</p>
+        </div>
+      )}
 
-  {/* overlay */}
-  <div className="absolute inset-0 bg-gradient-to-t from-background via-black/20 to-transparent" />
+      <section className="relative overflow-hidden min-h-[50vh] md:min-h-[70vh] lg:min-h-screen">
+        <Image src="/login-hero.jpg" alt="Hero" fill priority className="object-cover" />
 
-  {/* CONTENT: turun ~3cm (≈112px) - Mobile: 60px */}
-  <div className="absolute inset-0 flex items-end">
-    <div className="w-full px-4 md:px-6 lg:px-12 pb-[60px] md:pb-[112px] lg:pb-[112px]">
-      <h1 className="text-xl md:text-4xl lg:text-5xl font-bold text-white mb-2 md:mb-3">
-        [Judul Film]
-      </h1>
+        <div className="absolute inset-0 bg-gradient-to-t from-background via-black/20 to-transparent" />
 
-      <p className="text-xs md:text-base lg:text-lg text-gray-300 mb-4 md:mb-5 max-w-2xl line-clamp-2 md:line-clamp-none">
-        Watch groundbreaking films crafted by human creativity and artificial intelligence.
-      </p>
+        <div className="absolute inset-0 flex items-end">
+          <div className="w-full px-4 md:px-6 lg:px-12 pb-[60px] md:pb-[112px] lg:pb-[112px]">
+            <h1 className="text-xl md:text-4xl lg:text-5xl font-bold text-white mb-2 md:mb-3">
+              [Judul Film]
+            </h1>
 
-      <Button className="bg-white text-background hover:bg-gray-200 text-sm md:text-base py-2 md:py-2.5">
-        ▶ Watch Now
-      </Button>
-    </div>
-  </div>
+            <p className="text-xs md:text-base lg:text-lg text-gray-300 mb-4 md:mb-5 max-w-2xl line-clamp-2 md:line-clamp-none">
+              Watch groundbreaking films crafted by human creativity and artificial intelligence.
+            </p>
 
-  {/* INDICATOR: ikut turun ~3cm juga - Mobile: 60px */}
-  <div className="absolute left-1/2 -translate-x-1/2 bottom-[60px] md:bottom-[112px] lg:bottom-[112px]">
-    <div className="flex gap-1">
-      <div className="w-6 h-1 bg-white rounded-full" />
-      <div className="w-1 h-1 bg-gray-400 rounded-full" />
-      <div className="w-1 h-1 bg-gray-400 rounded-full" />
-      <div className="w-1 h-1 bg-gray-400 rounded-full" />
-    </div>
-  </div>
-</section>
+            <Button className="bg-white text-background hover:bg-gray-200 text-sm md:text-base py-2 md:py-2.5">
+              ▶ Watch Now
+            </Button>
+          </div>
+        </div>
 
-      {/* Latest Films - Hidden on Mobile, shown on MD+ */}
+        <div className="absolute left-1/2 -translate-x-1/2 bottom-[60px] md:bottom-[112px] lg:bottom-[112px]">
+          <div className="flex gap-1">
+            <div className="w-6 h-1 bg-white rounded-full" />
+            <div className="w-1 h-1 bg-gray-400 rounded-full" />
+            <div className="w-1 h-1 bg-gray-400 rounded-full" />
+            <div className="w-1 h-1 bg-gray-400 rounded-full" />
+          </div>
+        </div>
+      </section>
+
       <div className="hidden md:block">
-        <CarouselSection title="Latest Films" items={mockFilms} />
+        <CarouselSection title="Latest Films" items={displayFilms} />
       </div>
 
-      {/* Latest Series Section */}
+      {/* Latest Series */}
       <section className="px-4 md:px-6 lg:px-12 py-6 md:py-10 border-t border-white/10">
         <div className="flex items-center justify-between mb-4 md:mb-6">
           <h2 className="text-sm md:text-lg font-semibold text-white">Latest Series</h2>
-          <Link href="/dashboard/series" className="text-xs font-medium text-white/90 bg-white/10 hover:bg-white/15 border border-white/10 rounded-full px-3 md:px-4 py-1 md:py-1.5 transition-colors">
+          <Link
+            href="/dashboard/series"
+            className="text-xs font-medium text-white/90 bg-white/10 hover:bg-white/15 border border-white/10 rounded-full px-3 md:px-4 py-1 md:py-1.5 transition-colors"
+          >
             View All
           </Link>
         </div>
 
-        {/* Mobile: Stack vertically, Desktop: Grid */}
         <div className="grid gap-4 md:gap-6 grid-cols-1 lg:grid-cols-[1fr_340px]">
-          {mockSeries[0] && (
-            <Link href={`/dashboard/series/detail?id=${mockSeries[0].id}`} className="group block">
+          {displaySeries[0] && (
+            <Link href={`/dashboard/series/detail?id=${displaySeries[0].id}`} className="group block">
               <div className="relative w-full aspect-[16/10] md:aspect-[1066/660] rounded-xl md:rounded-3xl overflow-hidden bg-black">
                 <Image
-                  src="/login-hero.jpg"
-                  alt={mockSeries[0].title}
+                  src={displaySeries[0].image_landscape_url || displaySeries[0].image_url || displaySeries[0].image || '/login-hero.jpg'}
+                  alt={displaySeries[0].name}
                   fill
                   priority
                   sizes="(min-width: 1066px) 65vw, 100vw"
@@ -322,7 +515,14 @@ export default function DashboardPage() {
                 <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/30 to-transparent" />
 
                 <div className="absolute bottom-4 md:bottom-6 left-4 md:left-6 right-4 md:right-6">
-                  <h3 className="text-white font-semibold text-base md:text-xl mb-3 md:mb-4">{mockSeries[0].title}</h3>
+                  <h3 className="text-white font-semibold text-base md:text-xl mb-3 md:mb-4">
+                    {displaySeries[0].name}
+                  </h3>
+
+                  <p className="text-white/70 text-xs md:text-sm mb-3 md:mb-4">
+                    {displaySeries[0].asset_name} • {displaySeries[0].run_time_format}
+                  </p>
+
                   <div className="flex items-center gap-2 md:gap-3">
                     <button className="inline-flex items-center gap-2 bg-white text-black hover:bg-gray-200 rounded-full px-4 md:px-5 py-1.5 md:py-2 text-xs md:text-sm font-semibold transition-colors">
                       <Play className="w-3 h-3 md:w-4 md:h-4 fill-black" />
@@ -338,12 +538,12 @@ export default function DashboardPage() {
           )}
 
           <div className="flex flex-col gap-3 md:gap-6">
-            {mockSeries.slice(1, 4).map((series) => (
+            {displaySeries.slice(1, 4).map((series) => (
               <Link key={series.id} href={`/dashboard/series/detail?id=${series.id}`} className="relative rounded-lg md:rounded-2xl overflow-hidden group">
                 <div className="relative w-full aspect-[16/9] md:aspect-[302/160] bg-black">
                   <Image
-                    src={series.image || "/placeholder.svg"}
-                    alt={series.title}
+                    src={series.image_landscape_url || series.image_url || series.image || '/placeholder.svg'}
+                    alt={series.name}
                     fill
                     className="object-cover group-hover:scale-105 transition-transform duration-500"
                   />
@@ -352,9 +552,9 @@ export default function DashboardPage() {
                 <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/30 to-transparent" />
 
                 <div className="absolute bottom-3 left-3 right-3 md:bottom-4 md:left-4 md:right-4">
-                  <p className="text-white font-semibold text-xs md:text-sm truncate">{series.title}</p>
+                  <p className="text-white font-semibold text-xs md:text-sm truncate">{series.name}</p>
                   <p className="text-white/70 text-[10px] md:text-xs mt-0.5 md:mt-1">
-                    {series.episode} • {series.duration}
+                    {series.asset_name} • {series.run_time_format}
                   </p>
                 </div>
               </Link>
@@ -363,16 +563,20 @@ export default function DashboardPage() {
         </div>
       </section>
 
-      {/* Latest Clip Section (baru, presisi seperti screenshot) */}
-      <LatestClipSection title="Latest Clip" items={mockFilms} />
+      <LatestClipSection title="Latest Clip" items={displayFilms} />
 
-      <LatestAwards title="Latest Awards" viewAllLink="#" items={mockAwards} />
-<CategorySection title="Category" viewAllLink="#" items={categoriesData} />      {/* Most Watching - Hidden on Mobile, shown on MD+ */}
+      <LatestAwards
+        title="Latest Awards"
+        viewAllLink="#"
+        items={displayFilms.length > 0 ? displayFilms : mockAwards}
+      />
+
+      <CategorySection title="Category" viewAllLink="#" items={categoriesData} />
+
       <div className="hidden md:block">
         <CarouselSection title="Most Watching Film" items={mockMostWatching as any} />
       </div>
 
-      {/* Creator Section */}
       <section className="px-4 md:px-6 lg:px-12 py-6 md:py-8 border-t border-border">
         <div className="flex items-center justify-between mb-4 md:mb-6">
           <h2 className="text-lg md:text-2xl font-bold text-foreground">Creator</h2>
@@ -399,44 +603,31 @@ export default function DashboardPage() {
         </div>
 
         <div className="flex justify-center mt-8">
-          <Button className="bg-transparent border border-white/20 hover:bg-white/10 text-white">View All Creators</Button>
+          <Button className="bg-transparent border border-white/20 hover:bg-white/10 text-white">
+            View All Creators
+          </Button>
         </div>
       </section>
 
-         {/* Banner Section */}
       <section className="px-4 md:px-6 lg:px-12 py-8 md:py-12 border-t border-border">
         <div className="relative rounded-xl overflow-hidden min-h-96 md:min-h-[500px]">
-          {/* Background Image */}
           <div className="absolute inset-0">
-            <Image 
-              src="/images/design-mode/a.png" 
-              alt="Banner Background" 
-              fill 
-              className="object-cover"
-            />
+            <Image src="/images/design-mode/a.png" alt="Banner Background" fill className="object-cover" />
           </div>
-          
-          {/* Dark Overlay */}
+
           <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/60 to-transparent" />
-          
-          {/* Content */}
-      <FutureFilmmaking />
+
+          <FutureFilmmaking />
         </div>
       </section>
 
-
-         <section className="mt-8 md:mt-12 mb-6 md:mb-8 mx-4 md:mx-6 lg:mx-12">
+      <section className="mt-8 md:mt-12 mb-6 md:mb-8 mx-4 md:mx-6 lg:mx-12">
         <div className="relative rounded-lg overflow-hidden border border-white/10">
           <div className="absolute inset-0">
-            <Image 
-              src="/images/usky-tv-bg.png" 
-              alt="Background" 
-              fill 
-              className="object-cover"
-            />
+            <Image src="/images/usky-tv-bg.png" alt="Background" fill className="object-cover" />
           </div>
           <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/60 to-black/40" />
-          
+
           <div className="relative flex flex-col lg:flex-row items-center justify-between px-4 md:px-6 lg:px-12 py-6 md:py-8 lg:py-12 gap-4 md:gap-8">
             <div className="flex-1 max-w-md">
               <div className="inline-block bg-foreground text-background text-xs font-semibold px-3 py-1 rounded-full mb-3 md:mb-4">
@@ -460,12 +651,9 @@ export default function DashboardPage() {
                 </li>
               </ul>
             </div>
-            
-
           </div>
         </div>
       </section>
-
 
       <Footer />
     </div>
