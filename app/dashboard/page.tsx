@@ -4,14 +4,13 @@ import { User, Ticket, CreditCard, Settings, LogOut, Search, X, Menu, Play, Info
 import Image from 'next/image'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import categoriesData from '@/data/categories.json'
-import { CategorySection } from '@/components/category-section'
 import { useState, useRef, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { Header } from '@/components/header'
 import { Footer } from '@/components/footer'
 import { LatestAwards } from '@/components/latest-awards'
 import { FutureFilmmaking } from '@/components/future-filmmaking'
+import { CategorySection } from '@/components/category-section'
 import { FeaturedSkeleton, SeriesSkeleton, CarouselSkeleton, AwardSkeleton } from '@/components/skeleton-loaders'
 
 interface FilmData {
@@ -41,6 +40,14 @@ interface SeriesData {
   title?: string
   episode?: string
   duration?: string
+}
+
+interface CategoryApiData {
+  id: string
+  name: string
+  images?: string
+  images_url?: string
+  total_movie?: string
 }
 
 const mockAwards = [
@@ -109,14 +116,14 @@ const mockSeries: SeriesData[] = [
   },
 ]
 
-const categoryData = [
-  { name: 'Genre', count: '3.2K' },
-  { name: 'Drama', count: '2.8K' },
-  { name: 'Action', count: '2.1K' },
-  { name: 'Sci-Fi', count: '1.9K' },
-  { name: 'Comedy', count: '1.5K' },
-  { name: 'Horror', count: '1.2K' },
-  { name: 'Anime', count: '1.8K' },
+const fallbackCategoryData = [
+  { id: '1', name: 'Genre', count: '3.2K', image: '/placeholder.svg' },
+  { id: '2', name: 'Drama', count: '2.8K', image: '/placeholder.svg' },
+  { id: '3', name: 'Action', count: '2.1K', image: '/placeholder.svg' },
+  { id: '4', name: 'Sci-Fi', count: '1.9K', image: '/placeholder.svg' },
+  { id: '5', name: 'Comedy', count: '1.5K', image: '/placeholder.svg' },
+  { id: '6', name: 'Horror', count: '1.2K', image: '/placeholder.svg' },
+  { id: '7', name: 'Anime', count: '1.8K', image: '/placeholder.svg' },
 ]
 
 const mockCreators = [
@@ -248,17 +255,7 @@ function CarouselSection({
             className="flex transition-transform duration-300 gap-2 md:gap-4"
             style={{ transform: `translateX(-${currentIndex * (100 / itemsPerView)}%)` }}
           >
-            {layout === 'category'
-              ? categoryData.map((item, idx) => (
-                  <div key={idx} className="flex-shrink-0 w-1/3 sm:w-1/4 lg:w-1/7 text-center">
-                    <div className="w-full aspect-square rounded-full bg-gradient-to-br from-[#4c7c3f] to-[#2a4a2a] mb-2 md:mb-3 flex items-center justify-center">
-                      <span className="text-xl md:text-4xl text-white">🎬</span>
-                    </div>
-                    <p className="text-xs md:text-sm font-medium text-foreground line-clamp-1">{item.name}</p>
-                    <p className="text-xs text-muted-foreground">{item.count}</p>
-                  </div>
-                ))
-              : layout === 'creator'
+            {layout === 'creator'
               ? creatorData.map((item, idx) => (
                   <div key={idx} className="flex-shrink-0 w-1/3 sm:w-1/4 lg:w-1/7 text-center">
                     <div className="w-full aspect-square rounded-full bg-gradient-to-br from-[#7c4c9f] to-[#4a2a6a] mb-2 md:mb-3 flex items-center justify-center">
@@ -418,8 +415,9 @@ function LatestClipSection({
 
 export default function DashboardPage() {
   const [latestFilms, setLatestFilms] = useState<FilmData[]>([])
-  const [mostWatchingFilms, setMostWatchingFilms] = useState<FilmData[]>([]) // State baru untuk Watchs
+  const [mostWatchingFilms, setMostWatchingFilms] = useState<FilmData[]>([])
   const [seriesData, setSeriesData] = useState<SeriesData[]>([])
+  const [categoryApiData, setCategoryApiData] = useState<CategoryApiData[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const router = useRouter()
@@ -450,13 +448,16 @@ export default function DashboardPage() {
             setLatestFilms(data.list.latest)
           }
 
-          // INTEGRASI: Mengambil data "watchs" untuk Most Watching Film
           if (data.list?.watchs && Array.isArray(data.list.watchs)) {
             setMostWatchingFilms(data.list.watchs)
           }
 
           if (data.list?.series && Array.isArray(data.list.series)) {
             setSeriesData(data.list.series)
+          }
+
+          if (data.list?.category && Array.isArray(data.list.category)) {
+            setCategoryApiData(data.list.category)
           }
 
           setError(null)
@@ -489,8 +490,17 @@ export default function DashboardPage() {
   }
 
   const displayFilms = latestFilms.length > 0 ? transformFilmData(latestFilms) : []
-  const displayMostWatching = mostWatchingFilms.length > 0 ? transformFilmData(mostWatchingFilms) : [] // Data transform untuk Most Watching
+  const displayMostWatching = mostWatchingFilms.length > 0 ? transformFilmData(mostWatchingFilms) : []
   const displaySeries = seriesData.length > 0 ? seriesData : mockSeries
+  const displayCategories =
+    categoryApiData.length > 0
+      ? categoryApiData.map((item) => ({
+          id: item.id,
+          name: item.name,
+          count: item.total_movie || '0',
+          image: item.images_url || '/placeholder.svg',
+        }))
+      : fallbackCategoryData
 
   return (
     <div className="min-h-screen bg-[#0a1628] text-foreground dark">
@@ -505,7 +515,6 @@ export default function DashboardPage() {
 
       <section className="relative overflow-hidden min-h-[50vh] md:min-h-[70vh] lg:min-h-screen">
         <Image src="/login-hero.jpg" alt="Hero" fill priority className="object-cover" />
-
         <div className="absolute inset-0 bg-gradient-to-t from-background via-black/20 to-transparent" />
 
         <div className="absolute inset-0 flex items-end">
@@ -624,28 +633,15 @@ export default function DashboardPage() {
 
       <LatestClipSection title="Latest Clip" items={loading ? [] : displayFilms} />
 
-      {/* Upcoming Event Section */}
-            {/* Upcoming Event Section */}
       <section className="px-4 md:px-6 lg:px-12 py-8 md:py-10 border-t border-white/10">
         <div className="relative">
-          {/* Header */}
           <div className="flex items-start gap-3 mb-6">
             <div>
               <h2 className="text-white font-bold text-2xl md:text-3xl leading-none">Upcoming Event</h2>
               <div className="w-14 h-[3px] bg-yellow-400 rounded-full mt-3" />
             </div>
-
-            {/* <div className="relative w-16 h-16 md:w-20 md:h-20 rounded-full overflow-hidden border-4 border-white shadow-lg">
-              <Image
-                src="/images/event/example.png"
-                alt="Upcoming Avatar"
-                fill
-                className="object-cover"
-              />
-            </div> */}
           </div>
 
-          {/* Timeline */}
           <div className="relative mb-6 md:mb-8">
             <div className="absolute left-0 right-0 top-2 border-t border-dashed border-white/60" />
             <div className="relative flex justify-between items-center">
@@ -654,7 +650,6 @@ export default function DashboardPage() {
             </div>
           </div>
 
-          {/* Labels */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8 mb-5">
             <div>
               <h3 className="text-white text-2xl font-semibold leading-none">Hari ini</h3>
@@ -667,13 +662,11 @@ export default function DashboardPage() {
             </div>
           </div>
 
-          {/* Cards */}
           <div className="relative">
             <div
               className="flex gap-4 md:gap-6 overflow-x-auto pb-2 pr-10"
               style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
             >
-              {/* Card 1 */}
               <div className="flex-shrink-0 w-[320px] md:w-[500px]">
                 <div className="bg-black rounded-xl overflow-hidden min-h-[160px] flex">
                   <div className="flex-1 p-4 md:p-5">
@@ -711,7 +704,6 @@ export default function DashboardPage() {
                 </div>
               </div>
 
-              {/* Card 2 */}
               <div className="flex-shrink-0 w-[320px] md:w-[500px]">
                 <div className="bg-black rounded-xl overflow-hidden min-h-[160px] flex">
                   <div className="flex-1 p-4 md:p-5">
@@ -749,7 +741,6 @@ export default function DashboardPage() {
                 </div>
               </div>
 
-              {/* Card 3 */}
               <div className="flex-shrink-0 w-[320px] md:w-[500px]">
                 <div className="bg-black rounded-xl overflow-hidden min-h-[160px] flex">
                   <div className="flex-1 p-4 md:p-5">
@@ -788,7 +779,6 @@ export default function DashboardPage() {
               </div>
             </div>
 
-            {/* Right Arrow */}
             <button
               className="hidden md:flex absolute right-[-6px] top-1/2 -translate-y-1/2 w-11 h-12 rounded-l-xl bg-white text-black items-center justify-center shadow-lg"
               aria-label="Next upcoming"
@@ -818,9 +808,8 @@ export default function DashboardPage() {
         />
       )}
 
-      <CategorySection title="Category" viewAllLink="#" items={categoriesData} />
+      <CategorySection title="Category" viewAllLink="#" items={displayCategories} />
 
-      {/* INTEGRASI: Section Most Watching Film sekarang menggunakan data dari API (watchs) */}
       <div className="hidden md:block">
         <CarouselSection title="Most Watching Film" items={displayMostWatching} />
       </div>

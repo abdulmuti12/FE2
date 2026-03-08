@@ -2,31 +2,31 @@
 
 import { useState } from 'react'
 import Image from 'next/image'
+import Link from 'next/link'
+import { ChevronLeft, ChevronRight } from 'lucide-react'
 
-type CategoryItem = {
+interface CategoryItem {
+  id?: string
   name: string
   count: string
-  icon?: string
+  image?: string
 }
 
-type CategorySectionProps = {
-  title?: string
+interface CategorySectionProps {
+  title: string
   viewAllLink?: string
   items: CategoryItem[]
 }
 
 export function CategorySection({
-  title = 'Category',
+  title,
   viewAllLink = '#',
-  items,
+  items = [],
 }: CategorySectionProps) {
   const [currentIndex, setCurrentIndex] = useState(0)
 
-  // Mobile: show 3 items, Desktop: show 7 items
-  const itemsPerView = 3
-  const desktopItemsPerView = 7
+  const itemsPerView = 7
   const maxIndex = Math.max(0, items.length - itemsPerView)
-  const desktopMaxIndex = Math.max(0, items.length - desktopItemsPerView)
 
   const handleNext = () => {
     if (currentIndex < maxIndex) {
@@ -41,116 +41,78 @@ export function CategorySection({
   }
 
   return (
-    <section className="px-4 md:px-6 lg:px-12 py-6 md:py-8 border-t border-white/10">
-      {/* Header */}
+    <section className="px-4 md:px-6 lg:px-12 py-6 md:py-8 border-t border-border">
+
+      {/* HEADER */}
       <div className="flex items-center justify-between mb-4 md:mb-6">
-        <h2 className="text-sm md:text-2xl font-bold text-white">
+
+        <h2 className="text-lg md:text-2xl font-bold text-foreground">
           {title}
         </h2>
 
-        <div className="flex items-center gap-3 md:gap-0">
-          {/* Mobile: Show arrows inline, Desktop: Show View All link */}
-          <div className="flex md:hidden gap-2">
-            {currentIndex > 0 && (
+        <div className="flex items-center gap-4">
+
+
+          {items.length > itemsPerView && (
+            <div className="flex overflow-hidden rounded-sm border border-white/10 bg-[#0a2342]">
               <button
                 onClick={handlePrev}
-                className="bg-white/10 hover:bg-white/20 backdrop-blur-sm p-1.5 rounded-full transition"
-                aria-label="Prev"
+                disabled={currentIndex === 0}
+                className="flex h-10 w-10 items-center justify-center border-r border-white/10 text-white transition-colors hover:bg-white/10 disabled:opacity-40"
               >
-                <span className="text-white text-sm">‹</span>
+                <ChevronLeft className="h-4 w-4" />
               </button>
-            )}
-            {currentIndex < maxIndex && (
+
               <button
                 onClick={handleNext}
-                className="bg-white/10 hover:bg-white/20 backdrop-blur-sm p-1.5 rounded-full transition"
-                aria-label="Next"
+                disabled={currentIndex === maxIndex}
+                className="flex h-10 w-10 items-center justify-center text-white transition-colors hover:bg-white/10 disabled:opacity-40"
               >
-                <span className="text-white text-sm">›</span>
+                <ChevronRight className="h-4 w-4" />
               </button>
-            )}
-          </div>
+            </div>
+          )}
 
-          <a
-            href={viewAllLink}
-            className="hidden md:inline-block text-white/80 text-xs md:text-sm font-medium hover:text-white transition-colors"
-          >
-            View All
-          </a>
         </div>
       </div>
 
-      {/* Slider */}
+
+      {/* CATEGORY LIST */}
       <div className="relative">
         <div className="overflow-hidden">
           <div
-            className="flex transition-transform duration-500 ease-out gap-3 md:gap-6"
-            style={{
-              transform: `translateX(-${currentIndex * (100 / itemsPerView)}%)`,
-            }}
+            className="flex transition-transform duration-300 gap-4 md:gap-6"
+            style={{ transform: `translateX(-${currentIndex * (100 / itemsPerView)}%)` }}
           >
             {items.map((item, idx) => (
               <div
-                key={idx}
-                className="flex-shrink-0 w-1/3 md:w-[140px] lg:w-[160px] text-center"
+                key={item.id || idx}
+                className="flex-shrink-0 w-1/3 sm:w-1/4 md:w-1/6 lg:w-1/7 text-center"
               >
-                {/* Bulatan Image - Larger on mobile */}
-                <div className="relative w-full aspect-square rounded-full overflow-hidden mb-2 md:mb-3 bg-black/30 shadow-lg">
-                  {item.icon ? (
-                    <Image
-                      src={item.icon}
-                      alt={item.name}
-                      fill
-                      sizes="(min-width: 1024px) 160px, (min-width: 768px) 140px, 120px"
-                      className="object-cover rounded-full"
-                      priority={idx < 3}
-                    />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center">
-                      <span className="text-3xl md:text-2xl text-white">🎬</span>
-                    </div>
-                  )}
+
+                <div className="relative w-32 md:w-40 mx-auto mt-4 aspect-square rounded-full overflow-hidden mb-2 md:mb-3 bg-gradient-to-br from-[#4c7c3f] to-[#2a4a2a]">
+                  <Image
+                    src={item.image || '/placeholder.svg'}
+                    alt={item.name}
+                    fill
+                    className="object-cover"
+                  />
                 </div>
 
-                {/* Title */}
-                <p className="text-xs md:text-sm font-semibold text-white line-clamp-1">
+                <p className="text-xs md:text-sm font-medium text-foreground line-clamp-1">
                   {item.name}
                 </p>
 
-                {/* Count */}
-                <p className="text-[10px] md:text-xs text-white/60 mt-0.5 md:mt-1">
+                <p className="text-xs text-muted-foreground">
                   {item.count}
                 </p>
+
               </div>
             ))}
           </div>
         </div>
-
-        {/* Desktop Arrows - Hidden on mobile, shown on md+ */}
-        {currentIndex > 0 && (
-          <button
-            onClick={handlePrev}
-            className="hidden md:flex absolute left-0 top-1/2 -translate-y-1/2 -translate-x-8 bg-white/10 hover:bg-white/20 backdrop-blur-sm p-2 rounded-full transition"
-            aria-label="Prev"
-          >
-            <span className="text-white text-lg">‹</span>
-          </button>
-        )}
-
-        {currentIndex < desktopMaxIndex && (
-          <button
-            onClick={() => {
-              if (currentIndex < desktopMaxIndex) {
-                setCurrentIndex(currentIndex + 1)
-              }
-            }}
-            className="hidden md:flex absolute right-0 top-1/2 -translate-y-1/2 translate-x-8 bg-white/10 hover:bg-white/20 backdrop-blur-sm p-2 rounded-full transition"
-            aria-label="Next"
-          >
-            <span className="text-white text-lg">›</span>
-          </button>
-        )}
       </div>
+
     </section>
   )
 }
