@@ -1,6 +1,6 @@
 'use client'
 
-import { User, Ticket, CreditCard, Settings, LogOut, Search, X, Menu, Play, Info, AlertCircle } from 'lucide-react'
+import { User, Ticket, CreditCard, Settings, LogOut, Search, X, Menu, Play, Info, AlertCircle, ChevronLeft, ChevronRight } from 'lucide-react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
@@ -12,6 +12,7 @@ import { Header } from '@/components/header'
 import { Footer } from '@/components/footer'
 import { LatestAwards } from '@/components/latest-awards'
 import { FutureFilmmaking } from '@/components/future-filmmaking'
+import { FeaturedSkeleton, SeriesSkeleton, CarouselSkeleton, AwardSkeleton } from '@/components/skeleton-loaders'
 
 interface FilmData {
   id: string
@@ -74,45 +75,6 @@ const mockAwards = [
     description: '[Brief Synopsis] Watch groundbreaking films crafted by human creativity and artificial intelligence.',
     category: 'Genre',
     rating: '8.3/10',
-  },
-]
-
-const mockMostWatching = [
-  {
-    id: 1,
-    title: '[Judul Film]',
-    year: '2025 • 1h 0m',
-    image: '/login-hero.jpg',
-    description: '[Brief Synopsis] Watch groundbreaking films crafted by human creativity and artificial intelligence.',
-    categories: ['Genre', 'Genre'],
-    viewers: 4,
-  },
-  {
-    id: 2,
-    title: '[Judul Film]',
-    year: '2025 • 1h 0m',
-    image: '/login-hero.jpg',
-    description: '[Brief Synopsis] Watch groundbreaking films crafted by human creativity and artificial intelligence.',
-    categories: ['Genre', 'Genre'],
-    viewers: 3,
-  },
-  {
-    id: 3,
-    title: '[Judul Film]',
-    year: '2025 • 1h 0m',
-    image: '/login-hero.jpg',
-    description: '[Brief Synopsis] Watch groundbreaking films crafted by human creativity and artificial intelligence.',
-    categories: ['Genre', 'Genre'],
-    viewers: 3,
-  },
-  {
-    id: 4,
-    title: '[Judul Film]',
-    year: '2025 • 1h 0m',
-    image: '/login-hero.jpg',
-    description: '[Brief Synopsis] Watch groundbreaking films crafted by human creativity and artificial intelligence.',
-    categories: ['Genre', 'Genre'],
-    viewers: 2,
   },
 ]
 
@@ -199,12 +161,88 @@ function CarouselSection({
     <section className="px-4 md:px-6 lg:px-12 py-6 md:py-8 border-t border-border">
       <div className="flex items-center justify-between mb-4 md:mb-6">
         <h2 className="text-sm md:text-2xl font-bold text-foreground">{title}</h2>
-        <a href={viewAllLink} className="text-white text-xs md:text-sm font-medium hover:text-gray-300 transition-colors">
+        <a
+          href={viewAllLink}
+          className="text-white text-xs md:text-sm font-medium hover:text-gray-300 transition-colors border border-white/20 rounded-xl px-4 py-2 md:border-0 md:rounded-none md:px-0 md:py-0"
+        >
           View All
         </a>
       </div>
 
-      <div className="relative">
+      {layout === 'default' && (
+        <div className="md:hidden relative">
+          <div className="overflow-hidden">
+            <div
+              className="flex gap-4 transition-transform duration-300"
+              style={{ transform: `translateX(-${currentIndex * 88}%)` }}
+            >
+              {items.map((film) => (
+                <div key={film.id} className="w-[88%] flex-shrink-0">
+                  <div className="rounded-xl overflow-hidden bg-black">
+                    <div className="relative h-[170px] w-full">
+                      <Image
+                        src={film.image || '/placeholder.svg'}
+                        alt={film.title}
+                        fill
+                        className="object-cover"
+                      />
+                    </div>
+
+                    <div className="p-3">
+                      <p className="font-semibold text-white text-[15px] mb-1 line-clamp-1">
+                        {film.title}
+                      </p>
+
+                      {film.year && (
+                        <p className="text-[12px] text-gray-400 mb-2">
+                          {film.year}
+                        </p>
+                      )}
+
+                      <p className="text-[12px] text-gray-400 line-clamp-2 mb-3 leading-relaxed">
+                        {film.description}
+                      </p>
+
+                      <div className="flex gap-2 flex-wrap">
+                        {film.categories?.slice(0, 2).map((cat: string, idx: number) => (
+                          <Button
+                            key={idx}
+                            size="sm"
+                            className="h-auto text-[11px] bg-white text-black hover:bg-gray-200 rounded-full px-3 py-1"
+                            variant="default"
+                          >
+                            {cat}
+                          </Button>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {currentIndex > 0 && (
+            <button
+              onClick={handlePrev}
+              className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-3 z-10 w-8 h-8 rounded-full bg-[#003B79] flex items-center justify-center"
+            >
+              <ChevronLeft className="w-4 h-4 text-white" />
+            </button>
+          )}
+
+          {currentIndex < maxIndex && (
+            <button
+              onClick={handleNext}
+              className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-3 z-10 w-8 h-8 rounded-full bg-[#003B79] flex items-center justify-center"
+            >
+              <ChevronRight className="w-4 h-4 text-white" />
+            </button>
+          )}
+        </div>
+      )}
+
+      <div className={`${layout === 'default' ? 'hidden md:block' : 'block'} relative`}>
         <div className="overflow-hidden">
           <div
             className="flex transition-transform duration-300 gap-2 md:gap-4"
@@ -245,7 +283,12 @@ function CarouselSection({
                     <p className="text-xs text-muted-foreground mb-2 md:mb-3 line-clamp-2 hidden md:block">{film.description}</p>
                     <div className="flex gap-2 flex-wrap hidden md:flex">
                       {film.categories?.map((cat: string, idx: number) => (
-                        <Button key={idx} size="sm" className="text-xs bg-gray-200 text-black hover:bg-gray-300 rounded-full px-4" variant="default">
+                        <Button
+                          key={idx}
+                          size="sm"
+                          className="text-xs bg-gray-200 text-black hover:bg-gray-300 rounded-full px-4"
+                          variant="default"
+                        >
                           {cat}
                         </Button>
                       )) || (
@@ -375,6 +418,7 @@ function LatestClipSection({
 
 export default function DashboardPage() {
   const [latestFilms, setLatestFilms] = useState<FilmData[]>([])
+  const [mostWatchingFilms, setMostWatchingFilms] = useState<FilmData[]>([]) // State baru untuk Watchs
   const [seriesData, setSeriesData] = useState<SeriesData[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -404,6 +448,11 @@ export default function DashboardPage() {
         if (data.status === true || data.status !== false) {
           if (data.list?.latest && Array.isArray(data.list.latest)) {
             setLatestFilms(data.list.latest)
+          }
+
+          // INTEGRASI: Mengambil data "watchs" untuk Most Watching Film
+          if (data.list?.watchs && Array.isArray(data.list.watchs)) {
+            setMostWatchingFilms(data.list.watchs)
           }
 
           if (data.list?.series && Array.isArray(data.list.series)) {
@@ -440,6 +489,7 @@ export default function DashboardPage() {
   }
 
   const displayFilms = latestFilms.length > 0 ? transformFilmData(latestFilms) : []
+  const displayMostWatching = mostWatchingFilms.length > 0 ? transformFilmData(mostWatchingFilms) : [] // Data transform untuk Most Watching
   const displaySeries = seriesData.length > 0 ? seriesData : mockSeries
 
   return (
@@ -484,11 +534,10 @@ export default function DashboardPage() {
         </div>
       </section>
 
-      <div className="hidden md:block">
+      <div className="block">
         <CarouselSection title="Latest Films" items={displayFilms} />
       </div>
 
-      {/* Latest Series */}
       <section className="px-4 md:px-6 lg:px-12 py-6 md:py-10 border-t border-white/10">
         <div className="flex items-center justify-between mb-4 md:mb-6">
           <h2 className="text-sm md:text-lg font-semibold text-white">Latest Series</h2>
@@ -501,7 +550,9 @@ export default function DashboardPage() {
         </div>
 
         <div className="grid gap-4 md:gap-6 grid-cols-1 lg:grid-cols-[1fr_340px]">
-          {displaySeries[0] && (
+          {loading ? (
+            <FeaturedSkeleton />
+          ) : displaySeries[0] ? (
             <Link href={`/dashboard/series/detail?id=${displaySeries[0].id}`} className="group block">
               <div className="relative w-full aspect-[16/10] md:aspect-[1066/660] rounded-xl md:rounded-3xl overflow-hidden bg-black">
                 <Image
@@ -535,46 +586,243 @@ export default function DashboardPage() {
                 </div>
               </div>
             </Link>
-          )}
+          ) : null}
 
           <div className="flex flex-col gap-3 md:gap-6">
-            {displaySeries.slice(1, 4).map((series) => (
-              <Link key={series.id} href={`/dashboard/series/detail?id=${series.id}`} className="relative rounded-lg md:rounded-2xl overflow-hidden group">
-                <div className="relative w-full aspect-[16/9] md:aspect-[302/160] bg-black">
-                  <Image
-                    src={series.image_landscape_url || series.image_url || series.image || '/placeholder.svg'}
-                    alt={series.name}
-                    fill
-                    className="object-cover group-hover:scale-105 transition-transform duration-500"
-                  />
-                </div>
+            {loading ? (
+              <>
+                <SeriesSkeleton />
+                <SeriesSkeleton />
+                <SeriesSkeleton />
+              </>
+            ) : (
+              displaySeries.slice(1, 4).map((series) => (
+                <Link key={series.id} href={`/dashboard/series/detail?id=${series.id}`} className="relative rounded-lg md:rounded-2xl overflow-hidden group">
+                  <div className="relative w-full aspect-[16/9] md:aspect-[302/160] bg-black">
+                    <Image
+                      src={series.image_landscape_url || series.image_url || series.image || '/placeholder.svg'}
+                      alt={series.name}
+                      fill
+                      className="object-cover group-hover:scale-105 transition-transform duration-500"
+                    />
+                  </div>
 
-                <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/30 to-transparent" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/30 to-transparent" />
 
-                <div className="absolute bottom-3 left-3 right-3 md:bottom-4 md:left-4 md:right-4">
-                  <p className="text-white font-semibold text-xs md:text-sm truncate">{series.name}</p>
-                  <p className="text-white/70 text-[10px] md:text-xs mt-0.5 md:mt-1">
-                    {series.asset_name} • {series.run_time_format}
-                  </p>
-                </div>
-              </Link>
-            ))}
+                  <div className="absolute bottom-3 left-3 right-3 md:bottom-4 md:left-4 md:right-4">
+                    <p className="text-white font-semibold text-xs md:text-sm truncate">{series.name}</p>
+                    <p className="text-white/70 text-[10px] md:text-xs mt-0.5 md:mt-1">
+                      {series.asset_name} • {series.run_time_format}
+                    </p>
+                  </div>
+                </Link>
+              ))
+            )}
           </div>
         </div>
       </section>
 
-      <LatestClipSection title="Latest Clip" items={displayFilms} />
+      <LatestClipSection title="Latest Clip" items={loading ? [] : displayFilms} />
 
-      <LatestAwards
-        title="Latest Awards"
-        viewAllLink="#"
-        items={displayFilms.length > 0 ? displayFilms : mockAwards}
-      />
+      {/* Upcoming Event Section */}
+            {/* Upcoming Event Section */}
+      <section className="px-4 md:px-6 lg:px-12 py-8 md:py-10 border-t border-white/10">
+        <div className="relative">
+          {/* Header */}
+          <div className="flex items-start gap-3 mb-6">
+            <div>
+              <h2 className="text-white font-bold text-2xl md:text-3xl leading-none">Upcoming Event</h2>
+              <div className="w-14 h-[3px] bg-yellow-400 rounded-full mt-3" />
+            </div>
+
+            {/* <div className="relative w-16 h-16 md:w-20 md:h-20 rounded-full overflow-hidden border-4 border-white shadow-lg">
+              <Image
+                src="/images/event/example.png"
+                alt="Upcoming Avatar"
+                fill
+                className="object-cover"
+              />
+            </div> */}
+          </div>
+
+          {/* Timeline */}
+          <div className="relative mb-6 md:mb-8">
+            <div className="absolute left-0 right-0 top-2 border-t border-dashed border-white/60" />
+            <div className="relative flex justify-between items-center">
+              <div className="w-3 h-3 rounded-full bg-white" />
+              <div className="w-3 h-3 rounded-full bg-white" />
+            </div>
+          </div>
+
+          {/* Labels */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8 mb-5">
+            <div>
+              <h3 className="text-white text-2xl font-semibold leading-none">Hari ini</h3>
+              <p className="text-white/60 text-xl mt-2">Kamis</p>
+            </div>
+
+            <div className="hidden md:block text-left">
+              <h3 className="text-white text-2xl font-semibold leading-none">Besok</h3>
+              <p className="text-white/60 text-xl mt-2">Jumat</p>
+            </div>
+          </div>
+
+          {/* Cards */}
+          <div className="relative">
+            <div
+              className="flex gap-4 md:gap-6 overflow-x-auto pb-2 pr-10"
+              style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+            >
+              {/* Card 1 */}
+              <div className="flex-shrink-0 w-[320px] md:w-[500px]">
+                <div className="bg-black rounded-xl overflow-hidden min-h-[160px] flex">
+                  <div className="flex-1 p-4 md:p-5">
+                    <div className="flex items-center justify-between gap-3 mb-3">
+                      <div className="flex items-center gap-2 text-white/70 text-sm">
+                        <span>◷</span>
+                        <span>16:30 PM - 19:30 PM</span>
+                      </div>
+                      <span className="bg-white text-black text-[11px] font-medium px-3 py-1 rounded-md leading-none">
+                        [Tipe Event]
+                      </span>
+                    </div>
+
+                    <h3 className="text-white text-[28px] md:text-[32px] font-bold leading-none mb-3">
+                      [Judul Event]
+                    </h3>
+
+                    <div className="flex items-center gap-2 text-white/70 text-sm mb-3">
+                      <span>◌</span>
+                      <span>5/50</span>
+                    </div>
+
+                    <p className="text-white font-semibold text-lg mb-2 leading-none">Online</p>
+                    <p className="text-white/60 text-sm">Zoom Meeting</p>
+                  </div>
+
+                  <div className="relative w-[110px] md:w-[135px] flex-shrink-0">
+                    <Image
+                      src="/images/event/example.png"
+                      alt="Event Poster"
+                      fill
+                      className="object-cover"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Card 2 */}
+              <div className="flex-shrink-0 w-[320px] md:w-[500px]">
+                <div className="bg-black rounded-xl overflow-hidden min-h-[160px] flex">
+                  <div className="flex-1 p-4 md:p-5">
+                    <div className="flex items-center justify-between gap-3 mb-3">
+                      <div className="flex items-center gap-2 text-white/70 text-sm">
+                        <span>◷</span>
+                        <span>16:30 PM - 19:30 PM</span>
+                      </div>
+                      <span className="bg-white text-black text-[11px] font-medium px-3 py-1 rounded-md leading-none">
+                        [Tipe Event]
+                      </span>
+                    </div>
+
+                    <h3 className="text-white text-[28px] md:text-[32px] font-bold leading-none mb-3">
+                      [Judul Event]
+                    </h3>
+
+                    <div className="flex items-center gap-2 text-white/70 text-sm mb-3">
+                      <span>◌</span>
+                      <span>5/50</span>
+                    </div>
+
+                    <p className="text-white font-semibold text-lg mb-2 leading-none">Online</p>
+                    <p className="text-white/60 text-sm">Zoom Meeting</p>
+                  </div>
+
+                  <div className="relative w-[110px] md:w-[135px] flex-shrink-0">
+                    <Image
+                      src="/images/event/example.png"
+                      alt="Event Poster"
+                      fill
+                      className="object-cover"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Card 3 */}
+              <div className="flex-shrink-0 w-[320px] md:w-[500px]">
+                <div className="bg-black rounded-xl overflow-hidden min-h-[160px] flex">
+                  <div className="flex-1 p-4 md:p-5">
+                    <div className="flex items-center justify-between gap-3 mb-3">
+                      <div className="flex items-center gap-2 text-white/70 text-sm">
+                        <span>◷</span>
+                        <span>16:30 PM - 19:30 PM</span>
+                      </div>
+                      <span className="bg-white text-black text-[11px] font-medium px-3 py-1 rounded-md leading-none">
+                        [Tipe Event]
+                      </span>
+                    </div>
+
+                    <h3 className="text-white text-[28px] md:text-[32px] font-bold leading-none mb-3">
+                      [Judul Event]
+                    </h3>
+
+                    <div className="flex items-center gap-2 text-white/70 text-sm mb-3">
+                      <span>◌</span>
+                      <span>5/50</span>
+                    </div>
+
+                    <p className="text-white font-semibold text-lg mb-2 leading-none">Online</p>
+                    <p className="text-white/60 text-sm">Zoom Meeting</p>
+                  </div>
+
+                  <div className="relative w-[110px] md:w-[135px] flex-shrink-0">
+                    <Image
+                      src="/images/event/example.png"
+                      alt="Event Poster"
+                      fill
+                      className="object-cover"
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Right Arrow */}
+            <button
+              className="hidden md:flex absolute right-[-6px] top-1/2 -translate-y-1/2 w-11 h-12 rounded-l-xl bg-white text-black items-center justify-center shadow-lg"
+              aria-label="Next upcoming"
+            >
+              <ChevronRight className="w-6 h-6" />
+            </button>
+          </div>
+        </div>
+      </section>
+
+      {loading ? (
+        <section className="px-4 md:px-6 lg:px-12 py-6 md:py-8">
+          <div className="flex items-center justify-between mb-4 md:mb-6">
+            <h2 className="text-lg md:text-2xl font-bold text-foreground">Latest Awards</h2>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
+            {[1, 2, 3, 4].map((i) => (
+              <AwardSkeleton key={i} />
+            ))}
+          </div>
+        </section>
+      ) : (
+        <LatestAwards
+          title="Latest Awards"
+          viewAllLink="#"
+          items={displayFilms.length > 0 ? displayFilms : mockAwards}
+        />
+      )}
 
       <CategorySection title="Category" viewAllLink="#" items={categoriesData} />
 
+      {/* INTEGRASI: Section Most Watching Film sekarang menggunakan data dari API (watchs) */}
       <div className="hidden md:block">
-        <CarouselSection title="Most Watching Film" items={mockMostWatching as any} />
+        <CarouselSection title="Most Watching Film" items={displayMostWatching} />
       </div>
 
       <section className="px-4 md:px-6 lg:px-12 py-6 md:py-8 border-t border-border">
