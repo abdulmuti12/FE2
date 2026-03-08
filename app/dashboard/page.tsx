@@ -1,6 +1,20 @@
 'use client'
 
-import { User, Ticket, CreditCard, Settings, LogOut, Search, X, Menu, Play, Info, AlertCircle, ChevronLeft, ChevronRight } from 'lucide-react'
+import {
+  User,
+  Ticket,
+  CreditCard,
+  Settings,
+  LogOut,
+  Search,
+  X,
+  Menu,
+  Play,
+  Info,
+  AlertCircle,
+  ChevronLeft,
+  ChevronRight,
+} from 'lucide-react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
@@ -11,7 +25,12 @@ import { Footer } from '@/components/footer'
 import { LatestAwards } from '@/components/latest-awards'
 import { FutureFilmmaking } from '@/components/future-filmmaking'
 import { CategorySection } from '@/components/category-section'
-import { FeaturedSkeleton, SeriesSkeleton, CarouselSkeleton, AwardSkeleton } from '@/components/skeleton-loaders'
+import {
+  FeaturedSkeleton,
+  SeriesSkeleton,
+  CarouselSkeleton,
+  AwardSkeleton,
+} from '@/components/skeleton-loaders'
 
 interface FilmData {
   id: string
@@ -50,12 +69,23 @@ interface CategoryApiData {
   total_movie?: string
 }
 
+interface CreatorData {
+  id: string
+  sid?: string
+  name: string
+  email?: string
+  avatar?: string
+  avatar_url?: string
+  total_video?: string
+}
+
 const mockAwards = [
   {
     id: 1,
     title: '[Judul Film]',
     image: '/login-hero.jpg',
-    description: '[Brief Synopsis] Watch groundbreaking films crafted by human creativity and artificial intelligence.',
+    description:
+      '[Brief Synopsis] Watch groundbreaking films crafted by human creativity and artificial intelligence.',
     category: 'Genre',
     rating: '8.5/10',
   },
@@ -63,7 +93,8 @@ const mockAwards = [
     id: 2,
     title: '[Judul Film]',
     image: '/login-hero.jpg',
-    description: '[Brief Synopsis] Watch groundbreaking films crafted by human creativity and artificial intelligence.',
+    description:
+      '[Brief Synopsis] Watch groundbreaking films crafted by human creativity and artificial intelligence.',
     category: 'Genre',
     rating: '9.0/10',
   },
@@ -71,7 +102,8 @@ const mockAwards = [
     id: 3,
     title: '[Judul Film]',
     image: '/login-hero.jpg',
-    description: '[Brief Synopsis] Watch groundbreaking films crafted by human creativity and artificial intelligence.',
+    description:
+      '[Brief Synopsis] Watch groundbreaking films crafted by human creativity and artificial intelligence.',
     category: 'Genre',
     rating: '8.8/10',
   },
@@ -79,7 +111,8 @@ const mockAwards = [
     id: 4,
     title: '[Judul Film]',
     image: '/login-hero.jpg',
-    description: '[Brief Synopsis] Watch groundbreaking films crafted by human creativity and artificial intelligence.',
+    description:
+      '[Brief Synopsis] Watch groundbreaking films crafted by human creativity and artificial intelligence.',
     category: 'Genre',
     rating: '8.3/10',
   },
@@ -126,14 +159,14 @@ const fallbackCategoryData = [
   { id: '7', name: 'Anime', count: '1.8K', image: '/placeholder.svg' },
 ]
 
-const mockCreators = [
-  { id: 1, name: '[Creator]', movies: '3 Movies', colors: ['cyan', 'white'] },
-  { id: 2, name: '[Creator]', movies: '3 Movies', colors: ['pink', 'white'] },
-  { id: 3, name: '[Creator]', movies: '3 Movies', colors: ['cyan', 'white'] },
-  { id: 4, name: '[Creator]', movies: '3 Movies', colors: ['purple', 'white'] },
-  { id: 5, name: '[Creator]', movies: '3 Movies', colors: ['cyan', 'white'] },
-  { id: 6, name: '[Creator]', movies: '3 Movies', colors: ['purple', 'white'] },
-  { id: 7, name: '[Creator]', movies: '3 Movies', colors: ['pink', 'white'] },
+const mockCreators: CreatorData[] = [
+  { id: '1', name: '[Creator]', avatar_url: '/images/pngs.png', total_video: '3' },
+  { id: '2', name: '[Creator]', avatar_url: '/images/pngs.png', total_video: '3' },
+  { id: '3', name: '[Creator]', avatar_url: '/images/pngs.png', total_video: '3' },
+  { id: '4', name: '[Creator]', avatar_url: '/images/pngs.png', total_video: '3' },
+  { id: '5', name: '[Creator]', avatar_url: '/images/pngs.png', total_video: '3' },
+  { id: '6', name: '[Creator]', avatar_url: '/images/pngs.png', total_video: '3' },
+  { id: '7', name: '[Creator]', avatar_url: '/images/pngs.png', total_video: '3' },
 ]
 
 const creatorData = [
@@ -165,19 +198,19 @@ function CarouselSection({
   const handlePrev = () => currentIndex > 0 && setCurrentIndex(currentIndex - 1)
 
   return (
-    <section className="px-4 md:px-6 lg:px-12 py-6 md:py-8 border-t border-border">
-      <div className="flex items-center justify-between mb-4 md:mb-6">
-        <h2 className="text-sm md:text-2xl font-bold text-foreground">{title}</h2>
+    <section className="border-t border-border px-4 py-6 md:px-6 md:py-8 lg:px-12">
+      <div className="mb-4 flex items-center justify-between md:mb-6">
+        <h2 className="text-sm font-bold text-foreground md:text-2xl">{title}</h2>
         <a
           href={viewAllLink}
-          className="text-white text-xs md:text-sm font-medium hover:text-gray-300 transition-colors border border-white/20 rounded-xl px-4 py-2 md:border-0 md:rounded-none md:px-0 md:py-0"
+          className="rounded-xl border border-white/20 px-4 py-2 text-xs font-medium text-white transition-colors hover:text-gray-300 md:rounded-none md:border-0 md:px-0 md:py-0 md:text-sm"
         >
           View All
         </a>
       </div>
 
       {layout === 'default' && (
-        <div className="md:hidden relative">
+        <div className="relative md:hidden">
           <div className="overflow-hidden">
             <div
               className="flex gap-4 transition-transform duration-300"
@@ -185,7 +218,7 @@ function CarouselSection({
             >
               {items.map((film) => (
                 <div key={film.id} className="w-[88%] flex-shrink-0">
-                  <div className="rounded-xl overflow-hidden bg-black">
+                  <div className="overflow-hidden rounded-xl bg-black">
                     <div className="relative h-[170px] w-full">
                       <Image
                         src={film.image || '/placeholder.svg'}
@@ -196,26 +229,22 @@ function CarouselSection({
                     </div>
 
                     <div className="p-3">
-                      <p className="font-semibold text-white text-[15px] mb-1 line-clamp-1">
+                      <p className="mb-1 line-clamp-1 text-[15px] font-semibold text-white">
                         {film.title}
                       </p>
 
-                      {film.year && (
-                        <p className="text-[12px] text-gray-400 mb-2">
-                          {film.year}
-                        </p>
-                      )}
+                      {film.year && <p className="mb-2 text-[12px] text-gray-400">{film.year}</p>}
 
-                      <p className="text-[12px] text-gray-400 line-clamp-2 mb-3 leading-relaxed">
+                      <p className="mb-3 line-clamp-2 text-[12px] leading-relaxed text-gray-400">
                         {film.description}
                       </p>
 
-                      <div className="flex gap-2 flex-wrap">
+                      <div className="flex flex-wrap gap-2">
                         {film.categories?.slice(0, 2).map((cat: string, idx: number) => (
                           <Button
                             key={idx}
                             size="sm"
-                            className="h-auto text-[11px] bg-white text-black hover:bg-gray-200 rounded-full px-3 py-1"
+                            className="h-auto rounded-full bg-white px-3 py-1 text-[11px] text-black hover:bg-gray-200"
                             variant="default"
                           >
                             {cat}
@@ -232,18 +261,18 @@ function CarouselSection({
           {currentIndex > 0 && (
             <button
               onClick={handlePrev}
-              className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-3 z-10 w-8 h-8 rounded-full bg-[#003B79] flex items-center justify-center"
+              className="absolute left-0 top-1/2 z-10 flex h-8 w-8 -translate-x-3 -translate-y-1/2 items-center justify-center rounded-full bg-[#003B79]"
             >
-              <ChevronLeft className="w-4 h-4 text-white" />
+              <ChevronLeft className="h-4 w-4 text-white" />
             </button>
           )}
 
           {currentIndex < maxIndex && (
             <button
               onClick={handleNext}
-              className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-3 z-10 w-8 h-8 rounded-full bg-[#003B79] flex items-center justify-center"
+              className="absolute right-0 top-1/2 z-10 flex h-8 w-8 translate-x-3 -translate-y-1/2 items-center justify-center rounded-full bg-[#003B79]"
             >
-              <ChevronRight className="w-4 h-4 text-white" />
+              <ChevronRight className="h-4 w-4 text-white" />
             </button>
           )}
         </div>
@@ -252,48 +281,64 @@ function CarouselSection({
       <div className={`${layout === 'default' ? 'hidden md:block' : 'block'} relative`}>
         <div className="overflow-hidden">
           <div
-            className="flex transition-transform duration-300 gap-2 md:gap-4"
+            className="flex gap-2 transition-transform duration-300 md:gap-4"
             style={{ transform: `translateX(-${currentIndex * (100 / itemsPerView)}%)` }}
           >
             {layout === 'creator'
               ? creatorData.map((item, idx) => (
-                  <div key={idx} className="flex-shrink-0 w-1/3 sm:w-1/4 lg:w-1/7 text-center">
-                    <div className="w-full aspect-square rounded-full bg-gradient-to-br from-[#7c4c9f] to-[#4a2a6a] mb-2 md:mb-3 flex items-center justify-center">
-                      <span className="text-xl md:text-4xl text-white">👤</span>
+                  <div key={idx} className="w-1/3 flex-shrink-0 text-center sm:w-1/4 lg:w-1/7">
+                    <div className="mb-2 flex aspect-square w-full items-center justify-center rounded-full bg-gradient-to-br from-[#7c4c9f] to-[#4a2a6a] md:mb-3">
+                      <span className="text-xl text-white md:text-4xl">👤</span>
                     </div>
-                    <p className="text-xs md:text-sm font-medium text-foreground line-clamp-1">{item.name}</p>
+                    <p className="line-clamp-1 text-xs font-medium text-foreground md:text-sm">
+                      {item.name}
+                    </p>
                     <p className="text-xs text-muted-foreground">{item.count}</p>
                   </div>
                 ))
               : items.map((film) => (
-                  <div key={film.id} className="flex-shrink-0 w-1/2 md:w-1/4 lg:w-1/4">
-                    <div className="relative h-32 md:h-60 mb-2 md:mb-4 rounded-lg overflow-hidden group">
+                  <div key={film.id} className="w-1/2 flex-shrink-0 md:w-1/4 lg:w-1/4">
+                    <div className="group relative mb-2 h-32 overflow-hidden rounded-lg md:mb-4 md:h-60">
                       <Image
                         src={film.image || '/placeholder.svg'}
                         alt={film.title}
                         fill
-                        className="object-cover hover:scale-105 transition-transform duration-300"
+                        className="object-cover transition-transform duration-300 hover:scale-105"
                       />
                     </div>
-                    <p className="font-semibold text-xs md:text-base text-foreground mb-1 line-clamp-1">{film.title}</p>
-                    {film.year && <p className="text-xs text-muted-foreground hidden md:block">{film.year}</p>}
-                    <p className="text-xs text-muted-foreground mb-2 md:mb-3 line-clamp-2 hidden md:block">{film.description}</p>
-                    <div className="flex gap-2 flex-wrap hidden md:flex">
+                    <p className="mb-1 line-clamp-1 text-xs font-semibold text-foreground md:text-base">
+                      {film.title}
+                    </p>
+                    {film.year && (
+                      <p className="hidden text-xs text-muted-foreground md:block">{film.year}</p>
+                    )}
+                    <p className="mb-2 hidden line-clamp-2 text-xs text-muted-foreground md:mb-3 md:block">
+                      {film.description}
+                    </p>
+                    <div className="hidden flex-wrap gap-2 md:flex">
                       {film.categories?.map((cat: string, idx: number) => (
                         <Button
                           key={idx}
                           size="sm"
-                          className="text-xs bg-gray-200 text-black hover:bg-gray-300 rounded-full px-4"
+                          className="rounded-full bg-gray-200 px-4 text-xs text-black hover:bg-gray-300"
                           variant="default"
                         >
                           {cat}
                         </Button>
                       )) || (
                         <>
-                          <Button size="sm" className="text-xs bg-gray-200 text-black hover:bg-gray-300 rounded-full px-4" variant="default">
+                          <Button
+                            size="sm"
+                            className="rounded-full bg-gray-200 px-4 text-xs text-black hover:bg-gray-300"
+                            variant="default"
+                          >
                             Watch
                           </Button>
-                          <Button size="sm" className="text-xs bg-gray-200 text-black hover:bg-gray-300 rounded-full px-4" variant="default">
+                          <Button
+                            size="sm"
+                            className="rounded-full bg-gray-200 px-4 text-xs text-black hover:bg-gray-300"
+                            variant="default"
+                          >
                             Add List
                           </Button>
                         </>
@@ -307,18 +352,18 @@ function CarouselSection({
         {currentIndex > 0 && (
           <button
             onClick={handlePrev}
-            className="absolute left-0 top-1/3 -translate-y-1/2 -translate-x-8 md:-translate-x-12 lg:-translate-x-6 z-10 bg-accent/20 hover:bg-accent/40 p-1.5 md:p-2 rounded-full transition-colors"
+            className="absolute left-0 top-1/3 z-10 -translate-x-8 -translate-y-1/2 rounded-full bg-accent/20 p-1.5 transition-colors hover:bg-accent/40 md:-translate-x-12 md:p-2 lg:-translate-x-6"
           >
-            <X className="w-4 h-4 md:w-5 md:h-5 text-white" />
+            <X className="h-4 w-4 text-white md:h-5 md:w-5" />
           </button>
         )}
 
         {currentIndex < maxIndex && (
           <button
             onClick={handleNext}
-            className="absolute right-0 top-1/3 -translate-y-1/2 translate-x-8 md:translate-x-12 lg:translate-x-6 z-10 bg-accent/20 hover:bg-accent/40 p-1.5 md:p-2 rounded-full transition-colors"
+            className="absolute right-0 top-1/3 z-10 translate-x-8 -translate-y-1/2 rounded-full bg-accent/20 p-1.5 transition-colors hover:bg-accent/40 md:translate-x-12 md:p-2 lg:translate-x-6"
           >
-            <Menu className="w-4 h-4 md:w-5 md:h-5 text-white" />
+            <Menu className="h-4 w-4 text-white md:h-5 md:w-5" />
           </button>
         )}
       </div>
@@ -345,53 +390,55 @@ function LatestClipSection({
   }
 
   return (
-    <section className="px-4 md:px-6 lg:px-12 py-6 md:py-8 border-t border-white/10">
-      <div className="flex items-center justify-between mb-4 md:mb-6">
-        <Link href={viewAllLink} className="inline-flex items-center gap-2 text-white font-semibold">
+    <section className="border-t border-white/10 px-4 py-6 md:px-6 md:py-8 lg:px-12">
+      <div className="mb-4 flex items-center justify-between md:mb-6">
+        <Link href={viewAllLink} className="inline-flex items-center gap-2 font-semibold text-white">
           <span className="text-xs md:text-base">{title}</span>
           <span className="text-white/70">›</span>
         </Link>
 
         <div className="flex items-center gap-1">
-          <span className="w-2 h-[2px] md:w-3 rounded-full bg-white/80" />
-          <span className="w-2 h-[2px] md:w-3 rounded-full bg-white/40" />
-          <span className="w-2 h-[2px] md:w-3 rounded-full bg-white/30" />
+          <span className="h-[2px] w-2 rounded-full bg-white/80 md:w-3" />
+          <span className="h-[2px] w-2 rounded-full bg-white/40 md:w-3" />
+          <span className="h-[2px] w-2 rounded-full bg-white/30 md:w-3" />
         </div>
       </div>
 
       <div className="relative">
         <div
           ref={scrollerRef}
-          className="flex gap-3 md:gap-6 overflow-x-auto scroll-smooth pb-2 pr-8 md:pr-12"
+          className="flex gap-3 overflow-x-auto scroll-smooth pb-2 pr-8 md:gap-6 md:pr-12"
           style={{ scrollbarWidth: 'none' }}
         >
           {items.map((film) => (
-            <div key={film.id} className="flex-shrink-0 w-[200px] md:w-[260px] lg:w-[280px]">
-              <div className="relative rounded-xl md:rounded-2xl overflow-hidden bg-black group">
-                <div className="relative w-full h-[260px] md:h-[360px]">
+            <div key={film.id} className="w-[200px] flex-shrink-0 md:w-[260px] lg:w-[280px]">
+              <div className="group relative overflow-hidden rounded-xl bg-black md:rounded-2xl">
+                <div className="relative h-[260px] w-full md:h-[360px]">
                   <Image
                     src={film.image || '/placeholder.svg'}
                     alt={film.title}
                     fill
-                    className="object-cover object-center group-hover:scale-105 transition-transform duration-500"
+                    className="object-cover object-center transition-transform duration-500 group-hover:scale-105"
                   />
 
                   <div className="absolute inset-0 flex items-center justify-center">
-                    <div className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-black/35 border border-white/20 flex items-center justify-center backdrop-blur-sm">
-                      <Play className="w-3 h-3 md:w-4 md:h-4 text-white fill-white" />
+                    <div className="flex h-8 w-8 items-center justify-center rounded-full border border-white/20 bg-black/35 backdrop-blur-sm md:h-10 md:w-10">
+                      <Play className="h-3 w-3 fill-white text-white md:h-4 md:w-4" />
                     </div>
                   </div>
 
-                  <div className="absolute inset-x-0 bottom-0 h-40 md:h-44 bg-gradient-to-t from-black/90 via-black/55 to-transparent" />
+                  <div className="absolute inset-x-0 bottom-0 h-40 bg-gradient-to-t from-black/90 via-black/55 to-transparent md:h-44" />
                 </div>
 
-                <div className="absolute left-0 right-0 bottom-0 p-3 md:p-4">
-                  <p className="text-white font-semibold text-xs md:text-sm mb-1 line-clamp-1">{film.title}</p>
-                  <p className="text-white/70 text-[10px] md:text-[11px] leading-relaxed line-clamp-2 mb-2 md:mb-3 hidden md:block">
+                <div className="absolute bottom-0 left-0 right-0 p-3 md:p-4">
+                  <p className="mb-1 line-clamp-1 text-xs font-semibold text-white md:text-sm">
+                    {film.title}
+                  </p>
+                  <p className="mb-2 hidden line-clamp-2 text-[10px] leading-relaxed text-white/70 md:mb-3 md:block md:text-[11px]">
                     {film.description}
                   </p>
 
-                  <div className="flex items-center justify-between text-[10px] md:text-[11px] text-white/60">
+                  <div className="flex items-center justify-between text-[10px] text-white/60 md:text-[11px]">
                     <span>[Genre]</span>
                     <span>1h 0m</span>
                   </div>
@@ -403,10 +450,10 @@ function LatestClipSection({
 
         <button
           onClick={() => scrollByAmount('right')}
-          className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-2 md:translate-x-4 lg:translate-x-6 w-8 h-8 md:w-10 md:h-10 rounded-lg bg-white/95 text-black shadow-md hover:bg-white transition-colors flex items-center justify-center"
+          className="absolute right-0 top-1/2 flex h-8 w-8 translate-x-2 -translate-y-1/2 items-center justify-center rounded-lg bg-white/95 text-black shadow-md transition-colors hover:bg-white md:h-10 md:w-10 md:translate-x-4 lg:translate-x-6"
           aria-label="Next"
         >
-          <span className="text-lg md:text-xl leading-none">›</span>
+          <span className="text-lg leading-none md:text-xl">›</span>
         </button>
       </div>
     </section>
@@ -418,6 +465,7 @@ export default function DashboardPage() {
   const [mostWatchingFilms, setMostWatchingFilms] = useState<FilmData[]>([])
   const [seriesData, setSeriesData] = useState<SeriesData[]>([])
   const [categoryApiData, setCategoryApiData] = useState<CategoryApiData[]>([])
+  const [creatorApiData, setCreatorApiData] = useState<CreatorData[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const router = useRouter()
@@ -460,6 +508,10 @@ export default function DashboardPage() {
             setCategoryApiData(data.list.category)
           }
 
+          if (data.list?.creator && Array.isArray(data.list.creator)) {
+            setCreatorApiData(data.list.creator)
+          }
+
           setError(null)
         } else {
           setError(data.message || 'Failed to fetch data')
@@ -480,7 +532,10 @@ export default function DashboardPage() {
       id: film.id,
       title: film.name,
       image: film.image_url || '/login-hero.jpg',
-      description: film.synopsis || film.description || 'Watch groundbreaking films crafted by human creativity and artificial intelligence.',
+      description:
+        film.synopsis ||
+        film.description ||
+        'Watch groundbreaking films crafted by human creativity and artificial intelligence.',
       category: film.cats || 'Films',
       rating: film.rates ? `${film.rates}/10` : '8.5/10',
       year: `${film.years || '2025'} • ${film.run_time_format || '1h 0m'}`,
@@ -490,7 +545,8 @@ export default function DashboardPage() {
   }
 
   const displayFilms = latestFilms.length > 0 ? transformFilmData(latestFilms) : []
-  const displayMostWatching = mostWatchingFilms.length > 0 ? transformFilmData(mostWatchingFilms) : []
+  const displayMostWatching =
+    mostWatchingFilms.length > 0 ? transformFilmData(mostWatchingFilms) : []
   const displaySeries = seriesData.length > 0 ? seriesData : mockSeries
   const displayCategories =
     categoryApiData.length > 0
@@ -501,44 +557,45 @@ export default function DashboardPage() {
           image: item.images_url || '/placeholder.svg',
         }))
       : fallbackCategoryData
+  const displayCreators = creatorApiData.length > 0 ? creatorApiData : mockCreators
 
   return (
     <div className="min-h-screen bg-[#0a1628] text-foreground dark">
       <Header />
 
       {error && (
-        <div className="px-4 md:px-6 lg:px-12 py-4 bg-red-950/30 border border-red-500/30 rounded-lg mx-4 md:mx-6 lg:mx-12 mt-4 flex items-center gap-3">
-          <AlertCircle className="w-5 h-5 text-red-500" />
+        <div className="mx-4 mt-4 flex items-center gap-3 rounded-lg border border-red-500/30 bg-red-950/30 px-4 py-4 md:mx-6 lg:mx-12">
+          <AlertCircle className="h-5 w-5 text-red-500" />
           <p className="text-sm text-red-300">{error}</p>
         </div>
       )}
 
-      <section className="relative overflow-hidden min-h-[50vh] md:min-h-[70vh] lg:min-h-screen">
+      <section className="relative min-h-[50vh] overflow-hidden md:min-h-[70vh] lg:min-h-screen">
         <Image src="/login-hero.jpg" alt="Hero" fill priority className="object-cover" />
         <div className="absolute inset-0 bg-gradient-to-t from-background via-black/20 to-transparent" />
 
         <div className="absolute inset-0 flex items-end">
-          <div className="w-full px-4 md:px-6 lg:px-12 pb-[60px] md:pb-[112px] lg:pb-[112px]">
-            <h1 className="text-xl md:text-4xl lg:text-5xl font-bold text-white mb-2 md:mb-3">
+          <div className="w-full px-4 pb-[60px] md:px-6 md:pb-[112px] lg:px-12 lg:pb-[112px]">
+            <h1 className="mb-2 text-xl font-bold text-white md:mb-3 md:text-4xl lg:text-5xl">
               [Judul Film]
             </h1>
 
-            <p className="text-xs md:text-base lg:text-lg text-gray-300 mb-4 md:mb-5 max-w-2xl line-clamp-2 md:line-clamp-none">
+            <p className="mb-4 max-w-2xl line-clamp-2 text-xs text-gray-300 md:mb-5 md:line-clamp-none md:text-base lg:text-lg">
               Watch groundbreaking films crafted by human creativity and artificial intelligence.
             </p>
 
-            <Button className="bg-white text-background hover:bg-gray-200 text-sm md:text-base py-2 md:py-2.5">
+            <Button className="bg-white py-2 text-sm text-background hover:bg-gray-200 md:py-2.5 md:text-base">
               ▶ Watch Now
             </Button>
           </div>
         </div>
 
-        <div className="absolute left-1/2 -translate-x-1/2 bottom-[60px] md:bottom-[112px] lg:bottom-[112px]">
+        <div className="absolute bottom-[60px] left-1/2 -translate-x-1/2 md:bottom-[112px] lg:bottom-[112px]">
           <div className="flex gap-1">
-            <div className="w-6 h-1 bg-white rounded-full" />
-            <div className="w-1 h-1 bg-gray-400 rounded-full" />
-            <div className="w-1 h-1 bg-gray-400 rounded-full" />
-            <div className="w-1 h-1 bg-gray-400 rounded-full" />
+            <div className="h-1 w-6 rounded-full bg-white" />
+            <div className="h-1 w-1 rounded-full bg-gray-400" />
+            <div className="h-1 w-1 rounded-full bg-gray-400" />
+            <div className="h-1 w-1 rounded-full bg-gray-400" />
           </div>
         </div>
       </section>
@@ -547,49 +604,54 @@ export default function DashboardPage() {
         <CarouselSection title="Latest Films" items={displayFilms} />
       </div>
 
-      <section className="px-4 md:px-6 lg:px-12 py-6 md:py-10 border-t border-white/10">
-        <div className="flex items-center justify-between mb-4 md:mb-6">
-          <h2 className="text-sm md:text-lg font-semibold text-white">Latest Series</h2>
+      <section className="border-t border-white/10 px-4 py-6 md:px-6 md:py-10 lg:px-12">
+        <div className="mb-4 flex items-center justify-between md:mb-6">
+          <h2 className="text-sm font-semibold text-white md:text-lg">Latest Series</h2>
           <Link
             href="/dashboard/series"
-            className="text-xs font-medium text-white/90 bg-white/10 hover:bg-white/15 border border-white/10 rounded-full px-3 md:px-4 py-1 md:py-1.5 transition-colors"
+            className="rounded-full border border-white/10 bg-white/10 px-3 py-1 text-xs font-medium text-white/90 transition-colors hover:bg-white/15 md:px-4 md:py-1.5"
           >
             View All
           </Link>
         </div>
 
-        <div className="grid gap-4 md:gap-6 grid-cols-1 lg:grid-cols-[1fr_340px]">
+        <div className="grid grid-cols-1 gap-4 md:gap-6 lg:grid-cols-[1fr_340px]">
           {loading ? (
             <FeaturedSkeleton />
           ) : displaySeries[0] ? (
             <Link href={`/dashboard/series/detail?id=${displaySeries[0].id}`} className="group block">
-              <div className="relative w-full aspect-[16/10] md:aspect-[1066/660] rounded-xl md:rounded-3xl overflow-hidden bg-black">
+              <div className="relative aspect-[16/10] w-full overflow-hidden rounded-xl bg-black md:aspect-[1066/660] md:rounded-3xl">
                 <Image
-                  src={displaySeries[0].image_landscape_url || displaySeries[0].image_url || displaySeries[0].image || '/login-hero.jpg'}
+                  src={
+                    displaySeries[0].image_landscape_url ||
+                    displaySeries[0].image_url ||
+                    displaySeries[0].image ||
+                    '/login-hero.jpg'
+                  }
                   alt={displaySeries[0].name}
                   fill
                   priority
                   sizes="(min-width: 1066px) 65vw, 100vw"
-                  className="absolute inset-0 h-full w-full object-cover object-center group-hover:scale-105 transition-transform duration-500"
+                  className="absolute inset-0 h-full w-full object-cover object-center transition-transform duration-500 group-hover:scale-105"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/30 to-transparent" />
 
-                <div className="absolute bottom-4 md:bottom-6 left-4 md:left-6 right-4 md:right-6">
-                  <h3 className="text-white font-semibold text-base md:text-xl mb-3 md:mb-4">
+                <div className="absolute bottom-4 left-4 right-4 md:bottom-6 md:left-6 md:right-6">
+                  <h3 className="mb-3 text-base font-semibold text-white md:mb-4 md:text-xl">
                     {displaySeries[0].name}
                   </h3>
 
-                  <p className="text-white/70 text-xs md:text-sm mb-3 md:mb-4">
+                  <p className="mb-3 text-xs text-white/70 md:mb-4 md:text-sm">
                     {displaySeries[0].asset_name} • {displaySeries[0].run_time_format}
                   </p>
 
                   <div className="flex items-center gap-2 md:gap-3">
-                    <button className="inline-flex items-center gap-2 bg-white text-black hover:bg-gray-200 rounded-full px-4 md:px-5 py-1.5 md:py-2 text-xs md:text-sm font-semibold transition-colors">
-                      <Play className="w-3 h-3 md:w-4 md:h-4 fill-black" />
+                    <button className="inline-flex items-center gap-2 rounded-full bg-white px-4 py-1.5 text-xs font-semibold text-black transition-colors hover:bg-gray-200 md:px-5 md:py-2 md:text-sm">
+                      <Play className="h-3 w-3 fill-black md:h-4 md:w-4" />
                       Watch Now
                     </button>
-                    <button className="w-9 h-9 md:w-10 md:h-10 rounded-full bg-white/10 hover:bg-white/20 border border-white/10 flex items-center justify-center text-white transition-colors">
-                      <Info className="w-4 h-4 md:w-5 md:h-5" />
+                    <button className="flex h-9 w-9 items-center justify-center rounded-full border border-white/10 bg-white/10 text-white transition-colors hover:bg-white/20 md:h-10 md:w-10">
+                      <Info className="h-4 w-4 md:h-5 md:w-5" />
                     </button>
                   </div>
                 </div>
@@ -606,21 +668,32 @@ export default function DashboardPage() {
               </>
             ) : (
               displaySeries.slice(1, 4).map((series) => (
-                <Link key={series.id} href={`/dashboard/series/detail?id=${series.id}`} className="relative rounded-lg md:rounded-2xl overflow-hidden group">
-                  <div className="relative w-full aspect-[16/9] md:aspect-[302/160] bg-black">
+                <Link
+                  key={series.id}
+                  href={`/dashboard/series/detail?id=${series.id}`}
+                  className="group relative overflow-hidden rounded-lg md:rounded-2xl"
+                >
+                  <div className="relative aspect-[16/9] w-full bg-black md:aspect-[302/160]">
                     <Image
-                      src={series.image_landscape_url || series.image_url || series.image || '/placeholder.svg'}
+                      src={
+                        series.image_landscape_url ||
+                        series.image_url ||
+                        series.image ||
+                        '/placeholder.svg'
+                      }
                       alt={series.name}
                       fill
-                      className="object-cover group-hover:scale-105 transition-transform duration-500"
+                      className="object-cover transition-transform duration-500 group-hover:scale-105"
                     />
                   </div>
 
                   <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/30 to-transparent" />
 
                   <div className="absolute bottom-3 left-3 right-3 md:bottom-4 md:left-4 md:right-4">
-                    <p className="text-white font-semibold text-xs md:text-sm truncate">{series.name}</p>
-                    <p className="text-white/70 text-[10px] md:text-xs mt-0.5 md:mt-1">
+                    <p className="truncate text-xs font-semibold text-white md:text-sm">
+                      {series.name}
+                    </p>
+                    <p className="mt-0.5 text-[10px] text-white/70 md:mt-1 md:text-xs">
                       {series.asset_name} • {series.run_time_format}
                     </p>
                   </div>
@@ -633,67 +706,69 @@ export default function DashboardPage() {
 
       <LatestClipSection title="Latest Clip" items={loading ? [] : displayFilms} />
 
-      <section className="px-4 md:px-6 lg:px-12 py-8 md:py-10 border-t border-white/10">
+      <section className="border-t border-white/10 px-4 py-8 md:px-6 md:py-10 lg:px-12">
         <div className="relative">
-          <div className="flex items-start gap-3 mb-6">
+          <div className="mb-6 flex items-start gap-3">
             <div>
-              <h2 className="text-white font-bold text-2xl md:text-3xl leading-none">Upcoming Event</h2>
-              <div className="w-14 h-[3px] bg-yellow-400 rounded-full mt-3" />
+              <h2 className="text-2xl font-bold leading-none text-white md:text-3xl">
+                Upcoming Event
+              </h2>
+              <div className="mt-3 h-[3px] w-14 rounded-full bg-yellow-400" />
             </div>
           </div>
 
           <div className="relative mb-6 md:mb-8">
             <div className="absolute left-0 right-0 top-2 border-t border-dashed border-white/60" />
-            <div className="relative flex justify-between items-center">
-              <div className="w-3 h-3 rounded-full bg-white" />
-              <div className="w-3 h-3 rounded-full bg-white" />
+            <div className="relative flex items-center justify-between">
+              <div className="h-3 w-3 rounded-full bg-white" />
+              <div className="h-3 w-3 rounded-full bg-white" />
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8 mb-5">
+          <div className="mb-5 grid grid-cols-1 gap-6 md:grid-cols-2 md:gap-8">
             <div>
-              <h3 className="text-white text-2xl font-semibold leading-none">Hari ini</h3>
-              <p className="text-white/60 text-xl mt-2">Kamis</p>
+              <h3 className="text-2xl font-semibold leading-none text-white">Hari ini</h3>
+              <p className="mt-2 text-xl text-white/60">Kamis</p>
             </div>
 
-            <div className="hidden md:block text-left">
-              <h3 className="text-white text-2xl font-semibold leading-none">Besok</h3>
-              <p className="text-white/60 text-xl mt-2">Jumat</p>
+            <div className="hidden text-left md:block">
+              <h3 className="text-2xl font-semibold leading-none text-white">Besok</h3>
+              <p className="mt-2 text-xl text-white/60">Jumat</p>
             </div>
           </div>
 
           <div className="relative">
             <div
-              className="flex gap-4 md:gap-6 overflow-x-auto pb-2 pr-10"
+              className="flex gap-4 overflow-x-auto pb-2 pr-10 md:gap-6"
               style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
             >
-              <div className="flex-shrink-0 w-[320px] md:w-[500px]">
-                <div className="bg-black rounded-xl overflow-hidden min-h-[160px] flex">
+              <div className="w-[320px] flex-shrink-0 md:w-[500px]">
+                <div className="flex min-h-[160px] overflow-hidden rounded-xl bg-black">
                   <div className="flex-1 p-4 md:p-5">
-                    <div className="flex items-center justify-between gap-3 mb-3">
-                      <div className="flex items-center gap-2 text-white/70 text-sm">
+                    <div className="mb-3 flex items-center justify-between gap-3">
+                      <div className="flex items-center gap-2 text-sm text-white/70">
                         <span>◷</span>
                         <span>16:30 PM - 19:30 PM</span>
                       </div>
-                      <span className="bg-white text-black text-[11px] font-medium px-3 py-1 rounded-md leading-none">
+                      <span className="rounded-md bg-white px-3 py-1 text-[11px] font-medium leading-none text-black">
                         [Tipe Event]
                       </span>
                     </div>
 
-                    <h3 className="text-white text-[28px] md:text-[32px] font-bold leading-none mb-3">
+                    <h3 className="mb-3 text-[28px] font-bold leading-none text-white md:text-[32px]">
                       [Judul Event]
                     </h3>
 
-                    <div className="flex items-center gap-2 text-white/70 text-sm mb-3">
+                    <div className="mb-3 flex items-center gap-2 text-sm text-white/70">
                       <span>◌</span>
                       <span>5/50</span>
                     </div>
 
-                    <p className="text-white font-semibold text-lg mb-2 leading-none">Online</p>
-                    <p className="text-white/60 text-sm">Zoom Meeting</p>
+                    <p className="mb-2 text-lg font-semibold leading-none text-white">Online</p>
+                    <p className="text-sm text-white/60">Zoom Meeting</p>
                   </div>
 
-                  <div className="relative w-[110px] md:w-[135px] flex-shrink-0">
+                  <div className="relative w-[110px] flex-shrink-0 md:w-[135px]">
                     <Image
                       src="/images/event/example.png"
                       alt="Event Poster"
@@ -704,33 +779,33 @@ export default function DashboardPage() {
                 </div>
               </div>
 
-              <div className="flex-shrink-0 w-[320px] md:w-[500px]">
-                <div className="bg-black rounded-xl overflow-hidden min-h-[160px] flex">
+              <div className="w-[320px] flex-shrink-0 md:w-[500px]">
+                <div className="flex min-h-[160px] overflow-hidden rounded-xl bg-black">
                   <div className="flex-1 p-4 md:p-5">
-                    <div className="flex items-center justify-between gap-3 mb-3">
-                      <div className="flex items-center gap-2 text-white/70 text-sm">
+                    <div className="mb-3 flex items-center justify-between gap-3">
+                      <div className="flex items-center gap-2 text-sm text-white/70">
                         <span>◷</span>
                         <span>16:30 PM - 19:30 PM</span>
                       </div>
-                      <span className="bg-white text-black text-[11px] font-medium px-3 py-1 rounded-md leading-none">
+                      <span className="rounded-md bg-white px-3 py-1 text-[11px] font-medium leading-none text-black">
                         [Tipe Event]
                       </span>
                     </div>
 
-                    <h3 className="text-white text-[28px] md:text-[32px] font-bold leading-none mb-3">
+                    <h3 className="mb-3 text-[28px] font-bold leading-none text-white md:text-[32px]">
                       [Judul Event]
                     </h3>
 
-                    <div className="flex items-center gap-2 text-white/70 text-sm mb-3">
+                    <div className="mb-3 flex items-center gap-2 text-sm text-white/70">
                       <span>◌</span>
                       <span>5/50</span>
                     </div>
 
-                    <p className="text-white font-semibold text-lg mb-2 leading-none">Online</p>
-                    <p className="text-white/60 text-sm">Zoom Meeting</p>
+                    <p className="mb-2 text-lg font-semibold leading-none text-white">Online</p>
+                    <p className="text-sm text-white/60">Zoom Meeting</p>
                   </div>
 
-                  <div className="relative w-[110px] md:w-[135px] flex-shrink-0">
+                  <div className="relative w-[110px] flex-shrink-0 md:w-[135px]">
                     <Image
                       src="/images/event/example.png"
                       alt="Event Poster"
@@ -741,33 +816,33 @@ export default function DashboardPage() {
                 </div>
               </div>
 
-              <div className="flex-shrink-0 w-[320px] md:w-[500px]">
-                <div className="bg-black rounded-xl overflow-hidden min-h-[160px] flex">
+              <div className="w-[320px] flex-shrink-0 md:w-[500px]">
+                <div className="flex min-h-[160px] overflow-hidden rounded-xl bg-black">
                   <div className="flex-1 p-4 md:p-5">
-                    <div className="flex items-center justify-between gap-3 mb-3">
-                      <div className="flex items-center gap-2 text-white/70 text-sm">
+                    <div className="mb-3 flex items-center justify-between gap-3">
+                      <div className="flex items-center gap-2 text-sm text-white/70">
                         <span>◷</span>
                         <span>16:30 PM - 19:30 PM</span>
                       </div>
-                      <span className="bg-white text-black text-[11px] font-medium px-3 py-1 rounded-md leading-none">
+                      <span className="rounded-md bg-white px-3 py-1 text-[11px] font-medium leading-none text-black">
                         [Tipe Event]
                       </span>
                     </div>
 
-                    <h3 className="text-white text-[28px] md:text-[32px] font-bold leading-none mb-3">
+                    <h3 className="mb-3 text-[28px] font-bold leading-none text-white md:text-[32px]">
                       [Judul Event]
                     </h3>
 
-                    <div className="flex items-center gap-2 text-white/70 text-sm mb-3">
+                    <div className="mb-3 flex items-center gap-2 text-sm text-white/70">
                       <span>◌</span>
                       <span>5/50</span>
                     </div>
 
-                    <p className="text-white font-semibold text-lg mb-2 leading-none">Online</p>
-                    <p className="text-white/60 text-sm">Zoom Meeting</p>
+                    <p className="mb-2 text-lg font-semibold leading-none text-white">Online</p>
+                    <p className="text-sm text-white/60">Zoom Meeting</p>
                   </div>
 
-                  <div className="relative w-[110px] md:w-[135px] flex-shrink-0">
+                  <div className="relative w-[110px] flex-shrink-0 md:w-[135px]">
                     <Image
                       src="/images/event/example.png"
                       alt="Event Poster"
@@ -780,21 +855,21 @@ export default function DashboardPage() {
             </div>
 
             <button
-              className="hidden md:flex absolute right-[-6px] top-1/2 -translate-y-1/2 w-11 h-12 rounded-l-xl bg-white text-black items-center justify-center shadow-lg"
+              className="absolute right-[-6px] top-1/2 hidden h-12 w-11 -translate-y-1/2 items-center justify-center rounded-l-xl bg-white text-black shadow-lg md:flex"
               aria-label="Next upcoming"
             >
-              <ChevronRight className="w-6 h-6" />
+              <ChevronRight className="h-6 w-6" />
             </button>
           </div>
         </div>
       </section>
 
       {loading ? (
-        <section className="px-4 md:px-6 lg:px-12 py-6 md:py-8">
-          <div className="flex items-center justify-between mb-4 md:mb-6">
-            <h2 className="text-lg md:text-2xl font-bold text-foreground">Latest Awards</h2>
+        <section className="px-4 py-6 md:px-6 md:py-8 lg:px-12">
+          <div className="mb-4 flex items-center justify-between md:mb-6">
+            <h2 className="text-lg font-bold text-foreground md:text-2xl">Latest Awards</h2>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
+          <div className="grid grid-cols-1 gap-4 md:gap-6 sm:grid-cols-2 lg:grid-cols-4">
             {[1, 2, 3, 4].map((i) => (
               <AwardSkeleton key={i} />
             ))}
@@ -814,40 +889,47 @@ export default function DashboardPage() {
         <CarouselSection title="Most Watching Film" items={displayMostWatching} />
       </div>
 
-      <section className="px-4 md:px-6 lg:px-12 py-6 md:py-8 border-t border-border">
-        <div className="flex items-center justify-between mb-4 md:mb-6">
-          <h2 className="text-lg md:text-2xl font-bold text-foreground">Creator</h2>
+      <section className="border-t border-border px-4 py-6 md:px-6 md:py-8 lg:px-12">
+        <div className="mb-4 flex items-center justify-between md:mb-6">
+          <h2 className="text-lg font-bold text-foreground md:text-2xl">Creator</h2>
           <div className="flex gap-2">
-            <button className="bg-accent/20 hover:bg-accent/40 p-1.5 md:p-2 rounded-full transition-colors">
-              <X className="w-4 h-4 md:w-5 md:h-5 text-white" />
+            <button className="rounded-full bg-accent/20 p-1.5 transition-colors hover:bg-accent/40 md:p-2">
+              <X className="h-4 w-4 text-white md:h-5 md:w-5" />
             </button>
-            <button className="bg-accent/20 hover:bg-accent/40 p-1.5 md:p-2 rounded-full transition-colors">
-              <Menu className="w-4 h-4 md:w-5 md:h-5 text-white" />
+            <button className="rounded-full bg-accent/20 p-1.5 transition-colors hover:bg-accent/40 md:p-2">
+              <Menu className="h-4 w-4 text-white md:h-5 md:w-5" />
             </button>
           </div>
         </div>
 
-        <div className="flex gap-3 md:gap-6 overflow-x-auto pb-4">
-          {mockCreators.map((creator) => (
-            <div key={creator.id} className="flex-shrink-0 flex flex-col items-center">
-              <div className="w-16 h-16 md:w-24 md:h-24 rounded-full mb-2 md:mb-4 overflow-hidden">
-                <Image src="/images/pngs.png" alt={creator.name} width={100} height={100} className="w-full h-full object-cover" />
+        <div className="flex gap-3 overflow-x-auto pb-4 md:gap-6">
+          {displayCreators.map((creator) => (
+            <div key={creator.id} className="flex flex-shrink-0 flex-col items-center">
+              <div className="relative mb-2 h-16 w-16 overflow-hidden rounded-full bg-white/10 md:mb-4 md:h-24 md:w-24">
+                <Image
+                  src={creator.avatar_url || '/images/pngs.png'}
+                  alt={creator.name}
+                  fill
+                  className="object-cover"
+                />
               </div>
-              <p className="font-semibold text-foreground text-center text-sm">{creator.name}</p>
-              <p className="text-xs text-muted-foreground text-center">{creator.movies}</p>
+              <p className="text-center text-sm font-semibold text-foreground">{creator.name}</p>
+              <p className="text-center text-xs text-muted-foreground">
+                {creator.total_video || '0'} movies
+              </p>
             </div>
           ))}
         </div>
 
-        <div className="flex justify-center mt-8">
-          <Button className="bg-transparent border border-white/20 hover:bg-white/10 text-white">
+        <div className="mt-8 flex justify-center">
+          <Button className="border border-white/20 bg-transparent text-white hover:bg-white/10">
             View All Creators
           </Button>
         </div>
       </section>
 
-      <section className="px-4 md:px-6 lg:px-12 py-8 md:py-12 border-t border-border">
-        <div className="relative rounded-xl overflow-hidden min-h-96 md:min-h-[500px]">
+      <section className="border-t border-border px-4 py-8 md:px-6 md:py-12 lg:px-12">
+        <div className="relative min-h-96 overflow-hidden rounded-xl md:min-h-[500px]">
           <div className="absolute inset-0">
             <Image src="/images/design-mode/a.png" alt="Banner Background" fill className="object-cover" />
           </div>
@@ -858,32 +940,32 @@ export default function DashboardPage() {
         </div>
       </section>
 
-      <section className="mt-8 md:mt-12 mb-6 md:mb-8 mx-4 md:mx-6 lg:mx-12">
-        <div className="relative rounded-lg overflow-hidden border border-white/10">
+      <section className="mx-4 mb-6 mt-8 md:mx-6 md:mb-8 md:mt-12 lg:mx-12">
+        <div className="relative overflow-hidden rounded-lg border border-white/10">
           <div className="absolute inset-0">
             <Image src="/images/usky-tv-bg.png" alt="Background" fill className="object-cover" />
           </div>
           <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/60 to-black/40" />
 
-          <div className="relative flex flex-col lg:flex-row items-center justify-between px-4 md:px-6 lg:px-12 py-6 md:py-8 lg:py-12 gap-4 md:gap-8">
-            <div className="flex-1 max-w-md">
-              <div className="inline-block bg-foreground text-background text-xs font-semibold px-3 py-1 rounded-full mb-3 md:mb-4">
+          <div className="relative flex flex-col items-center justify-between gap-4 px-4 py-6 md:gap-8 md:px-6 md:py-8 lg:flex-row lg:px-12 lg:py-12">
+            <div className="max-w-md flex-1">
+              <div className="mb-3 inline-block rounded-full bg-foreground px-3 py-1 text-xs font-semibold text-background md:mb-4">
                 Coming Soon
               </div>
-              <h2 className="text-2xl md:text-3xl lg:text-4xl font-bold text-foreground mb-3 md:mb-4 leading-tight">
+              <h2 className="mb-3 text-2xl font-bold leading-tight text-foreground md:mb-4 md:text-3xl lg:text-4xl">
                 Get the USKY TV for free
               </h2>
-              <ul className="space-y-1.5 md:space-y-2 text-muted-foreground text-xs md:text-sm">
+              <ul className="space-y-1.5 text-xs text-muted-foreground md:space-y-2 md:text-sm">
                 <li className="flex items-start gap-2">
-                  <span className="text-accent mt-1">•</span>
+                  <span className="mt-1 text-accent">•</span>
                   <span>Live events, films and shows</span>
                 </li>
                 <li className="flex items-start gap-2">
-                  <span className="text-accent mt-1">•</span>
+                  <span className="mt-1 text-accent">•</span>
                   <span>Offline viewing</span>
                 </li>
                 <li className="flex items-start gap-2">
-                  <span className="text-accent mt-1">•</span>
+                  <span className="mt-1 text-accent">•</span>
                   <span>Event reminders</span>
                 </li>
               </ul>
