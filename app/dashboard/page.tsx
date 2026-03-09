@@ -32,6 +32,15 @@ import {
   AwardSkeleton,
 } from '@/components/skeleton-loaders'
 
+interface TrailerData {
+  id: string
+  name?: string
+  description?: string
+  image?: string
+  image_url?: string
+  video?: string
+  video_url?: string
+}
 interface FilmData {
   id: string
   name: string
@@ -461,6 +470,7 @@ function LatestClipSection({
 }
 
 export default function DashboardPage() {
+  const [trailerData, setTrailerData] = useState<TrailerData | null>(null)
   const [latestFilms, setLatestFilms] = useState<FilmData[]>([])
   const [mostWatchingFilms, setMostWatchingFilms] = useState<FilmData[]>([])
   const [seriesData, setSeriesData] = useState<SeriesData[]>([])
@@ -469,7 +479,30 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const router = useRouter()
+  const heroTitle = trailerData?.name || '[Judul Film]'
+  const [isTrailerPlaying, setIsTrailerPlaying] = useState(false)
+  
 
+const heroImage =
+  trailerData?.image_url ||
+  (trailerData?.image
+    ? `https://api.usky.ai/uploads/${trailerData.image}`
+    : '/login-hero.jpg')
+
+const heroVideo =
+  trailerData?.video_url ||
+  (trailerData?.video
+    ? `https://api.usky.ai/uploads/${trailerData.video}`
+    : '')
+
+ const handleWatchTrailer = () => {
+  if (!heroVideo) return
+  setIsTrailerPlaying(true)
+}
+
+const handleCloseTrailer = () => {
+  setIsTrailerPlaying(false)
+}
   useEffect(() => {
     const fetchDashboardData = async () => {
       try {
@@ -510,6 +543,10 @@ export default function DashboardPage() {
 
           if (data.list?.creator && Array.isArray(data.list.creator)) {
             setCreatorApiData(data.list.creator)
+          }
+
+          if (data.list?.trailer && Array.isArray(data.list.trailer)) {
+            setTrailerData(data.list.trailer[0])
           }
 
           setError(null)
@@ -570,35 +607,72 @@ export default function DashboardPage() {
         </div>
       )}
 
-      <section className="relative min-h-[50vh] overflow-hidden md:min-h-[70vh] lg:min-h-screen">
-        <Image src="/login-hero.jpg" alt="Hero" fill priority className="object-cover" />
-        <div className="absolute inset-0 bg-gradient-to-t from-background via-black/20 to-transparent" />
+<section className="relative min-h-[50vh] overflow-hidden md:min-h-[70vh] lg:min-h-screen">
+  {isTrailerPlaying && heroVideo ? (
+    <video
+      key={heroVideo}
+      autoPlay
+      muted
+      loop
+      playsInline
+      controls={false}
+      className="absolute inset-0 h-full w-full object-cover"
+    >
+      <source src={heroVideo} type="video/mp4" />
+      Browser Anda tidak mendukung video.
+    </video>
+  ) : (
+    <Image
+      src={heroImage}
+      alt={heroTitle}
+      fill
+      priority
+      className="object-cover"
+    />
+  )}
 
-        <div className="absolute inset-0 flex items-end">
-          <div className="w-full px-4 pb-[60px] md:px-6 md:pb-[112px] lg:px-12 lg:pb-[112px]">
-            <h1 className="mb-2 text-xl font-bold text-white md:mb-3 md:text-4xl lg:text-5xl">
-              [Judul Film]
-            </h1>
+  <div className="absolute inset-0 bg-gradient-to-t from-background via-black/20 to-transparent" />
 
-            <p className="mb-4 max-w-2xl line-clamp-2 text-xs text-gray-300 md:mb-5 md:line-clamp-none md:text-base lg:text-lg">
-              Watch groundbreaking films crafted by human creativity and artificial intelligence.
-            </p>
+  <div className="absolute inset-0 flex items-end">
+    <div className="w-full px-4 pb-[60px] md:px-6 md:pb-[112px] lg:px-12 lg:pb-[112px]">
+      <h1 className="mb-2 text-xl font-bold text-white md:mb-3 md:text-4xl lg:text-5xl">
+        {heroTitle}
+      </h1>
 
-            <Button className="bg-white py-2 text-sm text-background hover:bg-gray-200 md:py-2.5 md:text-base">
-              ▶ Watch Now
-            </Button>
-          </div>
-        </div>
+      <p className="mb-4 max-w-2xl line-clamp-2 text-xs text-gray-300 md:mb-5 md:line-clamp-none md:text-base lg:text-lg">
+        Watch groundbreaking films crafted by human creativity and artificial intelligence.
+      </p>
 
-        <div className="absolute bottom-[60px] left-1/2 -translate-x-1/2 md:bottom-[112px] lg:bottom-[112px]">
-          <div className="flex gap-1">
-            <div className="h-1 w-6 rounded-full bg-white" />
-            <div className="h-1 w-1 rounded-full bg-gray-400" />
-            <div className="h-1 w-1 rounded-full bg-gray-400" />
-            <div className="h-1 w-1 rounded-full bg-gray-400" />
-          </div>
-        </div>
-      </section>
+      <div className="flex gap-3">
+        <Button
+          onClick={handleWatchTrailer}
+          disabled={!heroVideo}
+          className="bg-white py-2 text-sm text-background hover:bg-gray-200 disabled:opacity-50 md:py-2.5 md:text-base"
+        >
+          ▶ Watch Now
+        </Button>
+
+        {isTrailerPlaying && (
+          <Button
+            onClick={handleCloseTrailer}
+            className="border border-white/20 bg-black/30 py-2 text-sm text-white hover:bg-black/50 md:py-2.5 md:text-base"
+          >
+            ✕ Close
+          </Button>
+        )}
+      </div>
+    </div>
+  </div>
+
+  <div className="absolute bottom-[60px] left-1/2 -translate-x-1/2 md:bottom-[112px] lg:bottom-[112px]">
+    <div className="flex gap-1">
+      <div className="h-1 w-6 rounded-full bg-white" />
+      <div className="h-1 w-1 rounded-full bg-gray-400" />
+      <div className="h-1 w-1 rounded-full bg-gray-400" />
+      <div className="h-1 w-1 rounded-full bg-gray-400" />
+    </div>
+  </div>
+</section>
 
       <div className="block">
         <CarouselSection title="Latest Films" items={displayFilms} />
