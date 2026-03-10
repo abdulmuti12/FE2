@@ -166,13 +166,15 @@ export function Header() {
         <div className="flex flex-col gap-4 md:hidden">
           {/* Row 1 */}
           <div className="flex items-center justify-between">
-            <Image
-              src="/usky-logo.png"
-              alt="USKY Logo"
-              width={120}
-              height={40}
-              className="h-8 w-auto object-contain"
-            />
+            <Link href="/dashboard">
+              <Image
+                src="/usky-logo.png"
+                alt="USKY Logo"
+                width={120}
+                height={40}
+                className="h-8 w-auto object-contain cursor-pointer hover:opacity-80 transition-opacity"
+              />
+            </Link>
 
             <div className="flex items-center gap-4">
               {!isSearchActive ? (
@@ -242,13 +244,15 @@ export function Header() {
         <div className="hidden md:flex flex-col md:flex-row md:items-center justify-between gap-4">
           {/* LEFT */}
           <div className="flex items-center justify-between w-full md:w-auto">
-            <Image
-              src="/usky-logo.png"
-              alt="USKY Logo"
-              width={80}
-              height={35}
-              className="h-8 md:h-9 w-auto object-contain"
-            />
+            <Link href="/dashboard">
+              <Image
+                src="/usky-logo.png"
+                alt="USKY Logo"
+                width={80}
+                height={35}
+                className="h-8 md:h-9 w-auto object-contain cursor-pointer hover:opacity-80 transition-opacity"
+              />
+            </Link>
           </div>
 
           {/* RIGHT */}

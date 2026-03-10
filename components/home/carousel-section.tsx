@@ -6,13 +6,7 @@ import { ChevronLeft, ChevronRight, X, Menu } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 
 const creatorData = [
-  { name: 'Creator 1', count: '5 movies' },
-  { name: 'Creator 2', count: '8 movies' },
-  { name: 'Creator 3', count: '12 movies' },
-  { name: 'Creator 4', count: '6 movies' },
-  { name: 'Creator 5', count: '9 movies' },
-  { name: 'Creator 6', count: '7 movies' },
-  { name: 'Creator 7', count: '11 movies' },
+  { name: 'Creator 1', count: '5 movies' }
 ]
 
 interface CarouselSectionProps {

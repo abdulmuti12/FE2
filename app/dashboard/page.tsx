@@ -1,19 +1,12 @@
 'use client'
 
 import {
-  User,
-  Ticket,
-  CreditCard,
-  Settings,
-  LogOut,
-  Search,
-  X,
+  AlertCircle,
+  Calendar,
+  Info,
   Menu,
   Play,
-  Info,
-  AlertCircle,
-  ChevronLeft,
-  ChevronRight,
+  X,
 } from 'lucide-react'
 import Image from 'next/image'
 import Link from 'next/link'
@@ -26,12 +19,11 @@ import { LatestAwards } from '@/components/home/latest-awards'
 import { FutureFilmmaking } from '@/components/home/future-filmmaking'
 import { CategorySection } from '@/components/home/category-section'
 import { MostWatchingFilm } from '@/components/home/most-watching-film'
-import { CarouselSection } from '@/components/home/carousel-section'
 import { LatestFilm } from '@/components/home/latest-film'
+import { UpcomingEventsSection } from '@/components/home/upcoming-events-section'
 import {
   FeaturedSkeleton,
   SeriesSkeleton,
-  CarouselSkeleton,
   AwardSkeleton,
 } from '@/components/skeleton-loaders'
 
@@ -44,6 +36,14 @@ interface TrailerData {
   video?: string
   video_url?: string
 }
+
+interface EventData {
+  id: string
+  title: string
+  image_url?: string
+  tgl_live?: string
+}
+
 interface FilmData {
   id: string
   name: string
@@ -57,6 +57,17 @@ interface FilmData {
   rates?: string | null
   favorit?: string
   my_favorit?: string
+}
+
+interface AwardData {
+  id: string
+  name: string
+  image_url?: string
+  image?: string
+  video_url?: string
+  description?: string
+  type?: string
+  synopsis?: string
 }
 
 interface SeriesData {
@@ -130,36 +141,7 @@ const mockAwards = [
   },
 ]
 
-const mockSeries: SeriesData[] = [
-  {
-    id: '1',
-    name: '[Judul Series]',
-    asset_name: 'Episode 1',
-    run_time_format: '1h 0m',
-    image: '/images/featured-series.png',
-  },
-  {
-    id: '2',
-    name: '[Judul Series]',
-    asset_name: 'Episode 2',
-    run_time_format: '1h 0m',
-    image: '/film/film1.png',
-  },
-  {
-    id: '3',
-    name: '[Judul Series]',
-    asset_name: 'Episode 3',
-    run_time_format: '1h 0m',
-    image: '/film/film2.png',
-  },
-  {
-    id: '4',
-    name: '[Judul Series]',
-    asset_name: 'Episode 4',
-    run_time_format: '1h 0m',
-    image: '/images/imageheader.png',
-  },
-]
+const mockSeries: SeriesData[] = []
 
 const fallbackCategoryData = [
   { id: '1', name: 'Genre', count: '3.2K', image: '/placeholder.svg' },
@@ -179,16 +161,6 @@ const mockCreators: CreatorData[] = [
   { id: '5', name: '[Creator]', avatar_url: '/images/pngs.png', total_video: '3' },
   { id: '6', name: '[Creator]', avatar_url: '/images/pngs.png', total_video: '3' },
   { id: '7', name: '[Creator]', avatar_url: '/images/pngs.png', total_video: '3' },
-]
-
-const creatorData = [
-  { name: 'Creator', count: '1.2K' },
-  { name: 'Creator', count: '1.1K' },
-  { name: 'Creator', count: '0.9K' },
-  { name: 'Creator', count: '0.8K' },
-  { name: 'Creator', count: '0.7K' },
-  { name: 'Creator', count: '0.6K' },
-  { name: 'Creator', count: '0.5K' },
 ]
 
 function LatestClipSection({
@@ -283,6 +255,7 @@ function LatestClipSection({
 export default function DashboardPage() {
   const [trailerData, setTrailerData] = useState<TrailerData | null>(null)
   const [latestFilms, setLatestFilms] = useState<FilmData[]>([])
+  const [latestAwards, setLatestAwards] = useState<AwardData[]>([])
   const [mostWatchingFilms, setMostWatchingFilms] = useState<FilmData[]>([])
   const [seriesData, setSeriesData] = useState<SeriesData[]>([])
   const [categoryApiData, setCategoryApiData] = useState<CategoryApiData[]>([])
@@ -292,28 +265,29 @@ export default function DashboardPage() {
   const router = useRouter()
   const heroTitle = trailerData?.name || '[Judul Film]'
   const [isTrailerPlaying, setIsTrailerPlaying] = useState(false)
-  
+  const [eventData, setEventData] = useState<EventData[]>([])
 
-const heroImage =
-  trailerData?.image_url ||
-  (trailerData?.image
-    ? `https://api.usky.ai/uploads/${trailerData.image}`
-    : '/login-hero.jpg')
+  const heroImage =
+    trailerData?.image_url ||
+    (trailerData?.image
+      ? `https://api.usky.ai/uploads/${trailerData.image}`
+      : '/login-hero.jpg')
 
-const heroVideo =
-  trailerData?.video_url ||
-  (trailerData?.video
-    ? `https://api.usky.ai/uploads/${trailerData.video}`
-    : '')
+  const heroVideo =
+    trailerData?.video_url ||
+    (trailerData?.video
+      ? `https://api.usky.ai/uploads/${trailerData.video}`
+      : '')
 
- const handleWatchTrailer = () => {
-  if (!heroVideo) return
-  setIsTrailerPlaying(true)
-}
+  const handleWatchTrailer = () => {
+    if (!heroVideo) return
+    setIsTrailerPlaying(true)
+  }
 
-const handleCloseTrailer = () => {
-  setIsTrailerPlaying(false)
-}
+  const handleCloseTrailer = () => {
+    setIsTrailerPlaying(false)
+  }
+
   useEffect(() => {
     const fetchDashboardData = async () => {
       try {
@@ -335,9 +309,17 @@ const handleCloseTrailer = () => {
 
         const data = await response.json()
 
+        if (data.list?.event && Array.isArray(data.list.event)) {
+          setEventData(data.list.event)
+        }
+
         if (data.status === true || data.status !== false) {
           if (data.list?.latest && Array.isArray(data.list.latest)) {
             setLatestFilms(data.list.latest)
+          }
+
+          if (data.list?.award && Array.isArray(data.list.award)) {
+            setLatestAwards(data.list.award)
           }
 
           if (data.list?.watchs && Array.isArray(data.list.watchs)) {
@@ -354,6 +336,10 @@ const handleCloseTrailer = () => {
 
           if (data.list?.creator && Array.isArray(data.list.creator)) {
             setCreatorApiData(data.list.creator)
+          }
+
+          if (data.list?.event && Array.isArray(data.list.event)) {
+            setEventData(data.list.event)
           }
 
           if (data.list?.trailer && Array.isArray(data.list.trailer)) {
@@ -375,6 +361,22 @@ const handleCloseTrailer = () => {
     fetchDashboardData()
   }, [router])
 
+  function stripHtml(html?: string) {
+    if (!html) return ''
+    return html
+      .replace(/<[^>]*>/g, ' ')
+      .replace(/&nbsp;/g, ' ')
+      .replace(/&amp;/g, '&')
+      .replace(/&quot;/g, '"')
+      .replace(/&#39;/g, "'")
+      .replace(/&ldquo;|&rdquo;/g, '"')
+      .replace(/&lsquo;|&rsquo;/g, "'")
+      .replace(/&mdash;/g, '—')
+      .replace(/&bull;/g, '•')
+      .replace(/\s+/g, ' ')
+      .trim()
+  }
+
   const transformFilmData = (films: FilmData[]) => {
     return films.map((film) => ({
       id: film.id,
@@ -392,7 +394,18 @@ const handleCloseTrailer = () => {
     }))
   }
 
+  const transformAwardData = (awards: AwardData[]) => {
+    return awards.map((award) => ({
+      id: award.id,
+      name: award.name,
+      image_url: award.image_url || award.image || '/placeholder.svg',
+      description: stripHtml(award.description || award.synopsis || ''),
+      genre: award.type || '',
+    }))
+  }
+
   const displayFilms = latestFilms.length > 0 ? transformFilmData(latestFilms) : []
+  const displayAwards = latestAwards.length > 0 ? transformAwardData(latestAwards) : []
   const displayMostWatching =
     mostWatchingFilms.length > 0 ? transformFilmData(mostWatchingFilms) : []
   const displaySeries = seriesData.length > 0 ? seriesData : mockSeries
@@ -418,72 +431,72 @@ const handleCloseTrailer = () => {
         </div>
       )}
 
-<section className="relative min-h-[50vh] overflow-hidden md:min-h-[70vh] lg:min-h-screen">
-  {isTrailerPlaying && heroVideo ? (
-    <video
-      key={heroVideo}
-      autoPlay
-      muted
-      loop
-      playsInline
-      controls={false}
-      className="absolute inset-0 h-full w-full object-cover"
-    >
-      <source src={heroVideo} type="video/mp4" />
-      Browser Anda tidak mendukung video.
-    </video>
-  ) : (
-    <Image
-      src={heroImage}
-      alt={heroTitle}
-      fill
-      priority
-      className="object-cover"
-    />
-  )}
-
-  <div className="absolute inset-0 bg-gradient-to-t from-background via-black/20 to-transparent" />
-
-  <div className="absolute inset-0 flex items-end">
-    <div className="w-full px-4 pb-[60px] md:px-6 md:pb-[112px] lg:px-12 lg:pb-[112px]">
-      <h1 className="mb-2 text-xl font-bold text-white md:mb-3 md:text-4xl lg:text-5xl">
-        {heroTitle}
-      </h1>
-
-      <p className="mb-4 max-w-2xl line-clamp-2 text-xs text-gray-300 md:mb-5 md:line-clamp-none md:text-base lg:text-lg">
-        Watch groundbreaking films crafted by human creativity and artificial intelligence.
-      </p>
-
-      <div className="flex gap-3">
-        <Button
-          onClick={handleWatchTrailer}
-          disabled={!heroVideo}
-          className="bg-white py-2 text-sm text-background hover:bg-gray-200 disabled:opacity-50 md:py-2.5 md:text-base"
-        >
-          ▶ Watch Now
-        </Button>
-
-        {isTrailerPlaying && (
-          <Button
-            onClick={handleCloseTrailer}
-            className="border border-white/20 bg-black/30 py-2 text-sm text-white hover:bg-black/50 md:py-2.5 md:text-base"
+      <section className="relative min-h-[50vh] overflow-hidden md:min-h-[70vh] lg:min-h-screen">
+        {isTrailerPlaying && heroVideo ? (
+          <video
+            key={heroVideo}
+            autoPlay
+            muted
+            loop
+            playsInline
+            controls={false}
+            className="absolute inset-0 h-full w-full object-cover"
           >
-            ✕ Close
-          </Button>
+            <source src={heroVideo} type="video/mp4" />
+            Browser Anda tidak mendukung video.
+          </video>
+        ) : (
+          <Image
+            src={heroImage}
+            alt={heroTitle}
+            fill
+            priority
+            className="object-cover"
+          />
         )}
-      </div>
-    </div>
-  </div>
 
-  <div className="absolute bottom-[60px] left-1/2 -translate-x-1/2 md:bottom-[112px] lg:bottom-[112px]">
-    <div className="flex gap-1">
-      <div className="h-1 w-6 rounded-full bg-white" />
-      <div className="h-1 w-1 rounded-full bg-gray-400" />
-      <div className="h-1 w-1 rounded-full bg-gray-400" />
-      <div className="h-1 w-1 rounded-full bg-gray-400" />
-    </div>
-  </div>
-</section>
+        <div className="absolute inset-0 bg-gradient-to-t from-background via-black/20 to-transparent" />
+
+        <div className="absolute inset-0 flex items-end">
+          <div className="w-full px-4 pb-[60px] md:px-6 md:pb-[112px] lg:px-12 lg:pb-[112px]">
+            <h1 className="mb-2 text-xl font-bold text-white md:mb-3 md:text-4xl lg:text-5xl">
+              {heroTitle}
+            </h1>
+
+            <p className="mb-4 max-w-2xl line-clamp-2 text-xs text-gray-300 md:mb-5 md:line-clamp-none md:text-base lg:text-lg">
+              Watch groundbreaking films crafted by human creativity and artificial intelligence.
+            </p>
+
+            <div className="flex gap-3">
+              <Button
+                onClick={handleWatchTrailer}
+                disabled={!heroVideo}
+                className="bg-white py-2 text-sm text-background hover:bg-gray-200 disabled:opacity-50 md:py-2.5 md:text-base"
+              >
+                ▶ Watch Now
+              </Button>
+
+              {isTrailerPlaying && (
+                <Button
+                  onClick={handleCloseTrailer}
+                  className="border border-white/20 bg-black/30 py-2 text-sm text-white hover:bg-black/50 md:py-2.5 md:text-base"
+                >
+                  ✕ Close
+                </Button>
+              )}
+            </div>
+          </div>
+        </div>
+
+        <div className="absolute bottom-[60px] left-1/2 -translate-x-1/2 md:bottom-[112px] lg:bottom-[112px]">
+          <div className="flex gap-1">
+            <div className="h-1 w-6 rounded-full bg-white" />
+            <div className="h-1 w-1 rounded-full bg-gray-400" />
+            <div className="h-1 w-1 rounded-full bg-gray-400" />
+            <div className="h-1 w-1 rounded-full bg-gray-400" />
+          </div>
+        </div>
+      </section>
 
       <LatestFilm items={displayFilms} />
 
@@ -589,163 +602,7 @@ const handleCloseTrailer = () => {
 
       <LatestClipSection title="Latest Clip" items={loading ? [] : displayFilms} />
 
-      <section className="border-t border-white/10 px-4 py-8 md:px-6 md:py-10 lg:px-12">
-        <div className="relative">
-          <div className="mb-6 flex items-start gap-3">
-            <div>
-              <h2 className="text-2xl font-bold leading-none text-white md:text-3xl">
-                Upcoming Event
-              </h2>
-              <div className="mt-3 h-[3px] w-14 rounded-full bg-yellow-400" />
-            </div>
-          </div>
-
-          <div className="relative mb-6 md:mb-8">
-            <div className="absolute left-0 right-0 top-2 border-t border-dashed border-white/60" />
-            <div className="relative flex items-center justify-between">
-              <div className="h-3 w-3 rounded-full bg-white" />
-              <div className="h-3 w-3 rounded-full bg-white" />
-            </div>
-          </div>
-
-          <div className="mb-5 grid grid-cols-1 gap-6 md:grid-cols-2 md:gap-8">
-            <div>
-              <h3 className="text-2xl font-semibold leading-none text-white">Hari ini</h3>
-              <p className="mt-2 text-xl text-white/60">Kamis</p>
-            </div>
-
-            <div className="hidden text-left md:block">
-              <h3 className="text-2xl font-semibold leading-none text-white">Besok</h3>
-              <p className="mt-2 text-xl text-white/60">Jumat</p>
-            </div>
-          </div>
-
-          <div className="relative">
-            <div
-              className="flex gap-4 overflow-x-auto pb-2 pr-10 md:gap-6"
-              style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
-            >
-              <div className="w-[320px] flex-shrink-0 md:w-[500px]">
-                <div className="flex min-h-[160px] overflow-hidden rounded-xl bg-black">
-                  <div className="flex-1 p-4 md:p-5">
-                    <div className="mb-3 flex items-center justify-between gap-3">
-                      <div className="flex items-center gap-2 text-sm text-white/70">
-                        <span>◷</span>
-                        <span>16:30 PM - 19:30 PM</span>
-                      </div>
-                      <span className="rounded-md bg-white px-3 py-1 text-[11px] font-medium leading-none text-black">
-                        [Tipe Event]
-                      </span>
-                    </div>
-
-                    <h3 className="mb-3 text-[28px] font-bold leading-none text-white md:text-[32px]">
-                      [Judul Event]
-                    </h3>
-
-                    <div className="mb-3 flex items-center gap-2 text-sm text-white/70">
-                      <span>◌</span>
-                      <span>5/50</span>
-                    </div>
-
-                    <p className="mb-2 text-lg font-semibold leading-none text-white">Online</p>
-                    <p className="text-sm text-white/60">Zoom Meeting</p>
-                  </div>
-
-                  <div className="relative w-[110px] flex-shrink-0 md:w-[135px]">
-                    <Image
-                      src="/images/event/example.png"
-                      alt="Event Poster"
-                      fill
-                      className="object-cover"
-                    />
-                  </div>
-                </div>
-              </div>
-
-              <div className="w-[320px] flex-shrink-0 md:w-[500px]">
-                <div className="flex min-h-[160px] overflow-hidden rounded-xl bg-black">
-                  <div className="flex-1 p-4 md:p-5">
-                    <div className="mb-3 flex items-center justify-between gap-3">
-                      <div className="flex items-center gap-2 text-sm text-white/70">
-                        <span>◷</span>
-                        <span>16:30 PM - 19:30 PM</span>
-                      </div>
-                      <span className="rounded-md bg-white px-3 py-1 text-[11px] font-medium leading-none text-black">
-                        [Tipe Event]
-                      </span>
-                    </div>
-
-                    <h3 className="mb-3 text-[28px] font-bold leading-none text-white md:text-[32px]">
-                      [Judul Event]
-                    </h3>
-
-                    <div className="mb-3 flex items-center gap-2 text-sm text-white/70">
-                      <span>◌</span>
-                      <span>5/50</span>
-                    </div>
-
-                    <p className="mb-2 text-lg font-semibold leading-none text-white">Online</p>
-                    <p className="text-sm text-white/60">Zoom Meeting</p>
-                  </div>
-
-                  <div className="relative w-[110px] flex-shrink-0 md:w-[135px]">
-                    <Image
-                      src="/images/event/example.png"
-                      alt="Event Poster"
-                      fill
-                      className="object-cover"
-                    />
-                  </div>
-                </div>
-              </div>
-
-              <div className="w-[320px] flex-shrink-0 md:w-[500px]">
-                <div className="flex min-h-[160px] overflow-hidden rounded-xl bg-black">
-                  <div className="flex-1 p-4 md:p-5">
-                    <div className="mb-3 flex items-center justify-between gap-3">
-                      <div className="flex items-center gap-2 text-sm text-white/70">
-                        <span>◷</span>
-                        <span>16:30 PM - 19:30 PM</span>
-                      </div>
-                      <span className="rounded-md bg-white px-3 py-1 text-[11px] font-medium leading-none text-black">
-                        [Tipe Event]
-                      </span>
-                    </div>
-
-                    <h3 className="mb-3 text-[28px] font-bold leading-none text-white md:text-[32px]">
-                      [Judul Event]
-                    </h3>
-
-                    <div className="mb-3 flex items-center gap-2 text-sm text-white/70">
-                      <span>◌</span>
-                      <span>5/50</span>
-                    </div>
-
-                    <p className="mb-2 text-lg font-semibold leading-none text-white">Online</p>
-                    <p className="text-sm text-white/60">Zoom Meeting</p>
-                  </div>
-
-                  <div className="relative w-[110px] flex-shrink-0 md:w-[135px]">
-                    <Image
-                      src="/images/event/example.png"
-                      alt="Event Poster"
-                      fill
-                      className="object-cover"
-                    />
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <button
-              className="absolute right-[-6px] top-1/2 hidden h-12 w-11 -translate-y-1/2 items-center justify-center rounded-l-xl bg-white text-black shadow-lg md:flex"
-              aria-label="Next upcoming"
-            >
-              <ChevronRight className="h-6 w-6" />
-            </button>
-          </div>
-        </div>
-      </section>
+      <UpcomingEventsSection title="Upcoming Events" items={eventData} />
 
       {loading ? (
         <section className="px-4 py-6 md:px-6 md:py-8 lg:px-12">
@@ -762,7 +619,7 @@ const handleCloseTrailer = () => {
         <LatestAwards
           title="Latest Awards"
           viewAllLink="#"
-          items={displayFilms.length > 0 ? displayFilms : mockAwards}
+          items={displayAwards.length > 0 ? displayAwards : mockAwards}
         />
       )}
 
