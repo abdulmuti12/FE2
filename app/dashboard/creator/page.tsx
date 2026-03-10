@@ -1,22 +1,107 @@
 'use client'
 
-import React, { useState } from "react"
+import React, { useState, useEffect } from "react"
 import { Header } from '@/components/header'
 import { Footer } from '@/components/footer'
 import { ChevronRight, Search, ChevronDown } from 'lucide-react'
+import { useRouter } from 'next/navigation'
 
-// Dummy data untuk simulasi daftar creator
-const creatorsData = Array(24).fill(null).map((_, i) => ({
-  id: i,
-  name: '[Creator]',
-  movies: '3 Movies',
-  // Kita gunakan warna background berbeda untuk variasi visual seperti di gambar
-  color: i % 3 === 0 ? 'bg-cyan-200' : i % 3 === 1 ? 'bg-purple-300' : 'bg-pink-300' 
-}))
+interface Creator {
+  id: string
+  name: string
+  avatar: string
+  avatar_url: string
+}
 
 export default function CreatorsPage() {
+  const router = useRouter()
   const [sortOption, setSortOption] = useState('Default')
   const [searchQuery, setSearchQuery] = useState('')
+  const [creators, setCreators] = useState<Creator[]>([])
+  const [filteredCreators, setFilteredCreators] = useState<Creator[]>([])
+  const [loading, setLoading] = useState(true)
+  const [displayCount, setDisplayCount] = useState(24)
+
+  // Color palette for creator avatars
+  const colors = ['bg-cyan-200', 'bg-purple-300', 'bg-pink-300', 'bg-blue-300', 'bg-green-300', 'bg-yellow-300']
+
+  useEffect(() => {
+    fetchCreators()
+  }, [])
+
+  useEffect(() => {
+    filterAndSortCreators()
+  }, [creators, searchQuery, sortOption])
+
+  const fetchCreators = async () => {
+    try {
+      setLoading(true)
+      const token = localStorage.getItem('user_token')
+
+      console.log('[v0] Token from localStorage:', token ? 'Found' : 'Not found')
+
+      if (!token) {
+        router.push('/')
+        return
+      }
+
+      const response = await fetch('/api/creators', {
+        method: 'GET',
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      })
+
+      const data = await response.json()
+      console.log('[v0] Creators Response:', data)
+
+      if (data.list && Array.isArray(data.list)) {
+        setCreators(data.list)
+      }
+    } catch (error) {
+      console.error('[v0] Error fetching creators:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const filterAndSortCreators = () => {
+    let filtered = creators
+
+    // Apply search filter
+    if (searchQuery.trim()) {
+      filtered = filtered.filter(creator =>
+        creator.name.toLowerCase().includes(searchQuery.toLowerCase())
+      )
+    }
+
+    // Apply sorting
+    if (sortOption === 'Name') {
+      filtered = [...filtered].sort((a, b) => a.name.localeCompare(b.name))
+    } else if (sortOption === 'Popularity') {
+      // Keep original order (assumed to be by popularity from API)
+      filtered = [...filtered]
+    } else {
+      // Default: keep original order
+      filtered = [...filtered]
+    }
+
+    setFilteredCreators(filtered)
+  }
+
+  const getCreatorColor = (index: number) => {
+    return colors[index % colors.length]
+  }
+
+  const getCreatorAvatar = (creator: Creator) => {
+    if (creator.avatar_url && creator.avatar_url !== 'http://usky.ai/uploads/') {
+      return creator.avatar_url
+    }
+    return null
+  }
+
+  const displayedCreators = filteredCreators.slice(0, displayCount)
 
   return (
     <div className="min-h-screen bg-[#020817] text-white font-sans">
@@ -73,7 +158,7 @@ export default function CreatorsPage() {
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Placeholder"
+                placeholder="Search creators..."
                 className="w-full md:w-64 bg-[#0a1120] border border-gray-800 text-gray-300 text-sm rounded-lg pl-10 pr-4 py-2.5 focus:outline-none focus:border-blue-600 placeholder-gray-600"
               />
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
@@ -82,34 +167,63 @@ export default function CreatorsPage() {
         </div>
 
         {/* Creators Grid */}
-        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-x-6 gap-y-12">
-          {creatorsData.map((creator) => (
-            <div key={creator.id} className="flex flex-col items-center group cursor-pointer">
-              {/* Avatar Circle */}
-              <div className={`w-32 h-32 md:w-40 md:h-40 rounded-full ${creator.color} flex items-center justify-center mb-4 transition-transform duration-300 group-hover:scale-105 border-4 border-[#020817] shadow-xl overflow-hidden`}>
-                 {/* Placeholder Image (Pixel Art Style) */}
-                 <div className="w-20 h-20 bg-white/30 grid grid-cols-3 gap-1 p-1">
-                    <div className="bg-white/60 col-span-3"></div>
-                    <div className="bg-white/60 row-span-2"></div>
-                    <div className="bg-white/60"></div>
-                    <div className="bg-white/60 row-span-2"></div>
-                    <div className="bg-white/60 col-span-3"></div>
-                 </div>
-              </div>
-              
-              {/* Info */}
-              <h3 className="text-white font-bold text-base mb-1 group-hover:text-blue-400 transition-colors">{creator.name}</h3>
-              <p className="text-gray-500 text-xs">{creator.movies}</p>
-            </div>
-          ))}
-        </div>
+        {loading ? (
+          <div className="flex justify-center items-center py-20">
+            <p className="text-gray-400">Loading creators...</p>
+          </div>
+        ) : displayedCreators.length > 0 ? (
+          <>
+            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-x-6 gap-y-12">
+              {displayedCreators.map((creator, index) => {
+                const avatarUrl = getCreatorAvatar(creator)
+                const bgColor = getCreatorColor(index)
 
-        {/* View More Button */}
-        <div className="mt-16 flex justify-center">
-          <button className="px-8 py-2.5 bg-[#0f172a] border border-gray-800 hover:bg-gray-800 text-gray-300 text-sm font-medium rounded-lg transition-all">
-            View More
-          </button>
-        </div>
+                return (
+                  <div key={creator.id} className="flex flex-col items-center group cursor-pointer">
+                    {/* Avatar Circle */}
+                    <div className={`w-32 h-32 md:w-40 md:h-40 rounded-full ${!avatarUrl ? bgColor : ''} flex items-center justify-center mb-4 transition-transform duration-300 group-hover:scale-105 border-4 border-[#020817] shadow-xl overflow-hidden`}>
+                      {avatarUrl ? (
+                        <img 
+                          src={avatarUrl} 
+                          alt={creator.name}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <div className="w-20 h-20 bg-white/30 grid grid-cols-3 gap-1 p-1">
+                          <div className="bg-white/60 col-span-3"></div>
+                          <div className="bg-white/60 row-span-2"></div>
+                          <div className="bg-white/60"></div>
+                          <div className="bg-white/60 row-span-2"></div>
+                          <div className="bg-white/60 col-span-3"></div>
+                        </div>
+                      )}
+                    </div>
+                    
+                    {/* Info */}
+                    <h3 className="text-white font-bold text-base mb-1 group-hover:text-blue-400 transition-colors text-center">{creator.name}</h3>
+                    <p className="text-gray-500 text-xs">Creator</p>
+                  </div>
+                )
+              })}
+            </div>
+
+            {/* View More Button */}
+            {displayCount < filteredCreators.length && (
+              <div className="mt-16 flex justify-center">
+                <button 
+                  onClick={() => setDisplayCount(displayCount + 24)}
+                  className="px-8 py-2.5 bg-[#0f172a] border border-gray-800 hover:bg-gray-800 text-gray-300 text-sm font-medium rounded-lg transition-all"
+                >
+                  View More
+                </button>
+              </div>
+            )}
+          </>
+        ) : (
+          <div className="flex justify-center items-center py-20">
+            <p className="text-gray-400">No creators found</p>
+          </div>
+        )}
 
       </div>
 
