@@ -2,6 +2,7 @@
 
 import Image from 'next/image'
 import { useState, useRef, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 import {
   Heart,
   Plus,
@@ -20,6 +21,19 @@ import {
 import { Header } from '@/components/header'
 import { Footer } from '@/components/footer'
 
+// --- INTERFACES ---
+interface Movie {
+  id: string
+  name: string
+  video_url: string
+  image_url?: string
+  synopsis?: string
+  cats?: string
+  run_time_format?: string
+  favorit?: string
+  comment?: string
+}
+
 // --- DATA DUMMY ---
 const sidebarCategories = [
   { icon: '/images/icon/clippp.png', label: 'All Clips' },
@@ -34,49 +48,6 @@ const sidebarCategories = [
   { icon: '/images/icon/story.png', label: 'Story' },
   { icon: '/images/icon/religi.png', label: 'Religi' },
   { icon: '/images/icon/fantasy.png', label: 'Fantasy' },
-]
-
-const mockClips = [
-  {
-    id: 1,
-    title: 'Cinematic AI Masterpiece',
-    video: '/video/clips/1.mp4',
-    description:
-      'Watch groundbreaking films crafted by human creativity and artificial intelligence. #AI #Future',
-    creator: 'Alex Creator',
-    creatorAvatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Alex',
-    genre: 'Sci-Fi',
-    likes: '12.5K',
-    comments: '450',
-    shares: '1.2K',
-    saves: '305',
-  },
-  {
-    id: 2,
-    title: 'Fantasy World',
-    video: '/video/clips/2.mp4',
-    description: 'Exploring the depths of generative AI landscapes. #Fantasy #Art',
-    creator: 'Sarah Studio',
-    creatorAvatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Sarah',
-    genre: 'Fantasy',
-    likes: '8.2K',
-    comments: '210',
-    shares: '800',
-    saves: '150',
-  },
-  {
-    id: 3,
-    title: 'Cyberpunk City',
-    video: '/video/clips/3.mp4',
-    description: 'Neon lights and future vibes created with precision. #Cyberpunk',
-    creator: 'Neo Vision',
-    creatorAvatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Neo',
-    genre: 'Cyberpunk',
-    likes: '15K',
-    comments: '900',
-    shares: '2.5K',
-    saves: '500',
-  },
 ]
 
 // --- MOCK COMMENTS DATA ---
@@ -108,26 +79,31 @@ const mockComments = [
 ]
 
 // --- KOMPONEN ITEM VIDEO ---
-const VideoItem = ({ clip, index, total }: { clip: any; index: number; total: number }) => {
-  const videoRef = useRef<HTMLVideoElement>(null)
+const VideoItem = ({ clip, index, total, isActive, onActive, onNavigateNext, onNavigatePrev }: { clip: any; index: number; total: number; isActive: boolean; onActive: () => void; onNavigateNext?: () => void; onNavigatePrev?: () => void }) => {
+  // Pisahkan ref video agar tidak tabrakan
+  const desktopVideoRef = useRef<HTMLVideoElement>(null)
+  const mobileVideoRef = useRef<HTMLVideoElement>(null)
+  
   const containerRef = useRef<HTMLDivElement>(null)
+  const wheelTimeoutRef = useRef<NodeJS.Timeout | null>(null)
 
   const [isPlaying, setIsPlaying] = useState(false)
-  // Default false = Audio nyala (akan dicoba autoplay, lalu fallback ke mute jika diblokir browser)
   const [isMuted, setIsMuted] = useState(false)
   const [showComments, setShowComments] = useState(false)
   const [showShare, setShowShare] = useState(false)
 
-  // Toggle Play/Pause
+  // Toggle Play/Pause untuk kedua ref
   const togglePlay = () => {
-    if (!videoRef.current) return
-    if (isPlaying) {
-      videoRef.current.pause()
-      setIsPlaying(false)
-    } else {
-      videoRef.current.play()
-      setIsPlaying(true)
-    }
+    const currentIsPlaying = isPlaying;
+    [desktopVideoRef.current, mobileVideoRef.current].forEach(vid => {
+      if (!vid) return;
+      if (currentIsPlaying) {
+        vid.pause()
+      } else {
+        vid.play()
+      }
+    });
+    setIsPlaying(!currentIsPlaying)
   }
 
   // Toggle Mute
@@ -175,7 +151,31 @@ const VideoItem = ({ clip, index, total }: { clip: any; index: number; total: nu
     setShowShare(false)
   }
 
-  // Autoplay by scroll
+  // Handle wheel scroll for navigation
+  const handleWheel = (e: WheelEvent) => {
+    if (wheelTimeoutRef.current) return
+
+    // Jika comments atau share terbuka, jangan navigate
+    if (showComments || showShare) return
+
+    wheelTimeoutRef.current = setTimeout(() => {
+      wheelTimeoutRef.current = null
+    }, 800)
+
+    if (e.deltaY > 0) {
+      // Scroll down - ke next page jika di item terakhir
+      if (index === total - 1 && onNavigateNext) {
+        onNavigateNext()
+      }
+    } else if (e.deltaY < 0) {
+      // Scroll up - ke previous page jika di item pertama
+      if (index === 0 && onNavigatePrev) {
+        onNavigatePrev()
+      }
+    }
+  }
+
+  // 1. Observer hanya memberi tahu ke parent bahwa video ini aktif
   useEffect(() => {
     const options = {
       root: null,
@@ -186,25 +186,7 @@ const VideoItem = ({ clip, index, total }: { clip: any; index: number; total: nu
     const observer = new IntersectionObserver((entries) => {
       entries.forEach((entry) => {
         if (entry.isIntersecting) {
-          const playPromise = videoRef.current?.play()
-          if (playPromise !== undefined) {
-            playPromise
-              .then(() => setIsPlaying(true))
-              .catch((error) => {
-                console.log('Autoplay with sound blocked. Muting to play.', error)
-                if (videoRef.current) {
-                  videoRef.current.muted = true
-                  setIsMuted(true)
-                  videoRef.current.play()
-                }
-              })
-          }
-        } else {
-          if (videoRef.current) {
-            videoRef.current.pause()
-            videoRef.current.currentTime = 0
-          }
-          setIsPlaying(false)
+          onActive()
         }
       })
     }, options)
@@ -214,7 +196,52 @@ const VideoItem = ({ clip, index, total }: { clip: any; index: number; total: nu
     return () => {
       if (containerRef.current) observer.unobserve(containerRef.current)
     }
-  }, [])
+  }, [onActive])
+
+  // 2. Efek untuk Play/Pause murni berdasarkan prop isActive
+  useEffect(() => {
+    const playVideo = (vid: HTMLVideoElement | null) => {
+      if (!vid) return;
+      const playPromise = vid.play();
+      if (playPromise !== undefined) {
+        playPromise
+          .then(() => setIsPlaying(true))
+          .catch((error) => {
+            console.log('Autoplay blocked. Muting to play.', error)
+            vid.muted = true
+            setIsMuted(true)
+            vid.play().then(() => setIsPlaying(true)).catch(() => setIsPlaying(false))
+          })
+      }
+    };
+
+    const pauseVideo = (vid: HTMLVideoElement | null) => {
+      if (!vid) return;
+      vid.pause();
+      vid.currentTime = 0; // Kembalikan ke detik 0
+    };
+
+    if (isActive) {
+      playVideo(desktopVideoRef.current);
+      playVideo(mobileVideoRef.current);
+    } else {
+      pauseVideo(desktopVideoRef.current);
+      pauseVideo(mobileVideoRef.current);
+      setIsPlaying(false);
+    }
+  }, [isActive])
+
+  // Add wheel event listener
+  useEffect(() => {
+    const container = containerRef.current
+    if (!container) return
+
+    container.addEventListener('wheel', handleWheel, { passive: true })
+    return () => {
+      container.removeEventListener('wheel', handleWheel)
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [index, total, showComments, showShare, onNavigateNext, onNavigatePrev])
 
   return (
     <div ref={containerRef} className="w-full h-full snap-start flex items-center justify-center lg:p-8 relative">
@@ -260,13 +287,13 @@ const VideoItem = ({ clip, index, total }: { clip: any; index: number; total: nu
         {/* Kolom tengah: video */}
         <div className="col-span-6 h-full flex items-center justify-center px-4 py-4">
           <div className="relative w-full h-full max-h-[85vh] aspect-[9/16] rounded-3xl overflow-hidden border border-white/10 shadow-[0_0_50px_-12px_rgba(0,0,0,0.5)] group bg-black">
+            {/* Dihapus autoPlay agar tidak bentrok */}
             <video
-              ref={videoRef}
+              ref={desktopVideoRef}
               src={clip.video}
               className="w-full h-full object-cover cursor-pointer"
               muted={isMuted}
               loop
-              autoPlay
               playsInline
               onClick={togglePlay}
             />
@@ -362,15 +389,13 @@ const VideoItem = ({ clip, index, total }: { clip: any; index: number; total: nu
 
       {/* --- MOBILE LAYOUT (TIKTOK STYLE) --- */}
       <div className="lg:hidden w-full h-full relative bg-black">
+        {/* Dihapus autoPlay agar tidak bentrok */}
         <video
-          ref={(el) => {
-            if (typeof window !== 'undefined' && window.innerWidth < 1024) videoRef.current = el
-          }}
+          ref={mobileVideoRef}
           src={clip.video}
           className="w-full h-full object-cover"
           muted={isMuted}
           loop
-          autoPlay
           playsInline
           onClick={togglePlay}
         />
@@ -506,19 +531,14 @@ const VideoItem = ({ clip, index, total }: { clip: any; index: number; total: nu
 
       {/* ========================= */}
       {/* SHARE MODAL (RESPONSIVE)  */}
-      {/* WEB: center modal         */}
-      {/* MOBILE: bottom sheet      */}
       {/* ========================= */}
       {showShare && (
         <div className="fixed inset-0 z-[999]">
-          {/* Backdrop */}
           <button
             aria-label="Close share modal"
             className="absolute inset-0 bg-black/55 backdrop-blur-[1px]"
             onClick={() => setShowShare(false)}
           />
-
-          {/* Wrapper (mobile bottom, desktop center) */}
           <div
             className="
               absolute left-1/2 w-[92%] -translate-x-1/2
@@ -528,12 +548,9 @@ const VideoItem = ({ clip, index, total }: { clip: any; index: number; total: nu
             "
           >
             <div className="bg-[#0b1220]/95 border border-white/10 shadow-2xl overflow-hidden rounded-t-3xl lg:rounded-2xl">
-              {/* Mobile handle */}
               <div className="lg:hidden px-4 pt-3">
                 <div className="mx-auto h-1 w-10 rounded-full bg-white/20" />
               </div>
-
-              {/* Header */}
               <div className="flex items-center justify-between px-5 py-4 border-b border-white/10">
                 <h2 className="text-white font-semibold text-sm">Bagikan ke</h2>
                 <button
@@ -544,64 +561,39 @@ const VideoItem = ({ clip, index, total }: { clip: any; index: number; total: nu
                   <X className="w-5 h-5" />
                 </button>
               </div>
-
-              {/* Options */}
               <div className="px-5 py-5">
                 <div className="flex items-center justify-center gap-4 flex-wrap">
-                  <button
-                    onClick={() => handleShare('copy')}
-                    className="flex flex-col items-center gap-2 hover:opacity-90 transition-opacity group"
-                  >
+                  <button onClick={() => handleShare('copy')} className="flex flex-col items-center gap-2 hover:opacity-90 transition-opacity group">
                     <div className="w-12 h-12 rounded-full bg-white/10 flex items-center justify-center group-hover:bg-white/20 transition-colors">
                       <Copy className="w-6 h-6 text-white" />
                     </div>
                     <span className="text-[11px] text-white/90 font-medium">Copy</span>
                   </button>
-
-                  <button
-                    onClick={() => handleShare('facebook')}
-                    className="flex flex-col items-center gap-2 hover:opacity-90 transition-opacity group"
-                  >
+                  <button onClick={() => handleShare('facebook')} className="flex flex-col items-center gap-2 hover:opacity-90 transition-opacity group">
                     <div className="w-12 h-12 rounded-full bg-[#1877F2]/20 flex items-center justify-center group-hover:bg-[#1877F2]/30 transition-colors">
                       <span className="text-xl text-[#1877F2] font-bold">f</span>
                     </div>
                     <span className="text-[11px] text-white/90 font-medium">Facebook</span>
                   </button>
-
-                  <button
-                    onClick={() => handleShare('twitter')}
-                    className="flex flex-col items-center gap-2 hover:opacity-90 transition-opacity group"
-                  >
+                  <button onClick={() => handleShare('twitter')} className="flex flex-col items-center gap-2 hover:opacity-90 transition-opacity group">
                     <div className="w-12 h-12 rounded-full bg-white/10 flex items-center justify-center group-hover:bg-white/20 transition-colors">
                       <span className="text-xl text-white">𝕏</span>
                     </div>
                     <span className="text-[11px] text-white/90 font-medium">X</span>
                   </button>
-
-                  <button
-                    onClick={() => handleShare('telegram')}
-                    className="flex flex-col items-center gap-2 hover:opacity-90 transition-opacity group"
-                  >
+                  <button onClick={() => handleShare('telegram')} className="flex flex-col items-center gap-2 hover:opacity-90 transition-opacity group">
                     <div className="w-12 h-12 rounded-full bg-[#0088cc]/20 flex items-center justify-center group-hover:bg-[#0088cc]/30 transition-colors">
                       <span className="text-xl">✈️</span>
                     </div>
                     <span className="text-[11px] text-white/90 font-medium">Telegram</span>
                   </button>
-
-                  <button
-                    onClick={() => handleShare('linkedin')}
-                    className="flex flex-col items-center gap-2 hover:opacity-90 transition-opacity group"
-                  >
+                  <button onClick={() => handleShare('linkedin')} className="flex flex-col items-center gap-2 hover:opacity-90 transition-opacity group">
                     <div className="w-12 h-12 rounded-full bg-[#0A66C2]/20 flex items-center justify-center group-hover:bg-[#0A66C2]/30 transition-colors">
                       <span className="text-xl text-[#0A66C2] font-bold">in</span>
                     </div>
                     <span className="text-[11px] text-white/90 font-medium">LinkedIn</span>
                   </button>
-
-                  <button
-                    onClick={() => handleShare('link')}
-                    className="flex flex-col items-center gap-2 hover:opacity-90 transition-opacity group"
-                  >
+                  <button onClick={() => handleShare('link')} className="flex flex-col items-center gap-2 hover:opacity-90 transition-opacity group">
                     <div className="w-12 h-12 rounded-full bg-green-500/20 flex items-center justify-center group-hover:bg-green-500/30 transition-colors">
                       <span className="text-xl">🔗</span>
                     </div>
@@ -609,8 +601,6 @@ const VideoItem = ({ clip, index, total }: { clip: any; index: number; total: nu
                   </button>
                 </div>
               </div>
-
-              {/* Mobile padding bottom biar aman dari gesture bar */}
               <div className="lg:hidden h-4" />
             </div>
           </div>
@@ -622,7 +612,63 @@ const VideoItem = ({ clip, index, total }: { clip: any; index: number; total: nu
 
 // --- KOMPONEN UTAMA ---
 export default function ClipsPage() {
+  const router = useRouter()
   const [activeCategory, setActiveCategory] = useState('All Clips')
+  const [apiClips, setApiClips] = useState<Movie[]>([])
+  const [clipsLoading, setClipsLoading] = useState(true)
+  const [activeVideoId, setActiveVideoId] = useState<string | null>(null)
+  const [currentPage, setCurrentPage] = useState(1)
+
+  useEffect(() => {
+    const token = localStorage.getItem('user_token')
+
+    if (!token) {
+      router.push('/')
+      return
+    }
+
+    fetchMovies(token, currentPage)
+  }, [router, currentPage])
+
+  const fetchMovies = async (token: string, page: number = 1) => {
+    try {
+      setClipsLoading(true)
+      const params = new URLSearchParams({
+        sort: 'latest',
+        id_category: '',
+        id_creator: '',
+        page: page.toString(),
+        limit: '5',
+      })
+
+      const response = await fetch(`/api/movies?${params.toString()}`, {
+        method: 'GET',
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      })
+
+      const data = await response.json()
+      console.log('[v0] Movies Response:', data)
+
+      if (data.status && data.list && Array.isArray(data.list)) {
+        setApiClips(data.list)
+      }
+    } catch (error) {
+      console.error('[v0] Error fetching movies:', error)
+    } finally {
+      setClipsLoading(false)
+    }
+  }
+
+  const handleNavigateNext = () => {
+    setCurrentPage((prev) => prev + 1)
+  }
+
+  const handleNavigatePrev = () => {
+    setCurrentPage((prev) => (prev > 1 ? prev - 1 : 1))
+  }
 
   return (
     <div className="h-screen bg-[#020817] text-white flex flex-col font-sans overflow-hidden">
@@ -661,9 +707,43 @@ export default function ClipsPage() {
 
         {/* Main feed */}
         <main className="flex-1 h-full overflow-y-scroll snap-y snap-mandatory scroll-smooth no-scrollbar relative [&::-webkit-scrollbar]:hidden [-ms-overflow-style:'none'] [scrollbar-width:'none']">
-          {mockClips.map((clip, index) => (
-            <VideoItem key={clip.id} clip={clip} index={index} total={mockClips.length} />
-          ))}
+          {clipsLoading ? (
+            <div className="w-full h-full flex items-center justify-center">
+              <div className="text-gray-400">Loading clips...</div>
+            </div>
+          ) : apiClips.length > 0 ? (
+            apiClips.map((clip, index) => {
+              const transformedClip = {
+                id: clip.id,
+                title: clip.name,
+                video: clip.video_url,
+                description: clip.synopsis || '',
+                creator: 'Creator',
+                creatorAvatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Creator',
+                genre: clip.cats || 'Video Clip',
+                likes: clip.favorit || '0',
+                comments: clip.comment || '0',
+                shares: '0',
+                saves: '0',
+              }
+              return (
+                <VideoItem
+                  key={clip.id}
+                  clip={transformedClip}
+                  index={index}
+                  total={apiClips.length}
+                  isActive={activeVideoId === clip.id}
+                  onActive={() => setActiveVideoId(clip.id)}
+                  onNavigateNext={handleNavigateNext}
+                  onNavigatePrev={handleNavigatePrev}
+                />
+              )
+            })
+          ) : (
+            <div className="w-full h-full flex items-center justify-center">
+              <div className="text-gray-400">No clips available</div>
+            </div>
+          )}
         </main>
       </div>
 
