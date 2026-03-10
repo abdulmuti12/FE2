@@ -34,6 +34,19 @@ interface Movie {
   comment?: string
 }
 
+interface Comment {
+  id: string
+  id_customer: string
+  id_nft_item: string
+  comment: string
+  dates: string
+  name: string
+  avatar: string
+  avatar_url: string
+  time_ago: string
+  heart: string
+}
+
 // --- DATA DUMMY ---
 const sidebarCategories = [
   { icon: '/images/icon/clippp.png', label: 'All Clips' },
@@ -50,40 +63,11 @@ const sidebarCategories = [
   { icon: '/images/icon/fantasy.png', label: 'Fantasy' },
 ]
 
-// --- MOCK COMMENTS DATA ---
-const mockComments = [
-  {
-    id: 1,
-    author: 'freetheeartist',
-    avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=freetheeartist',
-    text: '[Comment] Lorem ipsum dolor sit amet consectetur. Volutpat fusce in adipiscing amet et et',
-    timestamp: '2 hours ago',
-    likes: 12,
-  },
-  {
-    id: 2,
-    author: 'freetheeartist',
-    avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=freetheeartist2',
-    text: '[Comment] Lorem ipsum dolor sit amet consectetur. Volutpat fusce in adipiscing amet et et',
-    timestamp: '1 hour ago',
-    likes: 8,
-  },
-  {
-    id: 3,
-    author: 'freetheeartist',
-    avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=freetheeartist3',
-    text: '[Comment] Lorem ipsum dolor sit amet consectetur. Volutpat fusce in adipiscing amet et et',
-    timestamp: '45 min ago',
-    likes: 5,
-  },
-]
-
 // --- KOMPONEN ITEM VIDEO ---
 const VideoItem = ({ clip, index, total, isActive, onActive, onNavigateNext, onNavigatePrev }: { clip: any; index: number; total: number; isActive: boolean; onActive: () => void; onNavigateNext?: () => void; onNavigatePrev?: () => void }) => {
-  // Pisahkan ref video agar tidak tabrakan
+  // Pisahkan ref agar video desktop dan mobile tidak konflik saat dijalankan via script
   const desktopVideoRef = useRef<HTMLVideoElement>(null)
   const mobileVideoRef = useRef<HTMLVideoElement>(null)
-  
   const containerRef = useRef<HTMLDivElement>(null)
   const wheelTimeoutRef = useRef<NodeJS.Timeout | null>(null)
 
@@ -91,91 +75,47 @@ const VideoItem = ({ clip, index, total, isActive, onActive, onNavigateNext, onN
   const [isMuted, setIsMuted] = useState(false)
   const [showComments, setShowComments] = useState(false)
   const [showShare, setShowShare] = useState(false)
+  const [comments, setComments] = useState<Comment[]>([])
+  const [commentsLoading, setCommentsLoading] = useState(false)
+  const [commentInput, setCommentInput] = useState('')
+  const [isSubmittingComment, setIsSubmittingComment] = useState(false)
 
-  // Toggle Play/Pause untuk kedua ref
-  const togglePlay = () => {
-    const currentIsPlaying = isPlaying;
-    [desktopVideoRef.current, mobileVideoRef.current].forEach(vid => {
-      if (!vid) return;
-      if (currentIsPlaying) {
-        vid.pause()
-      } else {
-        vid.play()
-      }
-    });
-    setIsPlaying(!currentIsPlaying)
-  }
+  // State untuk kontrol "Show More"
+  const [showAllComments, setShowAllComments] = useState(false)
 
-  // Toggle Mute
-  const toggleMute = (e: React.MouseEvent) => {
-    e.stopPropagation()
-    setIsMuted((prev) => !prev)
-  }
+  // 1. Auto-close komentar & hentikan video saat ganti slide (tidak active)
+  useEffect(() => {
+    const vids = [desktopVideoRef.current, mobileVideoRef.current].filter(Boolean) as HTMLVideoElement[];
 
-  // Share Handler
-  const handleShare = (platform: string) => {
-    const url = window.location.href
-    const title = clip.title
+    if (isActive) {
+      vids.forEach((vid) => {
+        const playPromise = vid.play();
+        if (playPromise !== undefined) {
+          playPromise
+            .then(() => setIsPlaying(true))
+            .catch((error) => {
+              console.log('Autoplay blocked, muting.', error);
+              vid.muted = true;
+              setIsMuted(true);
+              vid.play().then(() => setIsPlaying(true)).catch(() => setIsPlaying(false));
+            });
+        }
+      });
+    } else {
+      // Pause video & reset durasi
+      vids.forEach((vid) => {
+        vid.pause();
+        vid.currentTime = 0;
+      });
+      setIsPlaying(false);
 
-    switch (platform) {
-      case 'copy':
-        navigator.clipboard.writeText(url)
-        alert('Link copied to clipboard!')
-        break
-      case 'whatsapp':
-        window.open(`https://wa.me/?text=${encodeURIComponent(title + ' ' + url)}`, '_blank')
-        break
-      case 'facebook':
-        window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`, '_blank')
-        break
-      case 'twitter':
-        window.open(
-          `https://twitter.com/intent/tweet?url=${encodeURIComponent(url)}&text=${encodeURIComponent(title)}`,
-          '_blank'
-        )
-        break
-      case 'telegram':
-        window.open(`https://t.me/share/url?url=${encodeURIComponent(url)}&text=${encodeURIComponent(title)}`, '_blank')
-        break
-      case 'linkedin':
-        window.open(`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(url)}`, '_blank')
-        break
-      case 'link':
-        navigator.clipboard.writeText(url)
-        alert('Link copied to clipboard!')
-        break
-      default:
-        break
+      // Tutup panel yang terbuka
+      setShowComments(false);
+      setShowShare(false);
     }
+  }, [isActive]);
 
-    setShowShare(false)
-  }
-
-  // Handle wheel scroll for navigation
-  const handleWheel = (e: WheelEvent) => {
-    if (wheelTimeoutRef.current) return
-
-    // Jika comments atau share terbuka, jangan navigate
-    if (showComments || showShare) return
-
-    wheelTimeoutRef.current = setTimeout(() => {
-      wheelTimeoutRef.current = null
-    }, 800)
-
-    if (e.deltaY > 0) {
-      // Scroll down - ke next page jika di item terakhir
-      if (index === total - 1 && onNavigateNext) {
-        onNavigateNext()
-      }
-    } else if (e.deltaY < 0) {
-      // Scroll up - ke previous page jika di item pertama
-      if (index === 0 && onNavigatePrev) {
-        onNavigatePrev()
-      }
-    }
-  }
-
-  // 1. Observer hanya memberi tahu ke parent bahwa video ini aktif
+  // Observer HANYA mendeteksi apakah slide sedang terlihat lalu set onActive
   useEffect(() => {
     const options = {
       root: null,
@@ -186,7 +126,7 @@ const VideoItem = ({ clip, index, total, isActive, onActive, onNavigateNext, onN
     const observer = new IntersectionObserver((entries) => {
       entries.forEach((entry) => {
         if (entry.isIntersecting) {
-          onActive()
+          onActive() // Memanggil state parent, bukan .play() langsung
         }
       })
     }, options)
@@ -198,38 +138,140 @@ const VideoItem = ({ clip, index, total, isActive, onActive, onNavigateNext, onN
     }
   }, [onActive])
 
-  // 2. Efek untuk Play/Pause murni berdasarkan prop isActive
-  useEffect(() => {
-    const playVideo = (vid: HTMLVideoElement | null) => {
-      if (!vid) return;
-      const playPromise = vid.play();
-      if (playPromise !== undefined) {
-        playPromise
-          .then(() => setIsPlaying(true))
-          .catch((error) => {
-            console.log('Autoplay blocked. Muting to play.', error)
-            vid.muted = true
-            setIsMuted(true)
-            vid.play().then(() => setIsPlaying(true)).catch(() => setIsPlaying(false))
-          })
+  // Toggle Play/Pause Manual
+  const togglePlay = () => {
+    const vids = [desktopVideoRef.current, mobileVideoRef.current].filter(Boolean) as HTMLVideoElement[];
+    const currentIsPlaying = isPlaying;
+
+    vids.forEach((vid) => {
+      if (currentIsPlaying) vid.pause();
+      else vid.play();
+    });
+
+    setIsPlaying(!currentIsPlaying);
+  }
+
+  // Toggle Mute Manual
+  const toggleMute = (e: React.MouseEvent) => {
+    e.stopPropagation()
+    const vids = [desktopVideoRef.current, mobileVideoRef.current].filter(Boolean) as HTMLVideoElement[];
+    
+    vids.forEach((vid) => {
+      vid.muted = !vid.muted;
+    });
+    
+    setIsMuted(!isMuted)
+  }
+
+  // Handle wheel scroll for navigation
+  const handleWheel = (e: WheelEvent) => {
+    if (wheelTimeoutRef.current) return
+    if (showComments || showShare) return
+
+    wheelTimeoutRef.current = setTimeout(() => {
+      wheelTimeoutRef.current = null
+    }, 800)
+
+    if (e.deltaY > 0) {
+      if (index === total - 1 && onNavigateNext) {
+        onNavigateNext()
       }
-    };
-
-    const pauseVideo = (vid: HTMLVideoElement | null) => {
-      if (!vid) return;
-      vid.pause();
-      vid.currentTime = 0; // Kembalikan ke detik 0
-    };
-
-    if (isActive) {
-      playVideo(desktopVideoRef.current);
-      playVideo(mobileVideoRef.current);
-    } else {
-      pauseVideo(desktopVideoRef.current);
-      pauseVideo(mobileVideoRef.current);
-      setIsPlaying(false);
+    } else if (e.deltaY < 0) {
+      if (index === 0 && onNavigatePrev) {
+        onNavigatePrev()
+      }
     }
-  }, [isActive])
+  }
+
+  // Fungsi khusus untuk Fetch Data Komentar (Bisa dipanggil ulang saat butuh reload)
+  const fetchCommentsData = async () => {
+    try {
+      setCommentsLoading(true)
+      const token = localStorage.getItem('user_token')
+
+      if (!token) return
+
+      const response = await fetch(`/api/clip-comments?id=${clip.id}`, {
+        method: 'GET',
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      })
+
+      if (!response.ok) {
+        setComments([])
+        return
+      }
+
+      const text = await response.text()
+      let data
+      try {
+        data = JSON.parse(text)
+      } catch (e) {
+        setComments([])
+        return
+      }
+
+      if (data.status === true && data.list && Array.isArray(data.list)) {
+        setComments(data.list)
+      } else {
+        setComments([])
+      }
+    } catch (error) {
+      console.error('[v0] Error fetching comments:', error)
+      setComments([])
+    } finally {
+      setCommentsLoading(false)
+    }
+  }
+
+  // Buka Komentar & Fetch (jika belum ada data)
+  const handleOpenComments = async () => {
+    setShowComments(true)
+    if (comments.length === 0) {
+      await fetchCommentsData()
+    }
+  }
+
+  // Submit comment
+  const handleSubmitComment = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!commentInput.trim()) return
+
+    try {
+      setIsSubmittingComment(true)
+      const token = localStorage.getItem('user_token')
+      if (!token) return
+
+      const requestBody = {
+        id: clip.id,
+        comment: commentInput,
+      }
+
+      const response = await fetch('/api/post-comment', {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(requestBody),
+      })
+
+      if (!response.ok) return
+
+      const data = await response.json()
+      if (data.status === true) {
+        setCommentInput('') // Kosongkan input
+        // 2. Fetch/Reload Komentar Terbaru langsung setelah berhasil dikirim
+        await fetchCommentsData() 
+      }
+    } catch (error) {
+      console.error('[v0] Error submitting comment:', error)
+    } finally {
+      setIsSubmittingComment(false)
+    }
+  }
 
   // Add wheel event listener
   useEffect(() => {
@@ -243,8 +285,12 @@ const VideoItem = ({ clip, index, total, isActive, onActive, onNavigateNext, onN
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [index, total, showComments, showShare, onNavigateNext, onNavigatePrev])
 
+  // Menentukan komentar yang ditampilkan (Max 5 di awal)
+  const displayedComments = showAllComments ? comments : comments.slice(0, 5)
+
   return (
-    <div ref={containerRef} className="w-full h-full snap-start flex items-center justify-center lg:p-8 relative">
+    <div ref={containerRef} className="w-full h-full snap-start flex items-center justify-center lg:items-start lg:pt-10 lg:px-8 relative">
+      
       {/* Navigasi kecil desktop */}
       <div className="hidden lg:flex absolute right-8 top-1/2 -translate-y-1/2 flex-col gap-96 pointer-events-none opacity-20 z-50">
         {index > 0 && <ChevronUp className="w-10 h-10 animate-bounce" />}
@@ -252,9 +298,10 @@ const VideoItem = ({ clip, index, total, isActive, onActive, onNavigateNext, onN
       </div>
 
       {/* --- DESKTOP LAYOUT --- */}
-      <div className="hidden lg:grid grid-cols-12 gap-8 items-center w-full max-w-6xl h-full">
+      <div className={`hidden lg:grid grid-cols-12 gap-6 items-center w-full transition-all duration-500 lg:h-[82vh] ${showComments ? 'max-w-[1400px]' : 'max-w-6xl'}`}>
+        
         {/* Kolom kiri: info */}
-        <div className="col-span-3 flex flex-col justify-center space-y-6 animate-in slide-in-from-left duration-700 fade-in mt-24">
+        <div className={`flex flex-col justify-center space-y-6 animate-in slide-in-from-left duration-700 fade-in col-span-3`}>
           <div className="flex items-center gap-3 bg-white/5 p-3 rounded-xl border border-white/10 w-fit backdrop-blur-sm">
             <Image
               src={clip.creatorAvatar}
@@ -285,9 +332,8 @@ const VideoItem = ({ clip, index, total, isActive, onActive, onNavigateNext, onN
         </div>
 
         {/* Kolom tengah: video */}
-        <div className="col-span-6 h-full flex items-center justify-center px-4 py-4">
-          <div className="relative w-full h-full max-h-[85vh] aspect-[9/16] rounded-3xl overflow-hidden border border-white/10 shadow-[0_0_50px_-12px_rgba(0,0,0,0.5)] group bg-black">
-            {/* Dihapus autoPlay agar tidak bentrok */}
+        <div className={`${showComments ? 'col-span-4' : 'col-span-6'} h-full flex items-center justify-center py-4 transition-all duration-500`}>
+          <div className="relative w-full h-full max-h-[82vh] aspect-[9/16] rounded-3xl overflow-hidden border border-white/10 shadow-[0_0_50px_-12px_rgba(0,0,0,0.5)] group bg-black">
             <video
               ref={desktopVideoRef}
               src={clip.video}
@@ -298,7 +344,6 @@ const VideoItem = ({ clip, index, total, isActive, onActive, onNavigateNext, onN
               onClick={togglePlay}
             />
 
-            {/* tombol mute desktop */}
             <button
               onClick={toggleMute}
               className="absolute top-4 right-4 z-20 bg-black/40 backdrop-blur-md p-2.5 rounded-full text-white hover:bg-black/60 transition-all border border-white/10"
@@ -306,7 +351,6 @@ const VideoItem = ({ clip, index, total, isActive, onActive, onNavigateNext, onN
               {isMuted ? <VolumeX className="w-5 h-5" /> : <Volume2 className="w-5 h-5" />}
             </button>
 
-            {/* play overlay */}
             {!isPlaying && (
               <div className="absolute inset-0 flex items-center justify-center bg-black/20 cursor-pointer" onClick={togglePlay}>
                 <div className="w-20 h-20 bg-white/20 backdrop-blur-md rounded-full flex items-center justify-center border border-white/30 hover:scale-110 transition-transform">
@@ -317,8 +361,8 @@ const VideoItem = ({ clip, index, total, isActive, onActive, onNavigateNext, onN
           </div>
         </div>
 
-        {/* Kolom kanan: actions */}
-        <div className="col-span-3 flex flex-col justify-center gap-8 pl-8 animate-in slide-in-from-right duration-700 fade-in">
+        {/* Kolom kanan 1: actions */}
+        <div className={`${showComments ? 'col-span-1 items-center justify-end pb-8 pl-0' : 'col-span-3 pl-8 justify-center'} flex flex-col gap-8 h-[82vh] animate-in slide-in-from-right duration-700 fade-in transition-all duration-500`}>
           {[
             { icon: Heart, label: clip.likes, action: null },
             { icon: MessageCircle, label: clip.comments, action: 'comments' },
@@ -328,7 +372,7 @@ const VideoItem = ({ clip, index, total, isActive, onActive, onNavigateNext, onN
             <div
               key={idx}
               onClick={() => {
-                if (btn.action === 'comments') setShowComments(!showComments)
+                if (btn.action === 'comments') handleOpenComments()
                 if (btn.action === 'share') setShowShare(true)
               }}
               className="flex items-center gap-4 group cursor-pointer"
@@ -340,56 +384,94 @@ const VideoItem = ({ clip, index, total, isActive, onActive, onNavigateNext, onN
               >
                 <btn.icon className={`w-6 h-6 ${btn.label === clip.likes ? 'group-hover:text-red-500' : 'text-white'}`} />
               </div>
-              <span className="text-base font-medium text-gray-300 group-hover:text-white">{btn.label}</span>
+              <span className={`text-base font-medium text-gray-300 group-hover:text-white ${showComments ? 'hidden' : 'block'}`}>{btn.label}</span>
             </div>
           ))}
         </div>
 
-        {/* Comments Panel desktop */}
+        {/* Kolom kanan 2: Comments Panel desktop */}
         {showComments && (
-          <div className="col-span-12 lg:col-span-3 lg:absolute lg:right-0 lg:top-0 lg:bottom-0 lg:w-80 bg-black/95 backdrop-blur border-l border-white/10 flex flex-col h-full z-50 rounded-tl-2xl rounded-bl-2xl">
+          <div className="col-span-4 bg-[#0b0f19] border border-white/10 flex flex-col h-[82vh] z-50 rounded-2xl shadow-2xl animate-in fade-in zoom-in-95 duration-300 relative">
             <div className="flex items-center justify-between px-5 py-4 border-b border-white/10">
-              <h3 className="text-white font-bold text-lg">Comment</h3>
+              <h3 className="text-white font-bold text-lg">Komentar</h3>
               <button onClick={() => setShowComments(false)} className="text-gray-400 hover:text-white transition-colors">
                 ✕
               </button>
             </div>
 
             <div className="flex-1 overflow-y-auto py-4 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:'none'] [scrollbar-width:'none']">
-              <div className="space-y-4 px-4">
-                {mockComments.map((comment) => (
-                  <div key={comment.id} className="flex gap-3">
-                    <Image src={comment.avatar} alt={comment.author} width={40} height={40} className="w-8 h-8 rounded-full flex-shrink-0" />
-                    <div className="flex-1 min-w-0">
-                      <p className="text-white text-sm font-semibold">{comment.author}</p>
-                      <p className="text-gray-300 text-xs mt-1 leading-relaxed break-words">{comment.text}</p>
-                      <div className="flex items-center gap-3 mt-2">
-                        <span className="text-gray-500 text-xs">{comment.timestamp}</span>
-                        <button className="text-gray-500 hover:text-red-500 transition-colors">
-                          <Heart className="w-3 h-3" strokeWidth={2} />
-                        </button>
-                        <span className="text-gray-500 text-xs">{comment.likes}</span>
+              {commentsLoading ? (
+                <div className="flex items-center justify-center h-full">
+                  <p className="text-gray-400 text-sm">Loading comments...</p>
+                </div>
+              ) : comments.length > 0 ? (
+                <div className="space-y-4 px-4 pb-10">
+                  {displayedComments.map((comment) => (
+                    <div key={comment.id} className="flex gap-3">
+                      <Image src={comment.avatar_url} alt={comment.name} width={40} height={40} className="w-8 h-8 rounded-full flex-shrink-0 object-cover" />
+                      <div className="flex-1 min-w-0">
+                        <p className="text-white text-sm font-semibold">{comment.name}</p>
+                        <p className="text-gray-300 text-xs mt-1 leading-relaxed break-words">{comment.comment}</p>
+                        <div className="flex items-center gap-3 mt-2">
+                          <span className="text-gray-500 text-xs">{comment.time_ago}</span>
+                          <button className="text-gray-500 hover:text-red-500 transition-colors">
+                            <Heart className="w-3 h-3" strokeWidth={2} />
+                          </button>
+                          <span className="text-gray-500 text-xs">{comment.heart}</span>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                ))}
-              </div>
+                  ))}
+
+                  {/* Tombol Show More / Less */}
+                  {comments.length > 5 && !showAllComments && (
+                    <button
+                      onClick={() => setShowAllComments(true)}
+                      className="text-gray-400 hover:text-white text-xs mt-3 w-full text-left transition-colors font-medium"
+                    >
+                      View more comments ({comments.length - 5})...
+                    </button>
+                  )}
+                  {comments.length > 5 && showAllComments && (
+                    <button
+                      onClick={() => setShowAllComments(false)}
+                      className="text-gray-400 hover:text-white text-xs mt-3 w-full text-left transition-colors font-medium"
+                    >
+                      Show less
+                    </button>
+                  )}
+                </div>
+              ) : (
+                <div className="flex items-center justify-center h-full">
+                  <p className="text-gray-400 text-sm">No comments yet</p>
+                </div>
+              )}
             </div>
 
-            <div className="border-t border-white/10 px-4 py-3">
-              <input
-                type="text"
-                placeholder="Write a comment..."
-                className="w-full bg-white/10 border border-white/20 rounded-lg px-3 py-2 text-white placeholder-gray-500 text-sm focus:outline-none focus:border-white/40 transition-colors"
-              />
-            </div>
+            <form onSubmit={handleSubmitComment} className="border-t border-white/10 px-4 py-3 bg-[#0b0f19] rounded-b-2xl">
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  placeholder="Tambahkan komentar..."
+                  value={commentInput}
+                  onChange={(e) => setCommentInput(e.target.value)}
+                  className="flex-1 bg-white/10 border border-white/20 rounded-lg px-3 py-2 text-white placeholder-gray-500 text-sm focus:outline-none focus:border-white/40 transition-colors"
+                />
+                <button
+                  type="submit"
+                  disabled={isSubmittingComment || !commentInput.trim()}
+                  className="px-4 py-2 bg-white/20 hover:bg-white/30 disabled:opacity-50 disabled:cursor-not-allowed rounded-lg text-white text-sm transition-colors"
+                >
+                  {isSubmittingComment ? 'Sending...' : 'Send'}
+                </button>
+              </div>
+            </form>
           </div>
         )}
       </div>
 
       {/* --- MOBILE LAYOUT (TIKTOK STYLE) --- */}
       <div className="lg:hidden w-full h-full relative bg-black">
-        {/* Dihapus autoPlay agar tidak bentrok */}
         <video
           ref={mobileVideoRef}
           src={clip.video}
@@ -400,7 +482,6 @@ const VideoItem = ({ clip, index, total, isActive, onActive, onNavigateNext, onN
           onClick={togglePlay}
         />
 
-        {/* tombol mute mobile */}
         <button
           onClick={toggleMute}
           className="absolute top-20 right-4 z-30 bg-black/20 backdrop-blur-sm p-2 rounded-full text-white/80 border border-white/10"
@@ -408,7 +489,6 @@ const VideoItem = ({ clip, index, total, isActive, onActive, onNavigateNext, onN
           {isMuted ? <VolumeX className="w-6 h-6" /> : <Volume2 className="w-6 h-6" />}
         </button>
 
-        {/* play overlay */}
         {!isPlaying && (
           <div className="absolute inset-0 flex items-center justify-center z-10" onClick={togglePlay}>
             <div className="w-16 h-16 bg-black/40 rounded-full flex items-center justify-center backdrop-blur-sm">
@@ -419,7 +499,6 @@ const VideoItem = ({ clip, index, total, isActive, onActive, onNavigateNext, onN
 
         <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-transparent to-black/90 pointer-events-none" />
 
-        {/* right actions mobile */}
         <div className="absolute right-2 bottom-20 flex flex-col items-center gap-5 z-20 pb-4">
           <div className="relative mb-2">
             <div className="w-10 h-10 rounded-full border border-white p-0.5 overflow-hidden">
@@ -436,7 +515,7 @@ const VideoItem = ({ clip, index, total, isActive, onActive, onNavigateNext, onN
           </div>
 
           <button
-            onClick={() => setShowComments(!showComments)}
+            onClick={handleOpenComments}
             className="flex flex-col items-center gap-1 drop-shadow-md hover:opacity-80 transition-opacity"
           >
             <MessageCircle className="w-8 h-8 text-white" strokeWidth={1.5} />
@@ -465,7 +544,6 @@ const VideoItem = ({ clip, index, total, isActive, onActive, onNavigateNext, onN
           </div>
         </div>
 
-        {/* bottom info */}
         <div className="absolute bottom-0 left-0 w-[80%] p-4 z-20 pb-6">
           <div className="flex items-center gap-2 mb-2">
             <h3 className="text-white font-bold text-base shadow-black drop-shadow-md">@{clip.creator.replace(' ', '')}</h3>
@@ -490,122 +568,105 @@ const VideoItem = ({ clip, index, total, isActive, onActive, onNavigateNext, onN
             <div className="absolute inset-0 bg-black/50" onClick={() => setShowComments(false)} />
             <div className="relative w-full bg-[#1a1a2e] border-t border-white/20 rounded-t-3xl max-h-[90vh] flex flex-col animate-in slide-in-from-bottom duration-300">
               <div className="flex items-center justify-between px-6 py-4 border-b border-white/10 flex-shrink-0">
-                <h3 className="text-white font-semibold text-base">Comment</h3>
+                <h3 className="text-white font-semibold text-base">Comments</h3>
                 <button onClick={() => setShowComments(false)} className="text-gray-400 hover:text-white transition-colors text-xl">
                   ✕
                 </button>
               </div>
 
               <div className="flex-1 overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:'none'] [scrollbar-width:'none']">
-                <div className="space-y-5 px-6 py-5">
-                  {mockComments.map((comment) => (
-                    <div key={comment.id} className="flex gap-3 pb-4 border-b border-white/5 last:border-b-0">
-                      <Image src={comment.avatar} alt={comment.author} width={40} height={40} className="w-10 h-10 rounded-full flex-shrink-0" />
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2">
-                          <p className="text-white text-sm font-medium">{comment.author}</p>
-                          <span className="text-gray-500 text-xs">{comment.timestamp}</span>
+                {commentsLoading ? (
+                  <div className="flex items-center justify-center h-full">
+                    <p className="text-gray-400 text-sm">Loading comments...</p>
+                  </div>
+                ) : comments.length > 0 ? (
+                  <div className="space-y-5 px-6 py-5 pb-10">
+                    {displayedComments.map((comment) => (
+                      <div key={comment.id} className="flex gap-3 pb-4 border-b border-white/5 last:border-b-0">
+                        <Image src={comment.avatar_url} alt={comment.name} width={40} height={40} className="w-10 h-10 rounded-full flex-shrink-0 object-cover" />
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2">
+                            <p className="text-white text-sm font-medium">{comment.name}</p>
+                            <span className="text-gray-500 text-xs">{comment.time_ago}</span>
+                          </div>
+                          <p className="text-gray-300 text-xs mt-2 leading-relaxed break-words">{comment.comment}</p>
+                          <button className="text-gray-500 hover:text-red-500 transition-colors mt-2 flex items-center gap-1">
+                            <Heart className="w-4 h-4" strokeWidth={2} fill="none" />
+                            <span className="text-xs">{comment.heart}</span>
+                          </button>
                         </div>
-                        <p className="text-gray-300 text-xs mt-2 leading-relaxed break-words">{comment.text}</p>
-                        <button className="text-gray-500 hover:text-red-500 transition-colors mt-2 flex items-center gap-1">
-                          <Heart className="w-4 h-4" strokeWidth={2} fill="none" />
-                          <span className="text-xs">{comment.likes}</span>
-                        </button>
                       </div>
-                    </div>
-                  ))}
-                </div>
+                    ))}
+
+                    {/* Tombol Show More / Less */}
+                    {comments.length > 5 && !showAllComments && (
+                      <button
+                        onClick={() => setShowAllComments(true)}
+                        className="text-gray-400 hover:text-white text-xs mt-3 w-full text-left transition-colors font-medium"
+                      >
+                        View more comments ({comments.length - 5})...
+                      </button>
+                    )}
+                    {comments.length > 5 && showAllComments && (
+                      <button
+                        onClick={() => setShowAllComments(false)}
+                        className="text-gray-400 hover:text-white text-xs mt-3 w-full text-left transition-colors font-medium"
+                      >
+                        Show less
+                      </button>
+                    )}
+                  </div>
+                ) : (
+                  <div className="flex items-center justify-center h-full">
+                    <p className="text-gray-400 text-sm">No comments yet</p>
+                  </div>
+                )}
               </div>
 
-              <div className="border-t border-white/10 px-6 py-4 flex-shrink-0 bg-[#1a1a2e]">
-                <input
-                  type="text"
-                  placeholder="Write a comment..."
-                  className="w-full bg-transparent border-0 border-b border-white/20 px-0 py-2 text-white placeholder-gray-600 text-sm focus:outline-none focus:border-white/40 transition-colors"
-                />
+              <form onSubmit={handleSubmitComment} className="border-t border-white/10 px-6 py-4 flex-shrink-0 bg-[#1a1a2e]">
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    placeholder="Write a comment..."
+                    value={commentInput}
+                    onChange={(e) => setCommentInput(e.target.value)}
+                    className="flex-1 bg-white/10 border border-white/20 rounded-lg px-3 py-2 text-white placeholder-gray-500 text-sm focus:outline-none focus:border-white/40 transition-colors"
+                  />
+                  <button
+                    type="submit"
+                    disabled={isSubmittingComment || !commentInput.trim()}
+                    className="px-4 py-2 bg-white/20 hover:bg-white/30 disabled:opacity-50 disabled:cursor-not-allowed rounded-lg text-white text-sm transition-colors"
+                  >
+                    {isSubmittingComment ? 'Sending...' : 'Send'}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
+
+        {/* Share sheet mobile */}
+        {showShare && (
+          <div className="fixed inset-0 z-50 flex items-end lg:hidden">
+            <div className="absolute inset-0 bg-black/50" onClick={() => setShowShare(false)} />
+            <div className="relative w-full bg-[#1a1a2e] border-t border-white/20 rounded-t-3xl max-h-[90vh] flex flex-col animate-in slide-in-from-bottom duration-300">
+              <div className="flex items-center justify-between px-6 py-4 border-b border-white/10">
+                <h3 className="text-white font-semibold text-base">Share</h3>
+                <button onClick={() => setShowShare(false)} className="text-gray-400 hover:text-white transition-colors text-xl">
+                  ✕
+                </button>
+              </div>
+
+              <div className="flex-1 p-6 flex flex-col gap-4">
+                <button className="w-full px-4 py-3 bg-white/10 hover:bg-white/20 rounded-lg text-white font-medium transition-colors flex items-center gap-3">
+                  <Copy className="w-5 h-5" />
+                  Copy Link
+                </button>
               </div>
             </div>
           </div>
         )}
       </div>
-
-      {/* ========================= */}
-      {/* SHARE MODAL (RESPONSIVE)  */}
-      {/* ========================= */}
-      {showShare && (
-        <div className="fixed inset-0 z-[999]">
-          <button
-            aria-label="Close share modal"
-            className="absolute inset-0 bg-black/55 backdrop-blur-[1px]"
-            onClick={() => setShowShare(false)}
-          />
-          <div
-            className="
-              absolute left-1/2 w-[92%] -translate-x-1/2
-              bottom-0
-              lg:bottom-auto lg:top-1/2 lg:-translate-y-1/2
-              lg:max-w-[560px]
-            "
-          >
-            <div className="bg-[#0b1220]/95 border border-white/10 shadow-2xl overflow-hidden rounded-t-3xl lg:rounded-2xl">
-              <div className="lg:hidden px-4 pt-3">
-                <div className="mx-auto h-1 w-10 rounded-full bg-white/20" />
-              </div>
-              <div className="flex items-center justify-between px-5 py-4 border-b border-white/10">
-                <h2 className="text-white font-semibold text-sm">Bagikan ke</h2>
-                <button
-                  onClick={() => setShowShare(false)}
-                  className="text-gray-400 hover:text-white transition-colors"
-                  aria-label="Close"
-                >
-                  <X className="w-5 h-5" />
-                </button>
-              </div>
-              <div className="px-5 py-5">
-                <div className="flex items-center justify-center gap-4 flex-wrap">
-                  <button onClick={() => handleShare('copy')} className="flex flex-col items-center gap-2 hover:opacity-90 transition-opacity group">
-                    <div className="w-12 h-12 rounded-full bg-white/10 flex items-center justify-center group-hover:bg-white/20 transition-colors">
-                      <Copy className="w-6 h-6 text-white" />
-                    </div>
-                    <span className="text-[11px] text-white/90 font-medium">Copy</span>
-                  </button>
-                  <button onClick={() => handleShare('facebook')} className="flex flex-col items-center gap-2 hover:opacity-90 transition-opacity group">
-                    <div className="w-12 h-12 rounded-full bg-[#1877F2]/20 flex items-center justify-center group-hover:bg-[#1877F2]/30 transition-colors">
-                      <span className="text-xl text-[#1877F2] font-bold">f</span>
-                    </div>
-                    <span className="text-[11px] text-white/90 font-medium">Facebook</span>
-                  </button>
-                  <button onClick={() => handleShare('twitter')} className="flex flex-col items-center gap-2 hover:opacity-90 transition-opacity group">
-                    <div className="w-12 h-12 rounded-full bg-white/10 flex items-center justify-center group-hover:bg-white/20 transition-colors">
-                      <span className="text-xl text-white">𝕏</span>
-                    </div>
-                    <span className="text-[11px] text-white/90 font-medium">X</span>
-                  </button>
-                  <button onClick={() => handleShare('telegram')} className="flex flex-col items-center gap-2 hover:opacity-90 transition-opacity group">
-                    <div className="w-12 h-12 rounded-full bg-[#0088cc]/20 flex items-center justify-center group-hover:bg-[#0088cc]/30 transition-colors">
-                      <span className="text-xl">✈️</span>
-                    </div>
-                    <span className="text-[11px] text-white/90 font-medium">Telegram</span>
-                  </button>
-                  <button onClick={() => handleShare('linkedin')} className="flex flex-col items-center gap-2 hover:opacity-90 transition-opacity group">
-                    <div className="w-12 h-12 rounded-full bg-[#0A66C2]/20 flex items-center justify-center group-hover:bg-[#0A66C2]/30 transition-colors">
-                      <span className="text-xl text-[#0A66C2] font-bold">in</span>
-                    </div>
-                    <span className="text-[11px] text-white/90 font-medium">LinkedIn</span>
-                  </button>
-                  <button onClick={() => handleShare('link')} className="flex flex-col items-center gap-2 hover:opacity-90 transition-opacity group">
-                    <div className="w-12 h-12 rounded-full bg-green-500/20 flex items-center justify-center group-hover:bg-green-500/30 transition-colors">
-                      <span className="text-xl">🔗</span>
-                    </div>
-                    <span className="text-[11px] text-white/90 font-medium">Link</span>
-                  </button>
-                </div>
-              </div>
-              <div className="lg:hidden h-4" />
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   )
 }
@@ -641,22 +702,22 @@ export default function ClipsPage() {
         limit: '5',
       })
 
-      const response = await fetch(`/api/movies?${params.toString()}`, {
-        method: 'GET',
+      const response = await fetch(`/api/movies?${params}`, {
         headers: {
           Authorization: `Bearer ${token}`,
-          'Content-Type': 'application/json',
         },
       })
 
       const data = await response.json()
-      console.log('[v0] Movies Response:', data)
 
-      if (data.status && data.list && Array.isArray(data.list)) {
+      if (data && data.list) {
         setApiClips(data.list)
+      } else {
+        setApiClips([])
       }
     } catch (error) {
       console.error('[v0] Error fetching movies:', error)
+      setApiClips([])
     } finally {
       setClipsLoading(false)
     }
@@ -671,85 +732,78 @@ export default function ClipsPage() {
   }
 
   return (
-    <div className="h-screen bg-[#020817] text-white flex flex-col font-sans overflow-hidden">
-      {/* Header */}
-      <div className="flex-none z-50">
-        <Header />
-      </div>
-
-      <div className="flex flex-1 h-[calc(100vh-80px)]">
-        {/* Desktop sidebar */}
-        <aside className="hidden lg:block w-64 bg-[#020817] border-r border-white/5 px-4 py-6 h-full overflow-y-auto flex-none [&::-webkit-scrollbar]:hidden [-ms-overflow-style:'none'] [scrollbar-width:'none']">
-          <h3 className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-4 px-3">Categories</h3>
-          <div className="space-y-1">
-            {sidebarCategories.map((item) => (
-              <button
-                key={item.label}
-                onClick={() => setActiveCategory(item.label)}
-                className={`w-full flex items-center gap-3 px-3 py-3 rounded-lg transition-all duration-200 group ${
-                  activeCategory === item.label ? 'bg-blue-600/10 text-blue-400' : 'text-gray-400 hover:bg-white/5 hover:text-white'
-                }`}
-              >
-                <div className={`p-1 rounded ${activeCategory === item.label ? 'bg-blue-600/20' : 'bg-transparent'}`}>
-                  <Image
-                    src={item.icon}
-                    alt={item.label}
-                    width={20}
-                    height={20}
-                    className="w-5 h-5 opacity-80 group-hover:opacity-100 object-contain"
-                  />
-                </div>
-                <span className="text-sm font-medium">{item.label}</span>
-              </button>
-            ))}
+    <>
+      <Header />
+      <main className="min-h-screen bg-black">
+        <div className="flex h-screen">
+          {/* Sidebar */}
+          <div className="hidden lg:flex lg:w-64 lg:flex-col lg:border-r lg:border-white/10 bg-black overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:'none'] [scrollbar-width:'none']">
+            <div className="p-6 space-y-4">
+              {sidebarCategories.map((category) => (
+                <button
+                  key={category.label}
+                  onClick={() => setActiveCategory(category.label)}
+                  className={`w-full flex items-center gap-4 px-4 py-3 rounded-lg transition-all ${
+                    activeCategory === category.label
+                      ? 'bg-white/10 text-white border border-white/20'
+                      : 'text-gray-400 hover:text-white hover:bg-white/5'
+                  }`}
+                >
+                  <Image src={category.icon} alt={category.label} width={24} height={24} className="w-6 h-6 flex-shrink-0" />
+                  <span className="text-sm font-medium">{category.label}</span>
+                </button>
+              ))}
+            </div>
           </div>
-        </aside>
 
-        {/* Main feed */}
-        <main className="flex-1 h-full overflow-y-scroll snap-y snap-mandatory scroll-smooth no-scrollbar relative [&::-webkit-scrollbar]:hidden [-ms-overflow-style:'none'] [scrollbar-width:'none']">
-          {clipsLoading ? (
-            <div className="w-full h-full flex items-center justify-center">
-              <div className="text-gray-400">Loading clips...</div>
-            </div>
-          ) : apiClips.length > 0 ? (
-            apiClips.map((clip, index) => {
-              const transformedClip = {
-                id: clip.id,
-                title: clip.name,
-                video: clip.video_url,
-                description: clip.synopsis || '',
-                creator: 'Creator',
-                creatorAvatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Creator',
-                genre: clip.cats || 'Video Clip',
-                likes: clip.favorit || '0',
-                comments: clip.comment || '0',
-                shares: '0',
-                saves: '0',
-              }
-              return (
-                <VideoItem
-                  key={clip.id}
-                  clip={transformedClip}
-                  index={index}
-                  total={apiClips.length}
-                  isActive={activeVideoId === clip.id}
-                  onActive={() => setActiveVideoId(clip.id)}
-                  onNavigateNext={handleNavigateNext}
-                  onNavigatePrev={handleNavigatePrev}
-                />
-              )
-            })
-          ) : (
-            <div className="w-full h-full flex items-center justify-center">
-              <div className="text-gray-400">No clips available</div>
-            </div>
-          )}
-        </main>
-      </div>
-
-      <div className="hidden">
-        <Footer />
-      </div>
-    </div>
+          {/* Main content */}
+          <div className="flex-1 overflow-hidden">
+            {clipsLoading ? (
+              <div className="w-full h-full flex items-center justify-center bg-black">
+                <div className="text-center">
+                  <div className="w-12 h-12 border-4 border-white/20 border-t-white rounded-full animate-spin mx-auto mb-4" />
+                  <p className="text-gray-400 text-sm">Loading clips...</p>
+                </div>
+              </div>
+            ) : apiClips.length > 0 ? (
+              <div className="snap-y snap-mandatory overflow-y-scroll h-full scroll-smooth [&::-webkit-scrollbar]:hidden [-ms-overflow-style:'none'] [scrollbar-width:'none']">
+                {apiClips.map((clip, index) => {
+                  const transformedClip = {
+                    id: clip.id,
+                    title: clip.name,
+                    video: clip.video_url,
+                    description: clip.synopsis || '',
+                    creator: 'Creator',
+                    creatorAvatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Creator',
+                    genre: clip.cats || 'Video Clip',
+                    likes: clip.favorit || '0',
+                    comments: clip.comment || '0',
+                    shares: '0',
+                    saves: '0',
+                  }
+                  return (
+                    <VideoItem
+                      key={clip.id}
+                      clip={transformedClip}
+                      index={index}
+                      total={apiClips.length}
+                      isActive={activeVideoId === clip.id}
+                      onActive={() => setActiveVideoId(clip.id)}
+                      onNavigateNext={handleNavigateNext}
+                      onNavigatePrev={handleNavigatePrev}
+                    />
+                  )
+                })}
+              </div>
+            ) : (
+              <div className="w-full h-full flex items-center justify-center bg-black">
+                <p className="text-gray-400">No clips found</p>
+              </div>
+            )}
+          </div>
+        </div>
+      </main>
+      <Footer />
+    </>
   )
 }
