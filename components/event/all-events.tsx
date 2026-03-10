@@ -16,6 +16,11 @@ interface EventItem {
   }
 }
 
+interface Category {
+  id: string
+  name: string
+}
+
 interface AllEventsProps {
   allEvents: EventItem[]
   currentPage: number
@@ -26,9 +31,10 @@ interface AllEventsProps {
   onCategoryChange?: (category: string) => void
   onPartnerChange?: (partner: string) => void
   currentSort?: string
+  categories?: Category[]
+  categoriesLoading?: boolean
+  paginationHtml?: string
 }
-
-const filterOptions = ['All', 'Nonton Bareng', 'Webinar', 'Kelas', 'Seminar']
 
 export function AllEvents({
   allEvents,
@@ -39,11 +45,30 @@ export function AllEvents({
   onSortChange,
   onCategoryChange,
   onPartnerChange,
-  currentSort = 'latest',
+  currentSort = 'oldest',
+  categories = [],
+  categoriesLoading = false,
+  paginationHtml = '',
 }: AllEventsProps) {
   const router = useRouter()
   const [activeFilter, setActiveFilter] = useState('All')
   const [sortBy, setSortBy] = useState(currentSort)
+
+  // Debug logging
+  console.log('[v0] AllEvents received paginationHtml:', paginationHtml ? 'YES' : 'NO')
+  if (paginationHtml) {
+    console.log('[v0] Pagination HTML content:', paginationHtml)
+  }
+
+  // Build filter options with "All" as default + dynamic categories
+  const filterOptions = ['All', ...categories.map(cat => cat.name)]
+
+  // Map category name to ID for API call
+  const getCategoryIdByName = (name: string): string => {
+    if (name === 'All') return ''
+    const category = categories.find(cat => cat.name === name)
+    return category?.id || ''
+  }
 
   const handleSortChange = (value: string) => {
     setSortBy(value)
@@ -54,11 +79,9 @@ export function AllEvents({
 
   const handleFilterChange = (filter: string) => {
     setActiveFilter(filter)
-    if (onCategoryChange && filter !== 'All') {
-      // You can map filter names to category IDs as needed
-      onCategoryChange(filter)
-    } else if (onCategoryChange) {
-      onCategoryChange('')
+    if (onCategoryChange) {
+      const categoryId = getCategoryIdByName(filter)
+      onCategoryChange(categoryId)
     }
   }
 
@@ -219,50 +242,123 @@ export function AllEvents({
         )}
       </div>
 
-      {/* Pagination */}
-      {totalPages > 1 && (
-        <div className="flex items-center justify-center gap-3 mt-12 md:justify-end">
-          <button 
-            onClick={() => onPageChange(Math.max(1, currentPage - 1))}
-            disabled={currentPage === 1}
-            className="flex items-center gap-1 px-4 py-2 rounded-lg bg-[#0F172A] text-sm text-gray-300 hover:text-white border border-white/10 hover:border-yellow-500 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            <ChevronLeft className="w-4 h-4" />
-            <span className="hidden sm:inline">Previous</span>
-          </button>
-          
-          {/* Page Numbers */}
-          <div className="flex items-center gap-2">
-            {Array.from({ length: Math.min(totalPages, 3) }).map((_, index) => {
-              const pageNum = index + 1
-              return (
-                <button
-                  key={pageNum}
-                  onClick={() => onPageChange(pageNum)}
-                  className={`w-9 h-9 rounded-lg text-sm font-medium transition-all ${
-                    currentPage === pageNum
-                      ? 'bg-[#0F172A] text-white border border-yellow-500'
-                      : 'bg-transparent text-gray-400 hover:bg-white/5'
-                  }`}
-                >
-                  {pageNum}
-                </button>
-              )
-            })}
-            {totalPages > 3 && <span className="text-gray-500">...</span>}
-          </div>
-          
-          <button 
-            onClick={() => onPageChange(Math.min(totalPages, currentPage + 1))}
-            disabled={currentPage === totalPages}
-            className="flex items-center gap-1 px-4 py-2 rounded-lg bg-[#0F172A] text-sm text-gray-300 hover:text-white border border-white/10 hover:border-yellow-500 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            <span className="hidden sm:inline">Next</span>
-            <ChevronRight className="w-4 h-4" />
-          </button>
-        </div>
+      {/* Pagination - Parse from HTML */}
+      {paginationHtml && (
+        <PaginationRenderer 
+          htmlString={paginationHtml} 
+          onPageClick={(page) => {
+            console.log('[v0] Pagination clicked:', page)
+            onPageChange(page)
+          }}
+          currentPage={currentPage}
+        />
       )}
     </section>
+  )
+}
+
+// Pagination Renderer Component
+interface PaginationRendererProps {
+  htmlString: string
+  onPageClick: (page: number) => void
+  currentPage: number
+}
+
+function PaginationRenderer({ htmlString, onPageClick, currentPage }: PaginationRendererProps) {
+  console.log('[v0] PaginationRenderer - Input HTML:', htmlString)
+  
+  // Parse HTML string to extract page numbers and links
+  const parsePages = () => {
+    const pages: Array<{ page: number; isActive: boolean; isEllipsis: boolean }> = []
+    const linkRegex = /href="\/(\d+)"|<strong>(\d+)<\/strong>/g
+    let match
+
+    const uniquePages = new Set<number>()
+
+    // Extract all page numbers from links
+    const tempRegex = /data-ci-pagination-page="(\d+)"/g
+    let tempMatch
+    while ((tempMatch = tempRegex.exec(htmlString))) {
+      uniquePages.add(parseInt(tempMatch[1]))
+    }
+
+    // Also check for strong tags (current page)
+    const strongRegex = /<strong>(\d+)<\/strong>/g
+    let strongMatch
+    while ((strongMatch = strongRegex.exec(htmlString))) {
+      uniquePages.add(parseInt(strongMatch[1]))
+    }
+
+    // Sort and create button data
+    const sortedPages = Array.from(uniquePages).sort((a, b) => a - b)
+    console.log('[v0] Parsed pages:', sortedPages)
+
+    return sortedPages.map((page) => ({
+      page,
+      isActive: page === currentPage,
+      isEllipsis: false,
+    }))
+  }
+
+  const pages = parsePages()
+
+  // Check if Previous/Next buttons should be enabled
+  const hasPrevious = htmlString.includes('rel="prev"')
+  const hasNext = htmlString.includes('rel="next"')
+
+  // Extract previous and next page numbers
+  const getPrevPage = (): number | null => {
+    const match = htmlString.match(/rel="prev">.*?href="\/(\d+)"/)
+    return match ? parseInt(match[1]) : null
+  }
+
+  const getNextPage = (): number | null => {
+    const match = htmlString.match(/rel="next">.*?href="\/(\d+)"/)
+    return match ? parseInt(match[1]) : null
+  }
+
+  const prevPage = getPrevPage()
+  const nextPage = getNextPage()
+
+  return (
+    <div className="flex items-center justify-center gap-3 mt-12 md:justify-end flex-wrap">
+      {/* Previous Button */}
+      <button
+        onClick={() => prevPage && onPageClick(prevPage)}
+        disabled={!hasPrevious}
+        className="flex items-center gap-1 px-4 py-2 rounded-lg bg-[#0F172A] text-sm text-gray-300 hover:text-white border border-white/10 hover:border-yellow-500 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+      >
+        <ChevronLeft className="w-4 h-4" />
+        <span className="hidden sm:inline">Previous</span>
+      </button>
+
+      {/* Page Numbers */}
+      <div className="flex items-center gap-2">
+        {pages.map((item) => (
+          <button
+            key={item.page}
+            onClick={() => onPageClick(item.page)}
+            className={`w-9 h-9 rounded-lg text-sm font-medium transition-all ${
+              item.isActive
+                ? 'bg-[#0F172A] text-white border border-yellow-500'
+                : 'bg-transparent text-gray-400 hover:bg-white/5'
+            }`}
+          >
+            {item.page}
+          </button>
+        ))}
+      </div>
+
+      {/* Next Button */}
+      <button
+        onClick={() => nextPage && onPageClick(nextPage)}
+        disabled={!hasNext}
+        className="flex items-center gap-1 px-4 py-2 rounded-lg bg-[#0F172A] text-sm text-gray-300 hover:text-white border border-white/10 hover:border-yellow-500 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+      >
+        <span className="hidden sm:inline">Next</span>
+        <ChevronRight className="w-4 h-4" />
+      </button>
+    </div>
   )
 }
 

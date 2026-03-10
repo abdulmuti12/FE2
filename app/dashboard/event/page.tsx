@@ -48,13 +48,21 @@ interface EventItem {
   }
 }
 
+interface Category {
+  id: string
+  name: string
+}
+
 export default function EventPage() {
   const router = useRouter()
 
   const [allEvents, setAllEvents] = useState<EventItem[]>([])
+  const [categories, setCategories] = useState<Category[]>([])
   const [currentPage, setCurrentPage] = useState(1)
   const [totalPages, setTotalPages] = useState(1)
   const [loading, setLoading] = useState(true)
+  const [categoriesLoading, setCategoriesLoading] = useState(true)
+  const [paginationHtml, setPaginationHtml] = useState<string>('')
 
   const [idCategory, setIdCategory] = useState('')
   const [idPartner, setIdPartner] = useState('')
@@ -72,8 +80,33 @@ export default function EventPage() {
       return
     }
 
+    fetchCategories(token)
     fetchEvents(token, currentPage, idCategory, idPartner, sortBy)
-  }, [currentPage, idCategory, idPartner, sortBy])
+  }, [currentPage, idCategory, idPartner, sortBy, router])
+
+  const fetchCategories = async (token: string) => {
+    try {
+      setCategoriesLoading(true)
+      const response = await fetch('/api/event-categories', {
+        method: 'GET',
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      })
+
+      const data = await response.json()
+      console.log('[v0] Categories Response:', data)
+
+      if (data.list && Array.isArray(data.list)) {
+        setCategories(data.list)
+      }
+    } catch (error) {
+      console.error('[v0] Error fetching categories:', error)
+    } finally {
+      setCategoriesLoading(false)
+    }
+  }
 
   const fetchEvents = async (
     token: string,
@@ -111,19 +144,43 @@ export default function EventPage() {
       const data = await response.json()
 
       console.log('[v0] API Response:', data)
+      console.log('[v0] Pagination data:', data.pagination)
 
       if (data.list && Array.isArray(data.list)) {
         setAllEvents(data.list)
-
-        const total = Math.ceil((data.total || 0) / LIMIT)
-        setTotalPages(total > 0 ? total : 1)
+        
+        // Extract pagination data
+        if (data.pagination) {
+          console.log('[v0] Setting pagination HTML:', data.pagination)
+          setPaginationHtml(data.pagination)
+          // Extract total pages from pagination HTML
+          const pageMatches = data.pagination.match(/data-ci-pagination-page="(\d+)"/g)
+          if (pageMatches && pageMatches.length > 0) {
+            const pages = pageMatches.map((match: string) => parseInt(match.match(/\d+/)?.[0] || '1'))
+            const maxPage = Math.max(...pages)
+            setTotalPages(maxPage)
+          }
+        } else {
+          const total = Math.ceil((data.total || 0) / LIMIT)
+          setTotalPages(total > 0 ? total : 1)
+        }
       }
 
       else if (data.data && Array.isArray(data.data)) {
         setAllEvents(data.data)
 
-        const total = Math.ceil((data.total || data.pagination?.total || 0) / LIMIT)
-        setTotalPages(total > 0 ? total : 1)
+        if (data.pagination) {
+          setPaginationHtml(data.pagination)
+          const pageMatches = data.pagination.match(/data-ci-pagination-page="(\d+)"/g)
+          if (pageMatches && pageMatches.length > 0) {
+            const pages = pageMatches.map((match: string) => parseInt(match.match(/\d+/)?.[0] || '1'))
+            const maxPage = Math.max(...pages)
+            setTotalPages(maxPage)
+          }
+        } else {
+          const total = Math.ceil((data.total || data.pagination?.total || 0) / LIMIT)
+          setTotalPages(total > 0 ? total : 1)
+        }
       }
 
       else if (Array.isArray(data)) {
@@ -214,6 +271,9 @@ export default function EventPage() {
           onCategoryChange={setIdCategory}
           onPartnerChange={setIdPartner}
           currentSort={sortBy}
+          categories={categories}
+          categoriesLoading={categoriesLoading}
+          paginationHtml={paginationHtml}
         />
 
       </div>
