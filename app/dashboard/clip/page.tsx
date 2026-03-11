@@ -884,15 +884,19 @@ export default function ClipsPage() {
               </div>
             ) : apiClips.length > 0 ? (
               <div className="snap-y snap-mandatory overflow-y-scroll h-full scroll-smooth [&::-webkit-scrollbar]:hidden [-ms-overflow-style:'none'] [scrollbar-width:'none']">
-                {apiClips.map((clip, index) => {
+             {apiClips.map((clip: any, index) => {
+                  // Ambil data customer dari API (fallback ke nilai default jika tidak ada)
+                  const creatorName = clip.customer?.name || 'Unknown Creator'
+                  const creatorAvatarUrl = clip.customer?.avatar_url || 'https://api.dicebear.com/7.x/avataaars/svg?seed=Creator'
+
                   const transformedClip = {
                     id: clip.id,
                     name: clip.name,
                     video_url: clip.video_url,
                     image_url: clip.image_url,
                     synopsis: clip.synopsis || '',
-                    creator: 'Creator',
-                    creatorAvatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Creator',
+                    creator: clip.creator.name ||'',
+                    creatorAvatar: clip.creator.avatar_url || creatorAvatarUrl,
                     cats: clip.cats || 'Video Clip',
                     favorit: clip.favorit || '0',
                     comment: clip.comment || '0',
