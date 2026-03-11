@@ -33,6 +33,7 @@ interface Movie {
   run_time_format?: string
   favorit?: string
   comment?: string
+  isLiked?: boolean // Tambahan state lokal untuk video like
 }
 
 interface Comment {
@@ -46,7 +47,7 @@ interface Comment {
   avatar_url: string
   time_ago: string
   heart: string
-  isLiked?: boolean // Tambahan state lokal untuk mendeteksi apakah user sudah like
+  isLiked?: boolean
 }
 
 // --- DATA DUMMY ---
@@ -75,7 +76,7 @@ const VideoItem = ({
   isNearEnd,
   onNearEnd,
 }: {
-  clip: any
+  clip: Movie
   index: number
   total: number
   isActive: boolean
@@ -97,7 +98,10 @@ const VideoItem = ({
   const [isSubmittingComment, setIsSubmittingComment] = useState(false)
   const [showAllComments, setShowAllComments] = useState(false)
 
-  // Auto-close komentar & hentikan video saat ganti slide (tidak active)
+  // --- STATE UNTUK VIDEO LIKE ---
+  const [videoLikes, setVideoLikes] = useState(parseInt(clip.favorit || '0'))
+  const [isVideoLiked, setIsVideoLiked] = useState(clip.isLiked || false)
+
   useEffect(() => {
     const vids = [desktopVideoRef.current, mobileVideoRef.current].filter(Boolean) as HTMLVideoElement[]
 
@@ -126,7 +130,6 @@ const VideoItem = ({
     }
   }, [isActive])
 
-  // Observer HANYA mendeteksi slide aktif & trigger prefetch di background jika isNearEnd
   useEffect(() => {
     const options = {
       root: null,
@@ -139,7 +142,7 @@ const VideoItem = ({
         if (entry.isIntersecting) {
           onActive()
           if (isNearEnd && onNearEnd) {
-            onNearEnd() // Trigger ambil data halaman berikutnya
+            onNearEnd() 
           }
         }
       })
@@ -173,6 +176,48 @@ const VideoItem = ({
     })
     
     setIsMuted(!isMuted)
+  }
+
+  // --- FUNGSI LIKE VIDEO ---
+  const handleLikeVideo = async (e: React.MouseEvent) => {
+    e.stopPropagation()
+    try {
+      const token = localStorage.getItem('user_token')
+      if (!token) return
+
+      // Optimistic Update
+      const newLikedState = !isVideoLiked
+      setIsVideoLiked(newLikedState)
+      setVideoLikes((prev) => (newLikedState ? prev + 1 : Math.max(0, prev - 1)))
+
+      const response = await fetch('/api/like-video', {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ id: clip.id }),
+      })
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`)
+      }
+
+      const data = await response.json()
+      
+      if (data.status !== true) {
+        console.warn("API returned false status:", data)
+        // Revert jika gagal
+        setIsVideoLiked(!newLikedState)
+        setVideoLikes((prev) => (!newLikedState ? prev + 1 : Math.max(0, prev - 1)))
+      }
+    } catch (error) {
+      console.error('[v0] Error liking video:', error)
+      // Revert jika error
+      const newLikedState = !isVideoLiked
+      setIsVideoLiked(!newLikedState)
+      setVideoLikes((prev) => (!newLikedState ? prev + 1 : Math.max(0, prev - 1)))
+    }
   }
 
   const fetchCommentsData = async () => {
@@ -260,13 +305,11 @@ const VideoItem = ({
     }
   }
 
-  // FITUR LIKE / UNLIKE COMMENT
   const handleLikeComment = async (commentId: string) => {
     try {
       const token = localStorage.getItem('user_token')
       if (!token) return
 
-      // Optimistic Update: Toggle state isLiked dan angkanya
       setComments((prevComments) =>
         prevComments.map((c) => {
           if (c.id === commentId) {
@@ -275,9 +318,7 @@ const VideoItem = ({
 
             return { 
               ...c, 
-              // Jika sebelumnya di-like, maka kurangi angkanya. Jika belum, tambah 1.
               heart: isCurrentlyLiked ? Math.max(0, currentHearts - 1).toString() : (currentHearts + 1).toString(),
-              // Balikkan status like-nya
               isLiked: !isCurrentlyLiked 
             }
           }
@@ -285,7 +326,6 @@ const VideoItem = ({
         })
       )
 
-      // Hit API LOKAL Next.js
       const response = await fetch('/api/like-comment', {
         method: 'POST',
         headers: {
@@ -319,7 +359,6 @@ const VideoItem = ({
       {/* Navigasi kecil desktop */}
       <div className="hidden lg:flex absolute right-8 top-1/2 -translate-y-1/2 flex-col gap-96 pointer-events-none opacity-20 z-50">
         {index > 0 && <ChevronUp className="w-10 h-10 animate-bounce" />}
-        {/* Hilangkan icon panah bawah jika belum ada data tapi ini akhir video (akan diload otomatis) */}
         {index < total - 1 && <ChevronDown className="w-10 h-10 animate-bounce" />}
       </div>
 
@@ -330,26 +369,26 @@ const VideoItem = ({
         <div className={`flex flex-col justify-center space-y-6 animate-in slide-in-from-left duration-700 fade-in col-span-3`}>
           <div className="flex items-center gap-3 bg-white/5 p-3 rounded-xl border border-white/10 w-fit backdrop-blur-sm">
             <Image
-              src={clip.creatorAvatar}
-              alt={clip.creator}
+              src={(clip as any).creatorAvatar}
+              alt={(clip as any).creator}
               width={48}
               height={48}
               className="w-10 h-10 rounded-full border border-white/20"
             />
             <div>
-              <h4 className="text-sm font-bold text-white leading-tight">{clip.creator}</h4>
+              <h4 className="text-sm font-bold text-white leading-tight">{(clip as any).creator}</h4>
               <p className="text-[10px] text-gray-400">Creator</p>
             </div>
           </div>
 
           <div>
-            <h1 className="text-3xl font-bold mb-3 leading-tight text-white drop-shadow-lg">{clip.title}</h1>
-            <p className="text-gray-300 text-sm leading-relaxed">{clip.description}</p>
+            <h1 className="text-3xl font-bold mb-3 leading-tight text-white drop-shadow-lg">{clip.name}</h1>
+            <p className="text-gray-300 text-sm leading-relaxed">{clip.synopsis}</p>
           </div>
 
           <div className="flex flex-wrap gap-2">
             <span className="px-3 py-1 rounded-full bg-white/5 border border-white/10 text-xs text-gray-300">
-              #{clip.genre}
+              #{clip.cats}
             </span>
             <span className="px-3 py-1 rounded-full bg-white/5 border border-white/10 text-xs text-gray-300">
               #AI_Video
@@ -362,9 +401,9 @@ const VideoItem = ({
           <div className="relative w-full h-full max-h-[82vh] aspect-[9/16] rounded-3xl overflow-hidden border border-white/10 shadow-[0_0_50px_-12px_rgba(0,0,0,0.5)] group bg-black">
             <video
               ref={desktopVideoRef}
-              src={clip.video}
-              poster={clip.image_url}   // Optimasi Render Thumbnail
-              preload="metadata"        // Hemat bandwidth untuk video tidak aktif
+              src={clip.video_url}
+              poster={clip.image_url}   
+              preload="metadata"        
               className="w-full h-full object-cover cursor-pointer"
               muted={isMuted}
               loop
@@ -391,11 +430,32 @@ const VideoItem = ({
 
         {/* Kolom kanan 1: actions */}
         <div className={`${showComments ? 'col-span-1 items-center justify-end pb-8 pl-0' : 'col-span-3 pl-8 justify-center'} flex flex-col gap-8 h-[82vh] animate-in slide-in-from-right duration-700 fade-in transition-all duration-500`}>
+          
+          {/* TOMBOL LIKE VIDEO DESKTOP */}
+          <div
+            onClick={handleLikeVideo}
+            className="flex items-center gap-4 group cursor-pointer"
+          >
+            <div
+              className={`w-14 h-14 rounded-full flex items-center justify-center backdrop-blur border border-white/10 group-hover:scale-110 transition-all shadow-lg ${
+                isVideoLiked ? 'bg-white/10' : 'bg-[#1e293b]/80 group-hover:bg-white/10'
+              }`}
+            >
+              <Heart 
+                className={`w-6 h-6 ${isVideoLiked ? 'text-red-500' : 'text-white group-hover:text-red-500'}`} 
+                fill={isVideoLiked ? "currentColor" : "none"}
+              />
+            </div>
+            <span className={`text-base font-medium text-gray-300 group-hover:text-white ${showComments ? 'hidden' : 'block'}`}>
+              {videoLikes}
+            </span>
+          </div>
+
+          {/* TOMBOL LAINNYA */}
           {[
-            { icon: Heart, label: clip.likes, action: null },
-            { icon: MessageCircle, label: clip.comments, action: 'comments' },
+            { icon: MessageCircle, label: clip.comment, action: 'comments' },
             { icon: Plus, label: 'Add', action: null },
-            { icon: Share2, label: clip.shares, action: 'share' },
+            { icon: Share2, label: '0', action: 'share' },
           ].map((btn, idx) => (
             <div
               key={idx}
@@ -410,7 +470,7 @@ const VideoItem = ({
                   showComments && btn.action === 'comments' ? 'bg-white/20' : ''
                 }`}
               >
-                <btn.icon className={`w-6 h-6 ${btn.label === clip.likes ? 'group-hover:text-red-500' : 'text-white'}`} />
+                <btn.icon className={`w-6 h-6 text-white`} />
               </div>
               <span className={`text-base font-medium text-gray-300 group-hover:text-white ${showComments ? 'hidden' : 'block'}`}>{btn.label}</span>
             </div>
@@ -465,7 +525,6 @@ const VideoItem = ({
                     </div>
                   ))}
 
-                  {/* Tombol Show More / Less */}
                   {comments.length > 5 && !showAllComments && (
                     <button
                       onClick={() => setShowAllComments(true)}
@@ -516,9 +575,9 @@ const VideoItem = ({
       <div className="lg:hidden w-full h-full relative bg-black">
         <video
           ref={mobileVideoRef}
-          src={clip.video}
-          poster={clip.image_url}     // Optimasi Render Thumbnail
-          preload="metadata"          // Hemat bandwidth untuk video tidak aktif
+          src={clip.video_url}
+          poster={clip.image_url}     
+          preload="metadata"          
           className="w-full h-full object-cover"
           muted={isMuted}
           loop
@@ -546,31 +605,39 @@ const VideoItem = ({
         <div className="absolute right-2 bottom-20 flex flex-col items-center gap-5 z-20 pb-4">
           <div className="relative mb-2">
             <div className="w-10 h-10 rounded-full border border-white p-0.5 overflow-hidden">
-              <Image src={clip.creatorAvatar} width={40} height={40} alt="Creator" className="rounded-full" />
+              <Image src={(clip as any).creatorAvatar} width={40} height={40} alt="Creator" className="rounded-full" />
             </div>
             <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 bg-red-500 rounded-full w-5 h-5 flex items-center justify-center">
               <Plus className="w-3 h-3 text-white" />
             </div>
           </div>
 
-          <div className="flex flex-col items-center gap-1 drop-shadow-md">
-            <Heart className="w-8 h-8 text-white" strokeWidth={1.5} />
-            <span className="text-xs font-semibold text-white">{clip.likes}</span>
-          </div>
+          {/* TOMBOL LIKE VIDEO MOBILE */}
+          <button
+            onClick={handleLikeVideo}
+            className="flex flex-col items-center gap-1 drop-shadow-md hover:opacity-80 transition-opacity"
+          >
+            <Heart 
+              className={`w-8 h-8 ${isVideoLiked ? 'text-red-500' : 'text-white'}`} 
+              strokeWidth={1.5} 
+              fill={isVideoLiked ? "currentColor" : "none"}
+            />
+            <span className="text-xs font-semibold text-white">{videoLikes}</span>
+          </button>
 
           <button
             onClick={handleOpenComments}
             className="flex flex-col items-center gap-1 drop-shadow-md hover:opacity-80 transition-opacity"
           >
             <MessageCircle className="w-8 h-8 text-white" strokeWidth={1.5} />
-            <span className="text-xs font-semibold text-white">{clip.comments}</span>
+            <span className="text-xs font-semibold text-white">{clip.comment}</span>
           </button>
 
           <div className="flex flex-col items-center gap-1 drop-shadow-md">
             <div className="bg-white/10 p-1.5 rounded-full backdrop-blur-sm">
               <Bookmark className="w-6 h-6 text-white fill-white/20" strokeWidth={1.5} />
             </div>
-            <span className="text-xs font-semibold text-white">{clip.saves}</span>
+            <span className="text-xs font-semibold text-white">0</span>
           </div>
 
           <button
@@ -578,29 +645,29 @@ const VideoItem = ({
             className="flex flex-col items-center gap-1 drop-shadow-md hover:opacity-80 transition-opacity"
           >
             <Share2 className="w-8 h-8 text-white" strokeWidth={1.5} />
-            <span className="text-xs font-semibold text-white">{clip.shares}</span>
+            <span className="text-xs font-semibold text-white">0</span>
           </button>
 
           <div className="mt-4 animate-[spin_4s_linear_infinite]">
             <div className="w-10 h-10 rounded-full bg-gray-900 border-4 border-gray-800 flex items-center justify-center overflow-hidden">
-              <Image src={clip.creatorAvatar} width={24} height={24} alt="music" className="rounded-full w-6 h-6" />
+              <Image src={(clip as any).creatorAvatar} width={24} height={24} alt="music" className="rounded-full w-6 h-6" />
             </div>
           </div>
         </div>
 
         <div className="absolute bottom-0 left-0 w-[80%] p-4 z-20 pb-6">
           <div className="flex items-center gap-2 mb-2">
-            <h3 className="text-white font-bold text-base shadow-black drop-shadow-md">@{clip.creator.replace(' ', '')}</h3>
+            <h3 className="text-white font-bold text-base shadow-black drop-shadow-md">@{(clip as any).creator.replace(' ', '')}</h3>
             <span className="bg-white/20 backdrop-blur-md px-2 py-0.5 rounded text-[10px] font-semibold text-white">Follow</span>
           </div>
           <p className="text-white text-sm leading-snug mb-3 drop-shadow-md">
-            {clip.description} <span className="font-bold ml-1">#fyp #viral</span>
+            {clip.synopsis} <span className="font-bold ml-1">#fyp #viral</span>
           </p>
           <div className="flex items-center gap-2">
             <Music className="w-3 h-3 text-white" />
             <div className="overflow-hidden w-40">
               <p className="text-xs text-white whitespace-nowrap animate-marquee">
-                Original Sound - {clip.genre} Music • {clip.title}
+                Original Sound - {clip.cats} Music • {clip.name}
               </p>
             </div>
           </div>
@@ -656,7 +723,6 @@ const VideoItem = ({
                       </div>
                     ))}
 
-                    {/* Tombol Show More / Less */}
                     {comments.length > 5 && !showAllComments && (
                       <button
                         onClick={() => setShowAllComments(true)}
@@ -740,7 +806,7 @@ export default function ClipsPage() {
   const [currentPage, setCurrentPage] = useState(1)
   const [hasMore, setHasMore] = useState(true)
 
-  const fetchingRef = useRef(false) // Mencegah double fetch saat StrictMode atau multiple triggers
+  const fetchingRef = useRef(false) 
 
   useEffect(() => {
     const token = localStorage.getItem('user_token')
@@ -753,7 +819,6 @@ export default function ClipsPage() {
   }, [router, currentPage])
 
   const fetchMovies = async (token: string, page: number) => {
-    // Abaikan jika sedang proses fetch atau data sudah habis
     if (fetchingRef.current || (!hasMore && page !== 1)) return
     
     fetchingRef.current = true
@@ -780,7 +845,6 @@ export default function ClipsPage() {
         if (page === 1) {
           setApiClips(data.list)
         } else {
-          // APPEND DATA: Mencegah duplikasi id
           setApiClips((prev) => {
             const existingIds = new Set(prev.map((c) => c.id))
             const newClips = data.list.filter((c: Movie) => !existingIds.has(c.id))
@@ -788,7 +852,6 @@ export default function ClipsPage() {
           })
         }
 
-        // Jika data dari api lebih kecil dari limit(5), berarti ini page terakhir
         if (data.list.length < 5) {
           setHasMore(false)
         }
@@ -805,7 +868,6 @@ export default function ClipsPage() {
     }
   }
 
-  // Dipanggil ketika user sudah melihat video ke 2 terakhir dari array
   const handleLoadMore = useCallback(() => {
     if (!fetchingRef.current && hasMore) {
       setCurrentPage((prev) => prev + 1)
@@ -851,26 +913,24 @@ export default function ClipsPage() {
                 {apiClips.map((clip, index) => {
                   const transformedClip = {
                     id: clip.id,
-                    title: clip.name,
-                    video: clip.video_url,
-                    image_url: clip.image_url, // Poster untuk preload
-                    description: clip.synopsis || '',
+                    name: clip.name,
+                    video_url: clip.video_url,
+                    image_url: clip.image_url,
+                    synopsis: clip.synopsis || '',
                     creator: 'Creator',
                     creatorAvatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Creator',
-                    genre: clip.cats || 'Video Clip',
-                    likes: clip.favorit || '0',
-                    comments: clip.comment || '0',
-                    shares: '0',
-                    saves: '0',
+                    cats: clip.cats || 'Video Clip',
+                    favorit: clip.favorit || '0',
+                    comment: clip.comment || '0',
+                    isLiked: false, // Default awal
                   }
                   
-                  // Trigger prefetch saat video berada di 2 indeks terakhir
                   const isNearEnd = index === apiClips.length - 2;
 
                   return (
                     <VideoItem
                       key={clip.id}
-                      clip={transformedClip}
+                      clip={transformedClip as any}
                       index={index}
                       total={apiClips.length}
                       isActive={activeVideoId === clip.id}
@@ -889,7 +949,6 @@ export default function ClipsPage() {
           </div>
         </div>
       </main>
-      {/* <Footer /> */}
     </>
   )
 }
