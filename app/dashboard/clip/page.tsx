@@ -1,7 +1,7 @@
 'use client'
 
 import Image from 'next/image'
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import {
   Heart,
@@ -20,6 +20,7 @@ import {
 } from 'lucide-react'
 import { Header } from '@/components/header'
 import { Footer } from '@/components/footer'
+import { ClipComments } from '@/components/clip/clip-comments'
 
 // --- INTERFACES ---
 interface Movie {
@@ -64,12 +65,26 @@ const sidebarCategories = [
 ]
 
 // --- KOMPONEN ITEM VIDEO ---
-const VideoItem = ({ clip, index, total, isActive, onActive, onNavigateNext, onNavigatePrev }: { clip: any; index: number; total: number; isActive: boolean; onActive: () => void; onNavigateNext?: () => void; onNavigatePrev?: () => void }) => {
-  // Pisahkan ref agar video desktop dan mobile tidak konflik saat dijalankan via script
+const VideoItem = ({
+  clip,
+  index,
+  total,
+  isActive,
+  onActive,
+  isNearEnd,
+  onNearEnd,
+}: {
+  clip: any
+  index: number
+  total: number
+  isActive: boolean
+  onActive: () => void
+  isNearEnd?: boolean
+  onNearEnd?: () => void
+}) => {
   const desktopVideoRef = useRef<HTMLVideoElement>(null)
   const mobileVideoRef = useRef<HTMLVideoElement>(null)
   const containerRef = useRef<HTMLDivElement>(null)
-  const wheelTimeoutRef = useRef<NodeJS.Timeout | null>(null)
 
   const [isPlaying, setIsPlaying] = useState(false)
   const [isMuted, setIsMuted] = useState(false)
@@ -79,43 +94,38 @@ const VideoItem = ({ clip, index, total, isActive, onActive, onNavigateNext, onN
   const [commentsLoading, setCommentsLoading] = useState(false)
   const [commentInput, setCommentInput] = useState('')
   const [isSubmittingComment, setIsSubmittingComment] = useState(false)
-
-  // State untuk kontrol "Show More"
   const [showAllComments, setShowAllComments] = useState(false)
 
-  // 1. Auto-close komentar & hentikan video saat ganti slide (tidak active)
+  // Auto-close komentar & hentikan video saat ganti slide (tidak active)
   useEffect(() => {
-    const vids = [desktopVideoRef.current, mobileVideoRef.current].filter(Boolean) as HTMLVideoElement[];
+    const vids = [desktopVideoRef.current, mobileVideoRef.current].filter(Boolean) as HTMLVideoElement[]
 
     if (isActive) {
       vids.forEach((vid) => {
-        const playPromise = vid.play();
+        const playPromise = vid.play()
         if (playPromise !== undefined) {
           playPromise
             .then(() => setIsPlaying(true))
             .catch((error) => {
-              console.log('Autoplay blocked, muting.', error);
-              vid.muted = true;
-              setIsMuted(true);
-              vid.play().then(() => setIsPlaying(true)).catch(() => setIsPlaying(false));
-            });
+              console.log('Autoplay blocked, muting.', error)
+              vid.muted = true
+              setIsMuted(true)
+              vid.play().then(() => setIsPlaying(true)).catch(() => setIsPlaying(false))
+            })
         }
-      });
+      })
     } else {
-      // Pause video & reset durasi
       vids.forEach((vid) => {
-        vid.pause();
-        vid.currentTime = 0;
-      });
-      setIsPlaying(false);
-
-      // Tutup panel yang terbuka
-      setShowComments(false);
-      setShowShare(false);
+        vid.pause()
+        vid.currentTime = 0
+      })
+      setIsPlaying(false)
+      setShowComments(false)
+      setShowShare(false)
     }
-  }, [isActive]);
+  }, [isActive])
 
-  // Observer HANYA mendeteksi apakah slide sedang terlihat lalu set onActive
+  // Observer HANYA mendeteksi slide aktif & trigger prefetch di background jika isNearEnd
   useEffect(() => {
     const options = {
       root: null,
@@ -126,7 +136,10 @@ const VideoItem = ({ clip, index, total, isActive, onActive, onNavigateNext, onN
     const observer = new IntersectionObserver((entries) => {
       entries.forEach((entry) => {
         if (entry.isIntersecting) {
-          onActive() // Memanggil state parent, bukan .play() langsung
+          onActive()
+          if (isNearEnd && onNearEnd) {
+            onNearEnd() // Trigger ambil data halaman berikutnya
+          }
         }
       })
     }, options)
@@ -136,59 +149,35 @@ const VideoItem = ({ clip, index, total, isActive, onActive, onNavigateNext, onN
     return () => {
       if (containerRef.current) observer.unobserve(containerRef.current)
     }
-  }, [onActive])
+  }, [onActive, isNearEnd, onNearEnd])
 
-  // Toggle Play/Pause Manual
   const togglePlay = () => {
-    const vids = [desktopVideoRef.current, mobileVideoRef.current].filter(Boolean) as HTMLVideoElement[];
-    const currentIsPlaying = isPlaying;
+    const vids = [desktopVideoRef.current, mobileVideoRef.current].filter(Boolean) as HTMLVideoElement[]
+    const currentIsPlaying = isPlaying
 
     vids.forEach((vid) => {
-      if (currentIsPlaying) vid.pause();
-      else vid.play();
-    });
+      if (currentIsPlaying) vid.pause()
+      else vid.play()
+    })
 
-    setIsPlaying(!currentIsPlaying);
+    setIsPlaying(!currentIsPlaying)
   }
 
-  // Toggle Mute Manual
   const toggleMute = (e: React.MouseEvent) => {
     e.stopPropagation()
-    const vids = [desktopVideoRef.current, mobileVideoRef.current].filter(Boolean) as HTMLVideoElement[];
+    const vids = [desktopVideoRef.current, mobileVideoRef.current].filter(Boolean) as HTMLVideoElement[]
     
     vids.forEach((vid) => {
-      vid.muted = !vid.muted;
-    });
+      vid.muted = !vid.muted
+    })
     
     setIsMuted(!isMuted)
   }
 
-  // Handle wheel scroll for navigation
-  const handleWheel = (e: WheelEvent) => {
-    if (wheelTimeoutRef.current) return
-    if (showComments || showShare) return
-
-    wheelTimeoutRef.current = setTimeout(() => {
-      wheelTimeoutRef.current = null
-    }, 800)
-
-    if (e.deltaY > 0) {
-      if (index === total - 1 && onNavigateNext) {
-        onNavigateNext()
-      }
-    } else if (e.deltaY < 0) {
-      if (index === 0 && onNavigatePrev) {
-        onNavigatePrev()
-      }
-    }
-  }
-
-  // Fungsi khusus untuk Fetch Data Komentar (Bisa dipanggil ulang saat butuh reload)
   const fetchCommentsData = async () => {
     try {
       setCommentsLoading(true)
       const token = localStorage.getItem('user_token')
-
       if (!token) return
 
       const response = await fetch(`/api/clip-comments?id=${clip.id}`, {
@@ -226,7 +215,6 @@ const VideoItem = ({ clip, index, total, isActive, onActive, onNavigateNext, onN
     }
   }
 
-  // Buka Komentar & Fetch (jika belum ada data)
   const handleOpenComments = async () => {
     setShowComments(true)
     if (comments.length === 0) {
@@ -234,7 +222,6 @@ const VideoItem = ({ clip, index, total, isActive, onActive, onNavigateNext, onN
     }
   }
 
-  // Submit comment
   const handleSubmitComment = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!commentInput.trim()) return
@@ -262,8 +249,7 @@ const VideoItem = ({ clip, index, total, isActive, onActive, onNavigateNext, onN
 
       const data = await response.json()
       if (data.status === true) {
-        setCommentInput('') // Kosongkan input
-        // 2. Fetch/Reload Komentar Terbaru langsung setelah berhasil dikirim
+        setCommentInput('') 
         await fetchCommentsData() 
       }
     } catch (error) {
@@ -273,19 +259,6 @@ const VideoItem = ({ clip, index, total, isActive, onActive, onNavigateNext, onN
     }
   }
 
-  // Add wheel event listener
-  useEffect(() => {
-    const container = containerRef.current
-    if (!container) return
-
-    container.addEventListener('wheel', handleWheel, { passive: true })
-    return () => {
-      container.removeEventListener('wheel', handleWheel)
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [index, total, showComments, showShare, onNavigateNext, onNavigatePrev])
-
-  // Menentukan komentar yang ditampilkan (Max 5 di awal)
   const displayedComments = showAllComments ? comments : comments.slice(0, 5)
 
   return (
@@ -294,6 +267,7 @@ const VideoItem = ({ clip, index, total, isActive, onActive, onNavigateNext, onN
       {/* Navigasi kecil desktop */}
       <div className="hidden lg:flex absolute right-8 top-1/2 -translate-y-1/2 flex-col gap-96 pointer-events-none opacity-20 z-50">
         {index > 0 && <ChevronUp className="w-10 h-10 animate-bounce" />}
+        {/* Hilangkan icon panah bawah jika belum ada data tapi ini akhir video (akan diload otomatis) */}
         {index < total - 1 && <ChevronDown className="w-10 h-10 animate-bounce" />}
       </div>
 
@@ -337,6 +311,8 @@ const VideoItem = ({ clip, index, total, isActive, onActive, onNavigateNext, onN
             <video
               ref={desktopVideoRef}
               src={clip.video}
+              poster={clip.image_url}   // Optimasi Render Thumbnail
+              preload="metadata"        // Hemat bandwidth untuk video tidak aktif
               className="w-full h-full object-cover cursor-pointer"
               muted={isMuted}
               loop
@@ -475,6 +451,8 @@ const VideoItem = ({ clip, index, total, isActive, onActive, onNavigateNext, onN
         <video
           ref={mobileVideoRef}
           src={clip.video}
+          poster={clip.image_url}     // Optimasi Render Thumbnail
+          preload="metadata"          // Hemat bandwidth untuk video tidak aktif
           className="w-full h-full object-cover"
           muted={isMuted}
           loop
@@ -676,24 +654,32 @@ export default function ClipsPage() {
   const router = useRouter()
   const [activeCategory, setActiveCategory] = useState('All Clips')
   const [apiClips, setApiClips] = useState<Movie[]>([])
+  
   const [clipsLoading, setClipsLoading] = useState(true)
   const [activeVideoId, setActiveVideoId] = useState<string | null>(null)
   const [currentPage, setCurrentPage] = useState(1)
+  const [hasMore, setHasMore] = useState(true)
+
+  const fetchingRef = useRef(false) // Mencegah double fetch saat StrictMode atau multiple triggers
 
   useEffect(() => {
     const token = localStorage.getItem('user_token')
-
     if (!token) {
       router.push('/')
       return
     }
-
     fetchMovies(token, currentPage)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [router, currentPage])
 
-  const fetchMovies = async (token: string, page: number = 1) => {
+  const fetchMovies = async (token: string, page: number) => {
+    // Abaikan jika sedang proses fetch atau data sudah habis
+    if (fetchingRef.current || (!hasMore && page !== 1)) return
+    
+    fetchingRef.current = true
+    if (page === 1) setClipsLoading(true)
+
     try {
-      setClipsLoading(true)
       const params = new URLSearchParams({
         sort: 'latest',
         id_category: '',
@@ -710,26 +696,41 @@ export default function ClipsPage() {
 
       const data = await response.json()
 
-      if (data && data.list) {
-        setApiClips(data.list)
+      if (data && data.list && data.list.length > 0) {
+        if (page === 1) {
+          setApiClips(data.list)
+        } else {
+          // APPEND DATA: Mencegah duplikasi id
+          setApiClips((prev) => {
+            const existingIds = new Set(prev.map((c) => c.id))
+            const newClips = data.list.filter((c: Movie) => !existingIds.has(c.id))
+            return [...prev, ...newClips]
+          })
+        }
+
+        // Jika data dari api lebih kecil dari limit(5), berarti ini page terakhir
+        if (data.list.length < 5) {
+          setHasMore(false)
+        }
       } else {
-        setApiClips([])
+        if (page === 1) setApiClips([])
+        setHasMore(false)
       }
     } catch (error) {
       console.error('[v0] Error fetching movies:', error)
-      setApiClips([])
+      if (page === 1) setApiClips([])
     } finally {
       setClipsLoading(false)
+      fetchingRef.current = false
     }
   }
 
-  const handleNavigateNext = () => {
-    setCurrentPage((prev) => prev + 1)
-  }
-
-  const handleNavigatePrev = () => {
-    setCurrentPage((prev) => (prev > 1 ? prev - 1 : 1))
-  }
+  // Dipanggil ketika user sudah melihat video ke 2 terakhir dari array
+  const handleLoadMore = useCallback(() => {
+    if (!fetchingRef.current && hasMore) {
+      setCurrentPage((prev) => prev + 1)
+    }
+  }, [hasMore])
 
   return (
     <>
@@ -757,8 +758,8 @@ export default function ClipsPage() {
           </div>
 
           {/* Main content */}
-          <div className="flex-1 overflow-hidden">
-            {clipsLoading ? (
+          <div className="flex-1 overflow-hidden relative">
+            {clipsLoading && apiClips.length === 0 ? (
               <div className="w-full h-full flex items-center justify-center bg-black">
                 <div className="text-center">
                   <div className="w-12 h-12 border-4 border-white/20 border-t-white rounded-full animate-spin mx-auto mb-4" />
@@ -772,6 +773,7 @@ export default function ClipsPage() {
                     id: clip.id,
                     title: clip.name,
                     video: clip.video_url,
+                    image_url: clip.image_url, // Poster untuk preload
                     description: clip.synopsis || '',
                     creator: 'Creator',
                     creatorAvatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Creator',
@@ -781,6 +783,10 @@ export default function ClipsPage() {
                     shares: '0',
                     saves: '0',
                   }
+                  
+                  // Trigger prefetch saat video berada di 2 indeks terakhir
+                  const isNearEnd = index === apiClips.length - 2;
+
                   return (
                     <VideoItem
                       key={clip.id}
@@ -789,8 +795,8 @@ export default function ClipsPage() {
                       total={apiClips.length}
                       isActive={activeVideoId === clip.id}
                       onActive={() => setActiveVideoId(clip.id)}
-                      onNavigateNext={handleNavigateNext}
-                      onNavigatePrev={handleNavigatePrev}
+                      isNearEnd={isNearEnd}
+                      onNearEnd={handleLoadMore}
                     />
                   )
                 })}
@@ -803,7 +809,7 @@ export default function ClipsPage() {
           </div>
         </div>
       </main>
-      <Footer />
+      {/* <Footer /> */}
     </>
   )
 }
