@@ -11,6 +11,8 @@ import {
   MessageCircle,
   ChevronDown,
   ChevronUp,
+  ChevronLeft,
+  ChevronRight,
   Music,
   Bookmark,
   Volume2,
@@ -19,7 +21,7 @@ import {
   X,
 } from 'lucide-react'
 import { Header } from '@/components/header'
-import { ClipComments } from '@/components/clip/clip-comments' // Pastikan path ini benar!
+import { ClipComments } from '@/components/clip/clip-comments'
 
 // --- INTERFACES ---
 interface Movie {
@@ -48,22 +50,6 @@ interface Comment {
   heart: string
   isLiked?: boolean
 }
-
-// --- DATA DUMMY ---
-const sidebarCategories = [
-  { icon: '/images/icon/clippp.png', label: 'All Clips' },
-  { icon: '/images/icon/action4.png', label: 'Action' },
-  { icon: '/images/icon/adventure.png', label: 'Adventure' },
-  { icon: '/images/icon/horror.png', label: 'Horror' },
-  { icon: '/images/icon/history.png', label: 'History' },
-  { icon: '/images/icon/comedy.png', label: 'Comedy' },
-  { icon: '/images/icon/mystery.png', label: 'Mystery' },
-  { icon: '/images/icon/clipp.png', label: 'Video Clip' },
-  { icon: '/images/icon/child.png', label: 'Kids' },
-  { icon: '/images/icon/story.png', label: 'Story' },
-  { icon: '/images/icon/religi.png', label: 'Religi' },
-  { icon: '/images/icon/fantasy.png', label: 'Fantasy' },
-]
 
 // --- KOMPONEN ITEM VIDEO ---
 const VideoItem = ({
@@ -100,6 +86,7 @@ const VideoItem = ({
   // --- STATE UNTUK VIDEO LIKE ---
   const [videoLikes, setVideoLikes] = useState(parseInt(clip.favorit || '0'))
   const [isVideoLiked, setIsVideoLiked] = useState(clip.isLiked || false)
+  const [isLiking, setIsLiking] = useState(false)
 
   useEffect(() => {
     const vids = [desktopVideoRef.current, mobileVideoRef.current].filter(Boolean) as HTMLVideoElement[]
@@ -179,13 +166,24 @@ const VideoItem = ({
 
   const handleLikeVideo = async (e: React.MouseEvent) => {
     e.stopPropagation()
+    if (isLiking) return
+    
     try {
+      setIsLiking(true)
       const token = localStorage.getItem('user_token')
       if (!token) return
 
       const newLikedState = !isVideoLiked
+      const storedLikes = JSON.parse(localStorage.getItem('liked_videos') || '[]')
+
       setIsVideoLiked(newLikedState)
       setVideoLikes((prev) => (newLikedState ? prev + 1 : Math.max(0, prev - 1)))
+      
+      if (newLikedState) {
+        localStorage.setItem('liked_videos', JSON.stringify([...new Set([...storedLikes, clip.id])]))
+      } else {
+        localStorage.setItem('liked_videos', JSON.stringify(storedLikes.filter((id: string) => id !== clip.id)))
+      }
 
       const response = await fetch('/api/like-video', {
         method: 'POST',
@@ -196,22 +194,33 @@ const VideoItem = ({
         body: JSON.stringify({ id: clip.id }),
       })
 
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`)
-      }
-
+      if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`)
       const data = await response.json()
       
       if (data.status !== true) {
-        console.warn("API returned false status:", data)
         setIsVideoLiked(!newLikedState)
         setVideoLikes((prev) => (!newLikedState ? prev + 1 : Math.max(0, prev - 1)))
+        
+        if (!newLikedState) {
+          localStorage.setItem('liked_videos', JSON.stringify([...new Set([...storedLikes, clip.id])]))
+        } else {
+          localStorage.setItem('liked_videos', JSON.stringify(storedLikes.filter((id: string) => id !== clip.id)))
+        }
       }
     } catch (error) {
       console.error('[v0] Error liking video:', error)
       const newLikedState = !isVideoLiked
       setIsVideoLiked(!newLikedState)
       setVideoLikes((prev) => (!newLikedState ? prev + 1 : Math.max(0, prev - 1)))
+      
+      const storedLikes = JSON.parse(localStorage.getItem('liked_videos') || '[]')
+      if (!newLikedState) {
+        localStorage.setItem('liked_videos', JSON.stringify([...new Set([...storedLikes, clip.id])]))
+      } else {
+        localStorage.setItem('liked_videos', JSON.stringify(storedLikes.filter((id: string) => id !== clip.id)))
+      }
+    } finally {
+      setIsLiking(false)
     }
   }
 
@@ -330,12 +339,9 @@ const VideoItem = ({
         body: JSON.stringify({ id_comment: commentId }),
       })
 
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`)
-      }
-
-      const data = await response.json()
+      if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`)
       
+      const data = await response.json()
       if (data.status !== true) {
         console.warn("API returned false status:", data)
         await fetchCommentsData()
@@ -346,8 +352,56 @@ const VideoItem = ({
     }
   }
 
+  // --- FUNGSI BARU UNTUK HANDLE SHARE ---
+  const handlePlatformShare = async (platform: string) => {
+    try {
+      const token = localStorage.getItem('user_token')
+      
+      // 1. Hit API Share secara background (tanpa memblokir user)
+      if (token) {
+        fetch(`/api/share-video?id=${clip.id}`, {
+          method: 'GET',
+          headers: { Authorization: `Bearer ${token}` }
+        }).catch(err => console.error("[v0] Background Share API Error:", err))
+      }
+
+      // 2. Siapkan Data URL Share
+      // Karena ini clip, kita asumsikan link sharenya adalah origin domain saat ini + id (Bisa di custom nanti)
+      const shareUrl = encodeURIComponent(`${window.location.origin}/clip?id=${clip.id}`)
+      const shareText = encodeURIComponent(`Tonton video keren ini: ${clip.name}`)
+
+      // 3. Eksekusi Aksi Buka Tab/Copy sesuai platform
+      switch (platform) {
+        case 'copy':
+          await navigator.clipboard.writeText(`${window.location.origin}/clip?id=${clip.id}`)
+          alert('Link berhasil disalin!')
+          break
+        case 'whatsapp':
+          window.open(`https://api.whatsapp.com/send?text=${shareText}%20${shareUrl}`, '_blank')
+          break
+        case 'facebook':
+          window.open(`https://www.facebook.com/sharer/sharer.php?u=${shareUrl}`, '_blank')
+          break
+        case 'x':
+          window.open(`https://twitter.com/intent/tweet?text=${shareText}&url=${shareUrl}`, '_blank')
+          break
+        case 'telegram':
+          window.open(`https://t.me/share/url?url=${shareUrl}&text=${shareText}`, '_blank')
+          break
+        case 'linkedin':
+          window.open(`https://www.linkedin.com/sharing/share-offsite/?url=${shareUrl}`, '_blank')
+          break
+      }
+      
+      // Tutup modal share setelah diklik
+      setShowShare(false)
+    } catch (error) {
+      console.error('[v0] Error sharing platform:', error)
+    }
+  }
+
   return (
-    <div ref={containerRef} className="w-full h-full snap-start flex items-center justify-center lg:items-start lg:pt-10 lg:px-8 relative">
+    <div ref={containerRef} className="w-full h-[100dvh] lg:h-full snap-start flex items-center justify-center lg:items-start lg:pt-10 lg:px-8 relative">
       
       {/* Navigasi kecil desktop */}
       <div className="hidden lg:flex absolute right-8 top-1/2 -translate-y-1/2 flex-col gap-96 pointer-events-none opacity-20 z-50">
@@ -392,18 +446,17 @@ const VideoItem = ({
         {/* Kolom tengah: video */}
         <div className={`${showComments ? 'col-span-4' : 'col-span-6'} h-full flex items-center justify-center py-4 transition-all duration-500`}>
           <div className="relative w-full h-full max-h-[82vh] aspect-[9/16] rounded-3xl overflow-hidden border border-white/10 shadow-[0_0_50px_-12px_rgba(0,0,0,0.5)] group bg-black">
-           <video
-            ref={mobileVideoRef}
-            src={clip.video_url}
-            poster={clip.image_url}     
-            preload="metadata"          
-            // KEMBALIKAN KE OBJECT-COVER, TAMBAHKAN OBJECT-CENTER
-            className="w-full h-full object-cover object-center"
-            muted={isMuted}
-            loop
-            playsInline
-            onClick={togglePlay}
-          />
+            <video
+              ref={desktopVideoRef}
+              src={clip.video_url}
+              poster={clip.image_url}   
+              preload="metadata"        
+              className="w-full h-full object-cover object-center cursor-pointer"
+              muted={isMuted}
+              loop
+              playsInline
+              onClick={togglePlay}
+            />
 
             <button
               onClick={toggleMute}
@@ -425,9 +478,9 @@ const VideoItem = ({
         {/* Kolom kanan 1: actions */}
         <div className={`${showComments ? 'col-span-1 items-center justify-end pb-8 pl-0' : 'col-span-3 pl-8 justify-center'} flex flex-col gap-8 h-[82vh] animate-in slide-in-from-right duration-700 fade-in transition-all duration-500`}>
           
-          <div onClick={handleLikeVideo} className="flex items-center gap-4 group cursor-pointer">
+          <div onClick={handleLikeVideo} className={`flex items-center gap-4 group ${isLiking ? 'cursor-not-allowed opacity-80' : 'cursor-pointer'}`}>
             <div className={`w-14 h-14 rounded-full flex items-center justify-center backdrop-blur border border-white/10 group-hover:scale-110 transition-all shadow-lg ${isVideoLiked ? 'bg-white/10' : 'bg-[#1e293b]/80 group-hover:bg-white/10'}`}>
-              <Heart className={`w-6 h-6 ${isVideoLiked ? 'text-red-500' : 'text-white group-hover:text-red-500'}`} fill={isVideoLiked ? "currentColor" : "none"}/>
+              <Heart className={`w-6 h-6 ${isVideoLiked ? 'text-red-500' : 'text-white group-hover:text-red-500'} ${isLiking ? 'animate-pulse' : ''}`} fill={isVideoLiked ? "currentColor" : "none"}/>
             </div>
             <span className={`text-base font-medium text-gray-300 group-hover:text-white ${showComments ? 'hidden' : 'block'}`}>{videoLikes}</span>
           </div>
@@ -435,7 +488,7 @@ const VideoItem = ({
           {[
             { icon: MessageCircle, label: clip.comment, action: 'comments' },
             { icon: Plus, label: 'Add', action: null },
-            { icon: Share2, label: '0', action: 'share' },
+            { icon: Share2, label: 'Share', action: 'share' },
           ].map((btn, idx) => (
             <div
               key={idx}
@@ -478,8 +531,7 @@ const VideoItem = ({
           src={clip.video_url}
           poster={clip.image_url}     
           preload="metadata"          
-          // MENGUBAH OBJECT-COVER MENJADI OBJECT-CONTAIN AGAR VIDEO TIDAK KEPOTONG (MOBILE)
-          className="w-full h-full object-contain"
+          className="w-full h-full object-cover object-center"
           muted={isMuted}
           loop
           playsInline
@@ -513,8 +565,8 @@ const VideoItem = ({
             </div>
           </div>
 
-          <button onClick={handleLikeVideo} className="flex flex-col items-center gap-1 drop-shadow-md hover:opacity-80 transition-opacity">
-            <Heart className={`w-8 h-8 ${isVideoLiked ? 'text-red-500' : 'text-white'}`} strokeWidth={1.5} fill={isVideoLiked ? "currentColor" : "none"}/>
+          <button onClick={handleLikeVideo} className={`flex flex-col items-center gap-1 drop-shadow-md transition-opacity ${isLiking ? 'opacity-50' : 'hover:opacity-80'}`}>
+            <Heart className={`w-8 h-8 ${isVideoLiked ? 'text-red-500' : 'text-white'} ${isLiking ? 'animate-pulse' : ''}`} strokeWidth={1.5} fill={isVideoLiked ? "currentColor" : "none"}/>
             <span className="text-xs font-semibold text-white">{videoLikes}</span>
           </button>
 
@@ -532,7 +584,7 @@ const VideoItem = ({
 
           <button onClick={() => setShowShare(true)} className="flex flex-col items-center gap-1 drop-shadow-md hover:opacity-80 transition-opacity">
             <Share2 className="w-8 h-8 text-white" strokeWidth={1.5} />
-            <span className="text-xs font-semibold text-white">0</span>
+            <span className="text-xs font-semibold text-white">Share</span>
           </button>
 
           <div className="mt-4 animate-[spin_4s_linear_infinite]">
@@ -575,45 +627,97 @@ const VideoItem = ({
           onLikeComment={handleLikeComment}
           isMobile={true}
         />
+      </div>
 
-        {/* Share sheet mobile */}
-        {showShare && (
-          <div className="fixed inset-0 z-50 flex items-end lg:hidden">
-            <div className="absolute inset-0 bg-black/50" onClick={() => setShowShare(false)} />
-            <div className="relative w-full bg-[#1a1a2e] border-t border-white/20 rounded-t-3xl max-h-[90vh] flex flex-col animate-in slide-in-from-bottom duration-300">
-              <div className="flex items-center justify-between px-6 py-4 border-b border-white/10">
-                <h3 className="text-white font-semibold text-base">Share</h3>
-                <button onClick={() => setShowShare(false)} className="text-gray-400 hover:text-white transition-colors text-xl">
-                  ✕
+      {/* --- GLOBAL SHARE MODAL (Tampil untuk Desktop & Mobile) --- */}
+      {showShare && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={() => setShowShare(false)} />
+          <div className="relative w-full max-w-sm bg-[#18181b] border border-white/10 rounded-2xl shadow-2xl flex flex-col animate-in fade-in zoom-in-95 duration-200">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-white/10">
+              <h3 className="text-white font-semibold text-base">Bagikan ke</h3>
+              <button onClick={() => setShowShare(false)} className="text-gray-400 hover:text-white transition-colors">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            
+            <div className="p-6 relative group/share">
+              <div className="flex items-start gap-5 overflow-x-auto pb-2 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:'none'] [scrollbar-width:'none']">
+                
+                {/* Copy */}
+                <button onClick={() => handlePlatformShare('copy')} className="flex flex-col items-center gap-2 min-w-[64px] flex-shrink-0 group">
+                  <div className="w-14 h-14 rounded-full bg-white/10 flex items-center justify-center group-hover:bg-white/20 transition-colors border border-white/10">
+                    <Copy className="w-6 h-6 text-white" />
+                  </div>
+                  <span className="text-xs text-gray-300 font-medium">Copy</span>
                 </button>
+
+                {/* WhatsApp */}
+                <button onClick={() => handlePlatformShare('whatsapp')} className="flex flex-col items-center gap-2 min-w-[64px] flex-shrink-0 group">
+                  <div className="w-14 h-14 rounded-full bg-[#25D366]/20 flex items-center justify-center group-hover:bg-[#25D366]/30 transition-colors border border-[#25D366]/30">
+                    <svg className="w-6 h-6 text-[#25D366]" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51a12.8 12.8 0 0 0-.57-.01c-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413Z"/></svg>
+                  </div>
+                  <span className="text-xs text-gray-300 font-medium">WhatsApp</span>
+                </button>
+
+                {/* Facebook */}
+                <button onClick={() => handlePlatformShare('facebook')} className="flex flex-col items-center gap-2 min-w-[64px] flex-shrink-0 group">
+                  <div className="w-14 h-14 rounded-full bg-[#1877F2]/20 flex items-center justify-center group-hover:bg-[#1877F2]/30 transition-colors border border-[#1877F2]/30">
+                    <svg className="w-6 h-6 text-[#1877F2]" viewBox="0 0 24 24" fill="currentColor"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.469h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.469h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
+                  </div>
+                  <span className="text-xs text-gray-300 font-medium">Facebook</span>
+                </button>
+
+                {/* X */}
+                <button onClick={() => handlePlatformShare('x')} className="flex flex-col items-center gap-2 min-w-[64px] flex-shrink-0 group">
+                  <div className="w-14 h-14 rounded-full bg-white/10 flex items-center justify-center group-hover:bg-white/20 transition-colors border border-white/10">
+                    <svg className="w-5 h-5 text-white" viewBox="0 0 24 24" fill="currentColor"><path d="M18.901 1.153h3.68l-8.04 9.19L24 22.846h-7.406l-5.8-7.584-6.638 7.584H.474l8.6-9.83L0 1.154h7.594l5.243 6.932ZM17.61 20.644h2.039L6.486 3.24H4.298Z"/></svg>
+                  </div>
+                  <span className="text-xs text-gray-300 font-medium">X</span>
+                </button>
+
+                {/* Telegram */}
+                <button onClick={() => handlePlatformShare('telegram')} className="flex flex-col items-center gap-2 min-w-[64px] flex-shrink-0 group">
+                  <div className="w-14 h-14 rounded-full bg-[#0088cc]/20 flex items-center justify-center group-hover:bg-[#0088cc]/30 transition-colors border border-[#0088cc]/30">
+                    <svg className="w-6 h-6 text-[#0088cc]" viewBox="0 0 24 24" fill="currentColor"><path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.888-.666 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z"/></svg>
+                  </div>
+                  <span className="text-xs text-gray-300 font-medium">Telegram</span>
+                </button>
+
+                {/* LinkedIn */}
+                <button onClick={() => handlePlatformShare('linkedin')} className="flex flex-col items-center gap-2 min-w-[64px] flex-shrink-0 group">
+                  <div className="w-14 h-14 rounded-full bg-[#0A66C2]/20 flex items-center justify-center group-hover:bg-[#0A66C2]/30 transition-colors border border-[#0A66C2]/30">
+                    <svg className="w-6 h-6 text-[#0A66C2]" viewBox="0 0 24 24" fill="currentColor"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>
+                  </div>
+                  <span className="text-xs text-gray-300 font-medium">LinkedIn</span>
+                </button>
+
               </div>
 
-              <div className="flex-1 p-6 flex flex-col gap-4">
-                <button className="w-full px-4 py-3 bg-white/10 hover:bg-white/20 rounded-lg text-white font-medium transition-colors flex items-center gap-3">
-                  <Copy className="w-5 h-5" />
-                  Copy Link
-                </button>
+              {/* Panah Indikator Kiri & Kanan (Muncul saat di hover) */}
+              <div className="absolute left-1 top-[40%] -translate-y-1/2 w-8 h-8 rounded-full bg-black/60 flex items-center justify-center pointer-events-none opacity-0 group-hover/share:opacity-100 transition-opacity">
+                  <ChevronLeft className="w-4 h-4 text-white" />
               </div>
+              <div className="absolute right-1 top-[40%] -translate-y-1/2 w-8 h-8 rounded-full bg-black/60 flex items-center justify-center pointer-events-none opacity-0 group-hover/share:opacity-100 transition-opacity">
+                  <ChevronRight className="w-4 h-4 text-white" />
+              </div>
+
             </div>
           </div>
-        )}
-      </div>
+        </div>
+      )}
     </div>
   )
 }
 
 // --- KOMPONEN UTAMA ---
-// --- KOMPONEN UTAMA ---
 export default function ClipsPage() {
   const router = useRouter()
   
-  // STATE BARU UNTUK MENYIMPAN ID KATEGORI
   const [activeCategoryId, setActiveCategoryId] = useState<string>('') 
   const [activeCategoryName, setActiveCategoryName] = useState('All Clips')
-  
   const [categories, setCategories] = useState<any[]>([]) 
   const [apiClips, setApiClips] = useState<Movie[]>([])
-  
   const [clipsLoading, setClipsLoading] = useState(true)
   const [activeVideoId, setActiveVideoId] = useState<string | null>(null)
   const [currentPage, setCurrentPage] = useState(1)
@@ -621,7 +725,6 @@ export default function ClipsPage() {
 
   const fetchingRef = useRef(false) 
 
-  // --- 1. FETCH KATEGORI API ---
   useEffect(() => {
     const fetchCategories = async (token: string) => {
       try {
@@ -632,7 +735,7 @@ export default function ClipsPage() {
         
         if (data.status === true && data.category) {
           const allClipsCategory = {
-            id: '', // id kosong untuk All Clips
+            id: '',
             name: 'All Clips',
             images_url: '/images/icon/clippp.png' 
           }
@@ -649,14 +752,12 @@ export default function ClipsPage() {
     }
   }, [])
 
-  // --- 2. FETCH MOVIES BERDASARKAN CATEGORY ID & PAGE ---
   useEffect(() => {
     const token = localStorage.getItem('user_token')
     if (!token) {
       router.push('/')
       return
     }
-    // Kirimkan activeCategoryId saat fetch
     fetchMovies(token, currentPage, activeCategoryId)
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [router, currentPage, activeCategoryId])
@@ -670,7 +771,7 @@ export default function ClipsPage() {
     try {
       const params = new URLSearchParams({
         sort: 'latest',
-        id_category: categoryId, // MENGGUNAKAN ID KATEGORI YANG AKTIF
+        id_category: categoryId, 
         id_creator: '',
         page: page.toString(),
         limit: '5',
@@ -685,12 +786,19 @@ export default function ClipsPage() {
       const data = await response.json()
 
       if (data && data.list && data.list.length > 0) {
+        const storedLikes = JSON.parse(localStorage.getItem('liked_videos') || '[]')
+        
+        const mappedData = data.list.map((clip: Movie) => ({
+          ...clip,
+          isLiked: storedLikes.includes(clip.id)
+        }))
+
         if (page === 1) {
-          setApiClips(data.list)
+          setApiClips(mappedData)
         } else {
           setApiClips((prev) => {
             const existingIds = new Set(prev.map((c) => c.id))
-            const newClips = data.list.filter((c: Movie) => !existingIds.has(c.id))
+            const newClips = mappedData.filter((c: Movie) => !existingIds.has(c.id))
             return [...prev, ...newClips]
           })
         }
@@ -711,16 +819,11 @@ export default function ClipsPage() {
     }
   }
 
-  // --- 3. HANDLER SAAT KATEGORI DIKLIK ---
   const handleCategoryClick = (categoryId: string, categoryName: string) => {
-    // Abaikan jika user mengklik kategori yang sudah aktif
     if (activeCategoryId === categoryId) return
 
-    // Update state kategori
     setActiveCategoryId(categoryId)
     setActiveCategoryName(categoryName)
-    
-    // Reset state video untuk loading ulang dari awal
     setApiClips([])
     setCurrentPage(1)
     setHasMore(true)
@@ -745,10 +848,8 @@ export default function ClipsPage() {
                 categories.map((category) => (
                   <button
                     key={category.name}
-                    // GUNAKAN HANDLER BARU
                     onClick={() => handleCategoryClick(category.id, category.name)}
                     className={`w-full flex items-center gap-4 px-4 py-3 rounded-lg transition-all ${
-                      // COCOKKAN BERDASARKAN ID
                       activeCategoryId === category.id
                         ? 'bg-white/10 text-white border border-white/20'
                         : 'text-gray-400 hover:text-white hover:bg-white/5'
@@ -795,7 +896,7 @@ export default function ClipsPage() {
                     cats: clip.cats || 'Video Clip',
                     favorit: clip.favorit || '0',
                     comment: clip.comment || '0',
-                    isLiked: false, 
+                    isLiked: clip.isLiked || false, 
                   }
                   
                   const isNearEnd = index === apiClips.length - 2;
