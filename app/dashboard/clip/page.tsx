@@ -46,6 +46,7 @@ interface Comment {
   avatar_url: string
   time_ago: string
   heart: string
+  isLiked?: boolean // Tambahan state lokal untuk mendeteksi apakah user sudah like
 }
 
 // --- DATA DUMMY ---
@@ -259,6 +260,57 @@ const VideoItem = ({
     }
   }
 
+  // FITUR LIKE / UNLIKE COMMENT
+  const handleLikeComment = async (commentId: string) => {
+    try {
+      const token = localStorage.getItem('user_token')
+      if (!token) return
+
+      // Optimistic Update: Toggle state isLiked dan angkanya
+      setComments((prevComments) =>
+        prevComments.map((c) => {
+          if (c.id === commentId) {
+            const currentHearts = parseInt(c.heart) || 0
+            const isCurrentlyLiked = !!c.isLiked
+
+            return { 
+              ...c, 
+              // Jika sebelumnya di-like, maka kurangi angkanya. Jika belum, tambah 1.
+              heart: isCurrentlyLiked ? Math.max(0, currentHearts - 1).toString() : (currentHearts + 1).toString(),
+              // Balikkan status like-nya
+              isLiked: !isCurrentlyLiked 
+            }
+          }
+          return c
+        })
+      )
+
+      // Hit API LOKAL Next.js
+      const response = await fetch('/api/like-comment', {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ id_comment: commentId }),
+      })
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`)
+      }
+
+      const data = await response.json()
+      
+      if (data.status !== true) {
+        console.warn("API returned false status:", data)
+        await fetchCommentsData()
+      }
+    } catch (error) {
+      console.error('[v0] Error liking comment:', error)
+      await fetchCommentsData() 
+    }
+  }
+
   const displayedComments = showAllComments ? comments : comments.slice(0, 5)
 
   return (
@@ -390,10 +442,24 @@ const VideoItem = ({
                         <p className="text-gray-300 text-xs mt-1 leading-relaxed break-words">{comment.comment}</p>
                         <div className="flex items-center gap-3 mt-2">
                           <span className="text-gray-500 text-xs">{comment.time_ago}</span>
-                          <button className="text-gray-500 hover:text-red-500 transition-colors">
-                            <Heart className="w-3 h-3" strokeWidth={2} />
+                          <button 
+                            type="button"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              handleLikeComment(comment.id);
+                            }}
+                            className={`flex items-center gap-1 transition-colors active:scale-110 ${
+                              comment.isLiked ? 'text-red-500' : 'text-gray-500 hover:text-red-500'
+                            }`}
+                          >
+                            <Heart 
+                              className="w-3 h-3" 
+                              strokeWidth={2} 
+                              fill={comment.isLiked ? "currentColor" : "none"} 
+                            />
+                            <span className="text-xs">{comment.heart}</span>
                           </button>
-                          <span className="text-gray-500 text-xs">{comment.heart}</span>
                         </div>
                       </div>
                     </div>
@@ -568,8 +634,22 @@ const VideoItem = ({
                             <span className="text-gray-500 text-xs">{comment.time_ago}</span>
                           </div>
                           <p className="text-gray-300 text-xs mt-2 leading-relaxed break-words">{comment.comment}</p>
-                          <button className="text-gray-500 hover:text-red-500 transition-colors mt-2 flex items-center gap-1">
-                            <Heart className="w-4 h-4" strokeWidth={2} fill="none" />
+                          <button 
+                            type="button"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              handleLikeComment(comment.id);
+                            }}
+                            className={`mt-2 flex items-center gap-1 transition-colors active:scale-110 ${
+                              comment.isLiked ? 'text-red-500' : 'text-gray-500 hover:text-red-500'
+                            }`}
+                          >
+                            <Heart 
+                              className="w-4 h-4" 
+                              strokeWidth={2} 
+                              fill={comment.isLiked ? "currentColor" : "none"} 
+                            />
                             <span className="text-xs">{comment.heart}</span>
                           </button>
                         </div>
