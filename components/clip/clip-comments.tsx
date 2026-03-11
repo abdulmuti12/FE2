@@ -1,7 +1,7 @@
 'use client'
 
 import Image from 'next/image'
-import { Heart, X } from 'lucide-react'
+import { Heart } from 'lucide-react'
 
 interface Comment {
   id: string
@@ -14,6 +14,7 @@ interface Comment {
   avatar_url: string
   time_ago: string
   heart: string
+  isLiked?: boolean
 }
 
 interface ClipCommentsProps {
@@ -27,6 +28,7 @@ interface ClipCommentsProps {
   onCommentInputChange: (value: string) => void
   onSubmitComment: (e: React.FormEvent) => void
   onShowAllComments: (show: boolean) => void
+  onLikeComment: (commentId: string) => void // <-- Tambahan props untuk handle Like
   isMobile?: boolean
 }
 
@@ -41,13 +43,14 @@ export function ClipComments({
   onCommentInputChange,
   onSubmitComment,
   onShowAllComments,
+  onLikeComment,
   isMobile = false,
 }: ClipCommentsProps) {
   const displayedComments = showAllComments ? comments : comments.slice(0, 5)
 
   if (!showComments) return null
 
-  // Desktop version
+  // --- DESKTOP VERSION ---
   if (!isMobile) {
     return (
       <div className="col-span-4 bg-[#0b0f19] border border-white/10 flex flex-col h-[82vh] z-50 rounded-2xl shadow-2xl animate-in fade-in zoom-in-95 duration-300 relative">
@@ -73,10 +76,24 @@ export function ClipComments({
                     <p className="text-gray-300 text-xs mt-1 leading-relaxed break-words">{comment.comment}</p>
                     <div className="flex items-center gap-3 mt-2">
                       <span className="text-gray-500 text-xs">{comment.time_ago}</span>
-                      <button className="text-gray-500 hover:text-red-500 transition-colors">
-                        <Heart className="w-3 h-3" strokeWidth={2} />
+                      <button 
+                        type="button"
+                        onClick={(e) => {
+                          e.preventDefault()
+                          e.stopPropagation()
+                          onLikeComment(comment.id)
+                        }}
+                        className={`flex items-center gap-1 transition-colors active:scale-110 ${
+                          comment.isLiked ? 'text-red-500' : 'text-gray-500 hover:text-red-500'
+                        }`}
+                      >
+                        <Heart 
+                          className="w-3 h-3" 
+                          strokeWidth={2} 
+                          fill={comment.isLiked ? "currentColor" : "none"} 
+                        />
+                        <span className="text-xs">{comment.heart}</span>
                       </button>
-                      <span className="text-gray-500 text-xs">{comment.heart}</span>
                     </div>
                   </div>
                 </div>
@@ -128,7 +145,7 @@ export function ClipComments({
     )
   }
 
-  // Mobile version
+  // --- MOBILE VERSION ---
   return (
     <div className="fixed inset-0 z-50 flex items-end lg:hidden">
       <div className="absolute inset-0 bg-black/50" onClick={onClose} />
@@ -156,8 +173,22 @@ export function ClipComments({
                       <span className="text-gray-500 text-xs">{comment.time_ago}</span>
                     </div>
                     <p className="text-gray-300 text-xs mt-2 leading-relaxed break-words">{comment.comment}</p>
-                    <button className="text-gray-500 hover:text-red-500 transition-colors mt-2 flex items-center gap-1">
-                      <Heart className="w-4 h-4" strokeWidth={2} fill="none" />
+                    <button 
+                      type="button"
+                      onClick={(e) => {
+                        e.preventDefault()
+                        e.stopPropagation()
+                        onLikeComment(comment.id)
+                      }}
+                      className={`mt-2 flex items-center gap-1 transition-colors active:scale-110 ${
+                        comment.isLiked ? 'text-red-500' : 'text-gray-500 hover:text-red-500'
+                      }`}
+                    >
+                      <Heart 
+                        className="w-4 h-4" 
+                        strokeWidth={2} 
+                        fill={comment.isLiked ? "currentColor" : "none"} 
+                      />
                       <span className="text-xs">{comment.heart}</span>
                     </button>
                   </div>
