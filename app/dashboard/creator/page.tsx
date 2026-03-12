@@ -179,8 +179,11 @@ export default function CreatorsPage() {
                 const bgColor = getCreatorColor(index)
 
                 return (
-                  <div key={creator.id} className="flex flex-col items-center group cursor-pointer">
-                    {/* Avatar Circle */}
+<div 
+  key={creator.id} 
+  onClick={() => router.push(`/dashboard/creator/detail/${creator.id}`)}
+  className="flex flex-col items-center group cursor-pointer"
+>                    {/* Avatar Circle */}
                     <div className={`w-32 h-32 md:w-40 md:h-40 rounded-full ${!avatarUrl ? bgColor : ''} flex items-center justify-center mb-4 transition-transform duration-300 group-hover:scale-105 border-4 border-[#020817] shadow-xl overflow-hidden`}>
                       {avatarUrl ? (
                         <img 
