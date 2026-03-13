@@ -18,7 +18,8 @@ interface FilmCard {
   category: string
 }
 
-const CATEGORIES = ['All', 'Action', 'Adventure', 'Horror', 'Comedy', 'Mystery','Video Clip','Kids','Story','Music','Fantasy']
+// const CATEGORIES = ['All', 'Action', 'Adventure', 'Horror', 'Comedy', 'Mystery','Video Clip','Kids','Story','Music','Fantasy']
+const CATEGORIES = ['All', 'Action', 'Adventure']
 
 const filmData: FilmCard[] = [
   {
@@ -115,7 +116,7 @@ const filmData: FilmCard[] = [
     genres: ['Adventure'],
     image: '/film/film4.png',
     type: 'film',
-    category: 'Horror',
+    category: 'Action',
   },
   {
     id: 9,
