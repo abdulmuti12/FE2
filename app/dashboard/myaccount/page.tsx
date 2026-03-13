@@ -1,113 +1,185 @@
 'use client'
 
-import React, { useMemo, useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { Header } from '@/components/header'
 import { Footer } from '@/components/footer'
 import { Heart, Eye, Edit2 } from 'lucide-react'
+import { useRouter } from 'next/navigation'
 
 const TABS = ['Watched', 'Watchlist', 'Favorit', 'Most View'] as const
 type Tab = (typeof TABS)[number]
 
+interface ProfileData {
+  id: string
+  name: string
+  email: string
+  avatar: string
+  avatar_url: string
+  balance: string
+  refferal_code: string
+}
+
+interface ContentItem {
+  id: string
+  pid?: string
+  name: string
+  image?: string
+  image_landscape?: string
+  heart?: string
+  viewx?: string
+  totalview?: string
+  run_time?: string
+  cats?: string
+  rates?: string
+  id_watch?: string
+}
+
+interface ProfileResponse {
+  data: ProfileData
+  tab: {
+    watched: ContentItem[]
+    watchlist: ContentItem[]
+    liked: ContentItem[]
+    view: ContentItem[]
+  }
+}
+
 export default function MyAccountPage() {
+  const router = useRouter()
   const [activeTab, setActiveTab] = useState<Tab>('Watched')
+  const [profileData, setProfileData] = useState<ProfileData | null>(null)
+  const [tabData, setTabData] = useState<{
+    watched: ContentItem[]
+    watchlist: ContentItem[]
+    liked: ContentItem[]
+    view: ContentItem[]
+  }>({
+    watched: [],
+    watchlist: [],
+    liked: [],
+    view: [],
+  })
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const [isMounted, setIsMounted] = useState(false)
 
-  const profileData = useMemo(
-    () => ({
-      name: '[Nama Creator]',
-      role: 'UI-Mal Creator',
-      rewards: '200 USKY',
-      avatar:
-        '/images/pngs.png',
-    }),
-    []
-  )
+  useEffect(() => {
+    setIsMounted(true)
+  }, [])
 
-  const filmData = useMemo(
-    () => [
-      {
-        id: 1,
-        title: '[Judul Film]',
-        synopsis:
-          '[Brief Synopsis] Watch groundbreaking films crafted by human creativity and arti...',
-        image: '/film/film1.png',
-        likes: 12,
-        views: 15,
-      },
-      {
-        id: 2,
-        title: '[Judul Film]',
-        synopsis:
-          '[Brief Synopsis] Watch groundbreaking films crafted by human creativity and arti...',
-        image: '/film/film2.png',
-        likes: 12,
-        views: 15,
-      },
-      {
-        id: 3,
-        title: '[Judul Film]',
-        synopsis:
-          '[Brief Synopsis] Watch groundbreaking films crafted by human creativity and arti...',
-        image: '/film/film3.png',
-        likes: 12,
-        views: 15,
-      },
-      {
-        id: 4,
-        title: '[Judul Film]',
-        synopsis:
-          '[Brief Synopsis] Watch groundbreaking films crafted by human creativity and arti...',
-        image: '/film/film1.png',
-        likes: 12,
-        views: 15,
-      },
-      {
-        id: 5,
-        title: '[Judul Film]',
-        synopsis:
-          '[Brief Synopsis] Watch groundbreaking films crafted by human creativity and arti...',
-        image: '/film/film2.png',
-        likes: 12,
-        views: 15,
-      },
-      {
-        id: 6,
-        title: '[Judul Film]',
-        synopsis:
-          '[Brief Synopsis] Watch groundbreaking films crafted by human creativity and arti...',
-        image: '/film/film3.png',
-        likes: 12,
-        views: 15,
-      },
-      {
-        id: 7,
-        title: '[Judul Film]',
-        synopsis:
-          '[Brief Synopsis] Watch groundbreaking films crafted by human creativity and arti...',
-        image: '/film/film1.png',
-        likes: 12,
-        views: 15,
-      },
-      {
-        id: 8,
-        title: '[Judul Film]',
-        synopsis:
-          '[Brief Synopsis] Watch groundbreaking films crafted by human creativity and arti...',
-        image: '/film/film2.png',
-        likes: 12,
-        views: 15,
-      },
-    ],
-    []
-  )
+  useEffect(() => {
+    if (!isMounted) return
+    fetchProfileData()
+  }, [isMounted])
+
+  const fetchProfileData = async () => {
+    try {
+      setLoading(true)
+      const token = localStorage.getItem('user_token')
+
+      if (!token) {
+        router.push('/')
+        return
+      }
+
+      const response = await fetch('/api/customer-profile', {
+        method: 'GET',
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      })
+
+      const data: ProfileResponse = await response.json()
+
+      if (!response.ok) {
+        setError('Failed to fetch profile')
+      } else {
+        if (data.data) {
+          setProfileData(data.data)
+        }
+        if (data.tab) {
+          setTabData({
+            watched: data.tab.watched || [],
+            watchlist: data.tab.watchlist || [],
+            liked: data.tab.liked || [],
+            view: data.tab.view || [],
+          })
+        }
+      }
+    } catch (err) {
+      console.error('[v0] Error fetching profile:', err)
+      setError('Failed to load profile')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const getTabData = (): ContentItem[] => {
+    switch (activeTab) {
+      case 'Watched':
+        return tabData.watched
+      case 'Watchlist':
+        return tabData.watchlist
+      case 'Favorit':
+        return tabData.liked
+      case 'Most View':
+        return tabData.view
+      default:
+        return []
+    }
+  }
+
+  const getImageUrl = (item: ContentItem): string => {
+    if (item.image) {
+      return item.image.startsWith('http')
+        ? item.image
+        : `http://usky.ai/uploads/${item.image}`
+    } else if (item.image_landscape) {
+      return item.image_landscape.startsWith('http')
+        ? item.image_landscape
+        : `http://usky.ai/uploads/${item.image_landscape}`
+    }
+    return '/film/film1.png'
+  }
+
+  const getViewCount = (film: ContentItem): string => {
+    if (activeTab === 'Most View') return film.totalview || '0'
+    return film.viewx || '0'
+  }
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-[#050b18] text-white flex flex-col">
+        <Header />
+        <main className="flex-1 flex items-center justify-center">
+          <p className="text-gray-400">Loading profile...</p>
+        </main>
+      </div>
+    )
+  }
+
+  if (error || !profileData) {
+    return (
+      <div className="min-h-screen bg-[#050b18] text-white flex flex-col">
+        <Header />
+        <main className="flex-1 flex items-center justify-center">
+          <p className="text-red-400">{error || 'Failed to load profile'}</p>
+        </main>
+      </div>
+    )
+  }
+
+  const displayedFilms = getTabData()
 
   return (
     <div className="min-h-screen bg-[#050b18] text-white flex flex-col">
       <Header />
 
       <main className="flex-1">
-        {/* HERO (tetap) */}
+        {/* HERO */}
         <section className="relative w-full overflow-hidden">
           <div className="relative h-[240px] md:h-[340px] lg:h-[380px]">
             <Image
@@ -139,21 +211,21 @@ export default function MyAccountPage() {
             MOBILE VERSION (md:hidden)
             ========================= */}
         <section className="md:hidden px-4 pb-16">
-          {/* Profile block (sesuai screenshot mobile) */}
           <div className="-mt-12">
             <div className="flex items-start gap-4">
-              {/* avatar */}
               <div className="relative w-[88px] h-[88px] flex-none">
-                <Image
-                  src={profileData.avatar}
+                <img
+                  src={profileData.avatar_url || profileData.avatar
+                    ? (profileData.avatar_url || `http://usky.ai/uploads/${profileData.avatar}`)
+                    : '/images/pngs.png'
+                  }
                   alt={profileData.name}
-                  fill
-                  className="rounded-full object-cover"
+                  onError={(e) => { e.currentTarget.src = '/images/pngs.png' }}
+                  className="w-full h-full rounded-full object-cover"
                 />
                 <div className="absolute inset-0 rounded-full ring-4 ring-[#050b18]" />
               </div>
 
-              {/* info */}
               <div className="flex-1 pt-1">
                 <div className="flex items-center gap-2">
                   <h2 className="text-base font-semibold text-white/95">
@@ -171,20 +243,20 @@ export default function MyAccountPage() {
                 </div>
 
                 <p className="mt-1 text-[11px] text-white/45">
-                  {profileData.role}
+                  {profileData.email}
                 </p>
 
                 <div className="mt-3 inline-flex items-center gap-2 rounded-md border border-white/10 bg-white/5 px-3 py-2">
-                  <span className="text-[10px] text-white/45">My Rewards:</span>
+                  <span className="text-[10px] text-white/45">Balance:</span>
                   <span className="text-xs font-semibold text-white">
-                    {profileData.rewards}
+                    {profileData.balance} USKY
                   </span>
                 </div>
               </div>
             </div>
           </div>
 
-          {/* Tabs (pills kecil satu baris, center) */}
+          {/* Tabs */}
           <div className="mt-6 flex justify-center">
             <div className="inline-flex items-center gap-1 rounded-full border border-white/10 bg-white/5 p-1">
               {TABS.map((tab) => {
@@ -207,69 +279,83 @@ export default function MyAccountPage() {
             </div>
           </div>
 
-          {/* Film list (1 column, card seperti screenshot) */}
+          {/* Film list mobile */}
           <div className="mt-6 space-y-4">
-            {filmData.map((film) => (
-              <Link
-                key={film.id}
-                href="#"
-                className="block rounded-2xl border border-white/10 bg-[#070f1f]/60 overflow-hidden"
-              >
-                <div className="relative aspect-[16/10]">
-                  <Image
-                    src={film.image}
-                    alt={film.title}
-                    fill
-                    className="object-cover"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/35 via-transparent to-transparent" />
-                </div>
+            {displayedFilms.length > 0 ? (
+              displayedFilms.map((film: ContentItem) => (
+                <Link
+                  key={film.id}
+                  href={film.pid ? `/film/${film.pid}` : '#'}
+                  className="block rounded-2xl border border-white/10 bg-[#070f1f]/60 overflow-hidden"
+                >
+                  <div className="relative aspect-[16/10]">
+                    <Image
+                      src={getImageUrl(film)}
+                      alt={film.name}
+                      fill
+                      className="object-cover"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/35 via-transparent to-transparent" />
+                    {/* Ceklis hanya di Watchlist */}
+                    {activeTab === 'Watchlist' && film.id_watch && (
+                      <div className="absolute top-2 right-2 w-7 h-7 rounded-full bg-black/60 flex items-center justify-center">
+                        <span className="text-white text-xs">✓</span>
+                      </div>
+                    )}
+                  </div>
 
-                <div className="p-4">
-                  <h3 className="text-sm font-semibold text-white/95 line-clamp-1">
-                    {film.title}
-                  </h3>
-
-                  <p className="mt-2 text-[11px] leading-relaxed text-white/45 line-clamp-2">
-                    {film.synopsis}
-                  </p>
-
-                  <div className="mt-3 flex items-center gap-4 text-[11px] text-white/45">
-                    <div className="flex items-center gap-1.5">
-                      <Heart className="w-4 h-4" />
-                      <span>{film.likes} Likes</span>
-                    </div>
-                    <div className="flex items-center gap-1.5">
-                      <Eye className="w-4 h-4" />
-                      <span>{film.views} Views</span>
+                  <div className="p-4">
+                    <h3 className="text-sm font-semibold text-white/95 line-clamp-1">
+                      {film.name}
+                    </h3>
+                    <p className="mt-2 text-[11px] leading-relaxed text-white/45 line-clamp-2">
+                      {film.cats || ''}
+                    </p>
+                    <div className="mt-3 flex items-center gap-4 text-[11px] text-white/45">
+                      <div className="flex items-center gap-1.5">
+                        <Heart className="w-4 h-4" />
+                        <span>{film.heart || 0} Likes</span>
+                      </div>
+                      <div className="flex items-center gap-1.5">
+                        <Eye className="w-4 h-4" />
+                        <span>{getViewCount(film)} Views</span>
+                      </div>
                     </div>
                   </div>
-                </div>
-              </Link>
-            ))}
+                </Link>
+              ))
+            ) : (
+              <p className="text-center text-white/40 py-10">Tidak ada data</p>
+            )}
           </div>
         </section>
 
         {/* =========================
-            DESKTOP VERSION (jangan diubah)
+            DESKTOP VERSION
             ========================= */}
         <section className="hidden md:block mx-auto w-full max-w-[1200px] px-4 md:px-6 lg:px-10 pb-16">
           {/* Profile row */}
-          <div className="-mt-14 md:-mt-16 lg:-mt-20">
-            <div className="flex items-start gap-5 md:gap-7">
+          <div className="mt-6 md:mt-8">
+            <div className="flex items-center gap-5 md:gap-7">
+              {/* Avatar desktop */}
               <div className="relative w-[92px] h-[92px] md:w-[112px] md:h-[112px] lg:w-[120px] lg:h-[120px] flex-none">
-                <Image
-                  src={profileData.avatar}
+                <img
+                  src={profileData.avatar_url || profileData.avatar
+                    ? (profileData.avatar_url || `http://usky.ai/uploads/${profileData.avatar}`)
+                    : '/images/pngs.png'
+                  }
                   alt={profileData.name}
-                  fill
-                  className="rounded-full object-cover"
+                  onError={(e) => { e.currentTarget.src = '/images/pngs.png' }}
+                  className="w-full h-full rounded-full object-cover"
                 />
                 <div className="absolute inset-0 rounded-full ring-4 ring-[#050b18]" />
               </div>
 
-              <div className="flex-1 pt-2 md:pt-4">
+              {/* Info profil desktop */}
+              <div className="flex-1">
                 <div className="flex flex-wrap items-center gap-3">
-                  <h2 className="text-lg md:text-xl lg:text-2xl font-semibold">
+                  {/* nama dari data.name */}
+                  <h2 className="text-lg md:text-xl lg:text-2xl font-semibold text-white">
                     {profileData.name}
                   </h2>
 
@@ -284,12 +370,16 @@ export default function MyAccountPage() {
                   </Link>
                 </div>
 
-                <p className="mt-1 text-xs text-white/45">{profileData.role}</p>
+                {/* email dari data.email */}
+                <p className="mt-1 text-xs text-white/45">
+                  [{profileData.email}]
+                </p>
 
+                {/* balance dari data.balance */}
                 <div className="mt-4 inline-flex items-center gap-2 rounded-lg border border-white/10 bg-white/5 px-4 py-2">
-                  <span className="text-[11px] text-white/45">My Rewards:</span>
+                  <span className="text-[11px] text-white/45">My Reward:</span>
                   <span className="text-sm font-semibold text-white">
-                    {profileData.rewards}
+                    {profileData.balance} USKY
                   </span>
                 </div>
               </div>
@@ -319,46 +409,63 @@ export default function MyAccountPage() {
             </div>
           </div>
 
-          {/* Grid */}
+          {/* Grid desktop */}
+          {/* FIX: ganti filmData → displayedFilms, film: any → film: ContentItem */}
           <div className="mt-10 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 lg:gap-6">
-            {filmData.map((film) => (
-              <Link
-                key={film.id}
-                href="#"
-                className="group block rounded-2xl border border-white/10 bg-[#070f1f]/60 hover:bg-[#070f1f]/80 transition-colors overflow-hidden"
-              >
-                <div className="relative aspect-[16/10] overflow-hidden">
-                  <Image
-                    src={film.image}
-                    alt={film.title}
-                    fill
-                    className="object-cover group-hover:scale-[1.03] transition-transform duration-500"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
-                </div>
+            {displayedFilms.length > 0 ? (
+              displayedFilms.map((film: ContentItem) => (
+                <Link
+                  key={film.id}
+                  href={film.pid ? `/film/${film.pid}` : '#'}
+                  className="group block rounded-2xl border border-white/10 bg-[#070f1f]/60 hover:bg-[#070f1f]/80 transition-colors overflow-hidden"
+                >
+                  <div className="relative aspect-[16/10] overflow-hidden">
+                    {/* FIX: ganti film.image → getImageUrl(film) */}
+                    <Image
+                      src={getImageUrl(film)}
+                      alt={film.name}
+                      fill
+                      className="object-cover group-hover:scale-[1.03] transition-transform duration-500"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
+                    {/* Ceklis hanya di Watchlist */}
+                    {activeTab === 'Watchlist' && film.id_watch && (
+                      <div className="absolute top-2 right-2 w-7 h-7 rounded-full bg-black/60 flex items-center justify-center">
+                        <span className="text-white text-xs">✓</span>
+                      </div>
+                    )}
+                  </div>
 
-                <div className="p-4">
-                  <h3 className="text-sm font-semibold text-white/95 line-clamp-1">
-                    {film.title}
-                  </h3>
+                  <div className="p-4">
+                    {/* FIX: ganti film.title → film.name */}
+                    <h3 className="text-sm font-semibold text-white/95 line-clamp-1">
+                      {film.name}
+                    </h3>
+                    {/* FIX: ganti film.synopsis → film.cats */}
+                    <p className="mt-2 text-[11px] leading-relaxed text-white/45 line-clamp-2">
+                      {film.cats || ''}
+                    </p>
 
-                  <p className="mt-2 text-[11px] leading-relaxed text-white/45 line-clamp-2">
-                    {film.synopsis}
-                  </p>
-
-                  <div className="mt-3 flex items-center gap-4 text-[11px] text-white/45">
-                    <div className="flex items-center gap-1.5">
-                      <Heart className="w-4 h-4" />
-                      <span>{film.likes} Likes</span>
-                    </div>
-                    <div className="flex items-center gap-1.5">
-                      <Eye className="w-4 h-4" />
-                      <span>{film.views} Views</span>
+                    <div className="mt-3 flex items-center gap-4 text-[11px] text-white/45">
+                      <div className="flex items-center gap-1.5">
+                        <Heart className="w-4 h-4" />
+                        {/* FIX: ganti film.likes → film.heart */}
+                        <span>{film.heart || 0} Likes</span>
+                      </div>
+                      <div className="flex items-center gap-1.5">
+                        <Eye className="w-4 h-4" />
+                        {/* FIX: ganti film.views → getViewCount(film) */}
+                        <span>{getViewCount(film)} Views</span>
+                      </div>
                     </div>
                   </div>
-                </div>
-              </Link>
-            ))}
+                </Link>
+              ))
+            ) : (
+              <p className="col-span-4 text-center text-white/40 py-10">
+                Tidak ada data
+              </p>
+            )}
           </div>
         </section>
       </main>
