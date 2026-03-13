@@ -368,12 +368,12 @@ const VideoItem = ({
         }).catch(err => console.error("[v0] Background Share API Error:", err))
       }
 
-      const shareUrl = encodeURIComponent(`${window.location.origin}/clip?id=${clip.id}`)
+      const shareUrl = encodeURIComponent(`${window.location.origin}/dashboard/clip?id=${clip.id}`)
       const shareText = encodeURIComponent(`Tonton video keren ini: ${clip.name}`)
 
       switch (platform) {
         case 'copy':
-          await navigator.clipboard.writeText(`${window.location.origin}/clip?id=${clip.id}`)
+          await navigator.clipboard.writeText(`${window.location.origin}/dashboard/clip?id=${clip.id}`)
           alert('Link berhasil disalin!')
           break
         case 'whatsapp':
