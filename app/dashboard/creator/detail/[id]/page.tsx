@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState, MouseEvent } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { Header } from '@/components/header'
 import { Footer } from '@/components/footer'
@@ -16,45 +16,7 @@ import {
   X,
 } from 'lucide-react'
 
-const transactionData = [
-  {
-    total: '9 USKY',
-    status: 'In',
-    date: 'Feb 24, 2025 1:31 pm',
-    desc: 'Earn From Customer For Watch Video Kutukan Jimat Warisan',
-    hash: '0xc9046c382b5f44bb...',
-  },
-  {
-    total: '9 USKY',
-    status: 'Out',
-    date: 'Mar 3, 2025 4:31 pm',
-    desc: 'Publish Fee',
-    hash: '0xc9046c382b5f44bb...',
-  },
-  {
-    total: '9 USKY',
-    status: 'In',
-    date: 'Mar 5, 2025 7:06 am',
-    desc: 'Earn From Customer For Watch Video Kutukan Jimat Warisan',
-    hash: '0xc9046c382b5f44bb...',
-  },
-]
-
-const monthsList = [
-  { name: 'January', value: '1' },
-  { name: 'February', value: '2' },
-  { name: 'March', value: '3' },
-  { name: 'April', value: '4' },
-  { name: 'May', value: '5' },
-  { name: 'June', value: '6' },
-  { name: 'July', value: '7' },
-  { name: 'August', value: '8' },
-  { name: 'September', value: '9' },
-  { name: 'October', value: '10' },
-  { name: 'November', value: '11' },
-  { name: 'December', value: '12' },
-]
-
+// --- TYPES ---
 type ChartItem = {
   day: number
   val: string
@@ -84,6 +46,36 @@ type CreatorData = {
   info?: CreatorInfo
 }
 
+type HistoryItem = {
+  id: string
+  type: string
+  dates: string
+  txhash: string
+  network_url: string
+  id_customer: string | null
+  reason: string
+  total: string
+  status: string
+  description: string
+}
+
+// --- CONSTANTS ---
+const monthsList = [
+  { name: 'January', value: '1' },
+  { name: 'February', value: '2' },
+  { name: 'March', value: '3' },
+  { name: 'April', value: '4' },
+  { name: 'May', value: '5' },
+  { name: 'June', value: '6' },
+  { name: 'July', value: '7' },
+  { name: 'August', value: '8' },
+  { name: 'September', value: '9' },
+  { name: 'October', value: '10' },
+  { name: 'November', value: '11' },
+  { name: 'December', value: '12' },
+]
+
+// --- UTILS ---
 function isObject(value: unknown): value is Record<string, any> {
   return typeof value === 'object' && value !== null && !Array.isArray(value)
 }
@@ -126,6 +118,7 @@ export default function CreatorDetailPage() {
   const router = useRouter()
   const id = Array.isArray(params?.id) ? params.id[0] : (params?.id as string)
 
+  // -- STATES: Creator & Chart --
   const [creatorData, setCreatorData] = useState<CreatorData | null>(null)
   const [loading, setLoading] = useState(true)
 
@@ -141,6 +134,13 @@ export default function CreatorDetailPage() {
     String(currentDate.getFullYear())
   )
 
+  // -- STATES: History Table --
+  const [historyList, setHistoryList] = useState<HistoryItem[]>([])
+  const [paginationHtml, setPaginationHtml] = useState<string>('')
+  const [isHistoryLoading, setIsHistoryLoading] = useState(false)
+  const [historyPage, setHistoryPage] = useState<number>(1)
+
+  // --- API FETCHERS ---
   const fetchChartData = async (year: string, month: string) => {
     try {
       setIsChartLoading(true)
@@ -165,13 +165,10 @@ export default function CreatorDetailPage() {
       })
 
       const result = await response.json()
-      console.log('CHART API RESULT:', result)
-
       if (result?.status === true && Array.isArray(result?.data)) {
         setChartData(result.data)
       } else {
         setChartData([])
-        console.error('Chart API error:', result)
       }
     } catch (error) {
       console.error('Error fetching chart data:', error)
@@ -181,6 +178,42 @@ export default function CreatorDetailPage() {
     }
   }
 
+  const fetchHistoryData = async (page: number) => {
+    try {
+      setIsHistoryLoading(true)
+      const token = localStorage.getItem('user_token')
+      if (!token || !id) return
+
+      // Memanggil endpoint history dengan parameter id dan page
+     const response = await fetch(
+  `/api/creator-history?id=${id}&per_page=${page}`,
+  {
+    method: 'GET',
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  }
+)
+
+      const result = await response.json()
+
+      if (result?.list) {
+        setHistoryList(result.list)
+        setPaginationHtml(result.pagination || '')
+      } else {
+        setHistoryList([])
+        setPaginationHtml('')
+      }
+    } catch (error) {
+      console.error('Error fetching history:', error)
+      setHistoryList([])
+      setPaginationHtml('')
+    } finally {
+      setIsHistoryLoading(false)
+    }
+  }
+
+  // --- USE EFFECTS ---
   useEffect(() => {
     const fetchCreatorDetail = async () => {
       try {
@@ -207,16 +240,12 @@ export default function CreatorDetailPage() {
         })
 
         const result = await response.json()
-        console.log('RAW CREATOR DETAIL:', result)
-
         const creator = findCreatorPayload(result)
-        console.log('FOUND CREATOR PAYLOAD:', creator)
 
         if (creator) {
           setCreatorData(creator)
         } else {
           setCreatorData(null)
-          console.error('Creator payload not found in response:', result)
         }
       } catch (error) {
         console.error('Error fetching creator details:', error)
@@ -233,11 +262,34 @@ export default function CreatorDetailPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id])
 
+  // Trigger fetch history saat page berubah
+  useEffect(() => {
+    if (id) {
+      fetchHistoryData(historyPage)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [id, historyPage])
+
+  // --- HANDLERS ---
   const handleApplyFilter = () => {
     fetchChartData(selectedYear, selectedMonth)
     setIsFilterOpen(false)
   }
 
+  // Mencegah reload halaman saat menekan tombol navigasi paginasi (dari CodeIgniter string)
+  const handlePaginationClick = (e: MouseEvent<HTMLDivElement>) => {
+    const target = e.target as HTMLElement
+    const anchor = target.closest('a')
+    if (anchor) {
+      e.preventDefault()
+      const pageStr = anchor.getAttribute('data-ci-pagination-page')
+      if (pageStr) {
+        setHistoryPage(Number(pageStr))
+      }
+    }
+  }
+
+  // --- RENDER CHECKS ---
   if (loading) {
     return (
       <div className="min-h-screen bg-[#020817] text-white flex items-center justify-center">
@@ -278,6 +330,7 @@ export default function CreatorDetailPage() {
       <Header />
 
       <div className="max-w-[1400px] mx-auto px-4 md:px-8 pt-6 pb-20">
+        {/* Breadcrumb */}
         <div className="flex items-center gap-2 text-xs text-gray-400 mb-6">
           <button
             onClick={() => router.back()}
@@ -299,6 +352,7 @@ export default function CreatorDetailPage() {
           <span className="text-white">Creator Details</span>
         </div>
 
+        {/* Header Profile */}
         <div className="flex justify-between items-start mb-8">
           <div>
             <h1 className="text-2xl font-bold mb-1">{creatorData.name || '-'}</h1>
@@ -325,6 +379,7 @@ export default function CreatorDetailPage() {
           </div>
         </div>
 
+        {/* Chart Section */}
         <div className="bg-[#0b1221] rounded-xl p-6 border border-gray-800 mb-6">
           <div className="flex justify-between items-start mb-8">
             <div>
@@ -405,6 +460,7 @@ export default function CreatorDetailPage() {
           </div>
         </div>
 
+        {/* Filter Modal */}
         {isFilterOpen && (
           <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
             <div className="bg-[#0b1221] border border-gray-800 w-full max-w-sm rounded-2xl overflow-hidden shadow-2xl animate-in fade-in zoom-in duration-200">
@@ -467,6 +523,7 @@ export default function CreatorDetailPage() {
           </div>
         )}
 
+        {/* Statistics Grid */}
         <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4 mb-6">
           {[
             {
@@ -509,7 +566,16 @@ export default function CreatorDetailPage() {
           ))}
         </div>
 
-        <div className="bg-[#0b1221] rounded-xl border border-gray-800 mb-10 overflow-hidden">
+        {/* --- DYNAMIC HISTORY TABLE --- */}
+        <div className="bg-[#0b1221] rounded-xl border border-gray-800 mb-10 overflow-hidden relative">
+          
+          {/* Loading Overlay */}
+          {isHistoryLoading && (
+            <div className="absolute inset-0 bg-[#0b1221]/60 backdrop-blur-[2px] z-10 flex items-center justify-center">
+              <div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin" />
+            </div>
+          )}
+
           <div className="w-full overflow-x-auto">
             <table className="w-full text-left text-sm whitespace-nowrap">
               <thead>
@@ -522,61 +588,64 @@ export default function CreatorDetailPage() {
                 </tr>
               </thead>
               <tbody>
-                {transactionData.map((row, idx) => (
-                  <tr
-                    key={idx}
-                    className="border-b border-gray-800/50 hover:bg-gray-800/20 transition-colors"
-                  >
-                    <td className="px-6 py-4 font-medium text-white">{row.total}</td>
-                    <td className="px-6 py-4">
-                      <span
-                        className={`text-[10px] font-bold px-2 py-0.5 rounded ${
-                          row.status === 'In'
-                            ? 'text-green-400 bg-green-400/10'
-                            : 'text-red-400 bg-red-400/10'
-                        }`}
-                      >
-                        {row.status}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 text-gray-400 text-xs">{row.date}</td>
-                    <td className="px-6 py-4 text-gray-300 text-xs max-w-xs truncate">
-                      {row.desc}
-                    </td>
-                    <td className="px-6 py-4 text-gray-500 text-xs text-right font-mono">
-                      {row.hash}
+                {historyList.length > 0 ? (
+                  historyList.map((row, idx) => (
+                    <tr
+                      key={row.id || idx}
+                      className="border-b border-gray-800/50 hover:bg-gray-800/20 transition-colors"
+                    >
+                      <td className="px-6 py-4 font-medium text-white">{row.total}</td>
+                      <td className="px-6 py-4">
+                        <span
+                          className={`text-[10px] font-bold px-2 py-0.5 rounded uppercase ${
+                            row.status?.toUpperCase() === 'IN'
+                              ? 'text-green-400 bg-green-400/10'
+                              : 'text-red-400 bg-red-400/10'
+                          }`}
+                        >
+                          {row.status}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 text-gray-400 text-xs">{row.dates}</td>
+                      <td 
+                        className="px-6 py-4 text-gray-300 text-xs max-w-xs truncate [&>a]:text-blue-400 hover:[&>a]:underline"
+                        dangerouslySetInnerHTML={{ __html: row.description }}
+                      />
+                      <td 
+                        className="px-6 py-4 text-gray-500 text-xs text-right font-mono [&>a]:text-blue-500 hover:[&>a]:underline [&>div]:inline-block"
+                        dangerouslySetInnerHTML={{ __html: row.txhash }}
+                      />
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan={5} className="px-6 py-8 text-center text-gray-500 text-sm">
+                      {!isHistoryLoading ? 'No transaction history found.' : 'Loading...'}
                     </td>
                   </tr>
-                ))}
+                )}
               </tbody>
             </table>
           </div>
 
-          <div className="px-6 py-4 flex flex-col md:flex-row justify-between items-center gap-4 text-xs text-gray-500 border-t border-gray-800">
-            <span>0 of 100 row(s) selected.</span>
-            <div className="flex items-center gap-6">
-              <div className="flex items-center gap-2">
-                <span>Rows per page</span>
-                <div className="flex items-center gap-1 bg-[#0f172a] px-2 py-1 rounded border border-gray-700">
-                  <span>5</span>
-                  <ChevronDown className="w-3 h-3" />
-                </div>
-              </div>
-              <div className="flex items-center gap-4">
-                <span>Page 1 of 10</span>
-                <div className="flex items-center gap-1">
-                  <button className="w-6 h-6 flex items-center justify-center bg-[#0f172a] rounded border border-gray-700 hover:text-white hover:border-gray-500">
-                    <ChevronLeft className="w-3 h-3" />
-                  </button>
-                  <button className="w-6 h-6 flex items-center justify-center bg-[#0f172a] rounded border border-gray-700 hover:text-white hover:border-gray-500">
-                    <ChevronRight className="w-3 h-3" />
-                  </button>
-                </div>
-              </div>
-            </div>
+          {/* HTML Pagination Footer */}
+          <div className="px-6 py-4 flex flex-col md:flex-row justify-between items-center gap-4 text-xs border-t border-gray-800 bg-[#0f172a]/30">
+            <span className="text-gray-500">
+              Showing {historyList.length} row(s) (Page {historyPage})
+            </span>
+            
+            {/* Render Pagination HTML string provided by API */}
+            {paginationHtml && (
+              <div 
+                className="flex items-center gap-1 [&>a]:flex [&>a]:items-center [&>a]:justify-center [&>a]:min-w-[28px] [&>a]:h-7 [&>a]:px-2 [&>a]:rounded [&>a]:border [&>a]:border-gray-700 [&>a]:bg-[#0f172a] [&>a]:text-gray-400 hover:[&>a]:text-white hover:[&>a]:border-gray-500 [&>a]:transition-colors [&>strong]:flex [&>strong]:items-center [&>strong]:justify-center [&>strong]:min-w-[28px] [&>strong]:h-7 [&>strong]:px-2 [&>strong]:rounded [&>strong]:bg-blue-600 [&>strong]:text-white"
+                onClick={handlePaginationClick}
+                dangerouslySetInnerHTML={{ __html: paginationHtml }}
+              />
+            )}
           </div>
         </div>
 
+        {/* List Clips */}
         <div className="mb-10">
           <div className="flex justify-between items-center mb-6">
             <h2 className="text-lg font-bold text-white">List Clips</h2>
