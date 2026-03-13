@@ -343,7 +343,7 @@ export default function CreatorDetailPage() {
           </button>
           <ChevronRight className="w-3 h-3" />
           <button
-            onClick={() => router.push('/creator')}
+            onClick={() => router.push('/dashboard/creator')}
             className="hover:text-white"
           >
             Creators
@@ -629,20 +629,22 @@ export default function CreatorDetailPage() {
           </div>
 
           {/* HTML Pagination Footer */}
-          <div className="px-6 py-4 flex flex-col md:flex-row justify-between items-center gap-4 text-xs border-t border-gray-800 bg-[#0f172a]/30">
-            <span className="text-gray-500">
-              Showing {historyList.length} row(s) (Page {historyPage})
-            </span>
-            
-            {/* Render Pagination HTML string provided by API */}
-            {paginationHtml && (
-              <div 
-                className="flex items-center gap-1 [&>a]:flex [&>a]:items-center [&>a]:justify-center [&>a]:min-w-[28px] [&>a]:h-7 [&>a]:px-2 [&>a]:rounded [&>a]:border [&>a]:border-gray-700 [&>a]:bg-[#0f172a] [&>a]:text-gray-400 hover:[&>a]:text-white hover:[&>a]:border-gray-500 [&>a]:transition-colors [&>strong]:flex [&>strong]:items-center [&>strong]:justify-center [&>strong]:min-w-[28px] [&>strong]:h-7 [&>strong]:px-2 [&>strong]:rounded [&>strong]:bg-blue-600 [&>strong]:text-white"
-                onClick={handlePaginationClick}
-                dangerouslySetInnerHTML={{ __html: paginationHtml }}
-              />
-            )}
-          </div>
+       <div className="px-6 py-6 flex flex-col md:flex-row justify-end items-center border-t border-gray-800 bg-transparent">
+  
+  {/* Render Pagination HTML string provided by API */}
+  {paginationHtml && (
+    <div 
+      className="flex items-center gap-2 
+        /* Styling untuk link tidak aktif (a tags) */
+        [&>a]:flex [&>a]:items-center [&>a]:justify-center [&>a]:px-4 [&>a]:py-2 [&>a]:rounded-lg [&>a]:border [&>a]:border-gray-800 [&>a]:text-gray-400 hover:[&>a]:text-white hover:[&>a]:border-gray-600 hover:[&>a]:bg-gray-800/40 [&>a]:transition-all [&>a]:cursor-pointer [&>a]:text-sm
+        
+        /* Styling untuk halaman aktif (strong tags) */
+        [&>strong]:flex [&>strong]:items-center [&>strong]:justify-center [&>strong]:px-4 [&>strong]:py-2 [&>strong]:rounded-lg [&>strong]:bg-[#2563eb] [&>strong]:text-white [&>strong]:font-bold [&>strong]:text-sm"
+      onClick={handlePaginationClick}
+      dangerouslySetInnerHTML={{ __html: paginationHtml }}
+    />
+  )}
+</div>
         </div>
 
         {/* List Clips */}
