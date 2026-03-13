@@ -423,26 +423,10 @@ const VideoItem = ({
     }
   }
 
-  // --- FUNGSI SHARE DENGAN HIT API PROXY ---
+  // --- FUNGSI SHARE DENGAN HIT API PROXY SETELAH CLICK PLATFORM ---
   const handlePlatformShare = async (platform: string) => {
     try {
       const token = localStorage.getItem('user_token')
-      
-      if (token) {
-        // Hit API Proxy share di background
-        fetch('/api/share', {
-          method: 'POST',
-          headers: { 
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json' // Kirim JSON ke proxy lokal
-          },
-          body: JSON.stringify({ id: clip.id })
-        })
-        .then(res => res.json())
-        // .then(data => console.log("[v0] Background Share Success:", data))
-        .catch(err => console.error("[v0] Background Share API Error:", err))
-      }
-
       const shareUrl = encodeURIComponent(`${window.location.origin}/dashboard/clip?id=${clip.id}`)
       const shareText = encodeURIComponent(`Tonton video keren ini: ${clip.name}`)
 
@@ -468,6 +452,21 @@ const VideoItem = ({
           break
       }
       
+      // Hit API Proxy share di background SETELAH action platform dilakukan
+      if (token) {
+        fetch('/api/share', {
+          method: 'POST',
+          headers: { 
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json' 
+          },
+          body: JSON.stringify({ id: clip.id })
+        })
+        .then(res => res.json())
+        .then(data => console.log("[v0] Share tracked successfully:", data))
+        .catch(err => console.error("[v0] Error tracking share:", err))
+      }
+
       setShowShare(false)
     } catch (error) {
       console.error('[v0] Error sharing platform:', error)
@@ -688,7 +687,7 @@ const VideoItem = ({
             <span className="text-xs font-semibold text-white">{clip.comment}</span>
           </button>
 
-          {/* Tombol Watchlist untuk versi Mobile */}
+          {/* Tombol Watchlist untuk versi Mobile (Angka 0 Dihapus) */}
           <div 
             onClick={handleAddToWatchlist} 
             className={`flex flex-col items-center gap-1 drop-shadow-md cursor-pointer transition-opacity ${isAddingWatchlist ? 'opacity-50 pointer-events-none' : 'hover:opacity-80'}`}
@@ -696,7 +695,7 @@ const VideoItem = ({
             <div className="bg-white/10 p-1.5 rounded-full backdrop-blur-sm">
               <Bookmark className={`w-6 h-6 ${isWatchlisted ? 'text-red-500 fill-red-500' : 'text-white fill-white/20'} ${isAddingWatchlist ? 'animate-pulse' : ''}`} strokeWidth={1.5} />
             </div>
-            <span className="text-xs font-semibold text-white">0</span>
+            {/* SPAN ANGKA 0 DI SINI SUDAH DIHAPUS */}
           </div>
 
           <button onClick={() => setShowShare(true)} className="flex flex-col items-center gap-1 drop-shadow-md hover:opacity-80 transition-opacity">

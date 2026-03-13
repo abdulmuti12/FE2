@@ -3,7 +3,6 @@ import { NextResponse } from 'next/server'
 
 export async function POST(request: Request) {
   try {
-    // 1. Terima JSON dari frontend lokal
     const body = await request.json()
     const authHeader = request.headers.get('authorization')
 
@@ -11,23 +10,21 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    // 2. Buat FormData sesuai permintaan API uSky
+    // Ubah ke FormData sesuai permintaan API uSky
     const formData = new FormData()
     formData.append('id', body.id) 
 
-    // 3. Tembak API uSky menggunakan FormData
+    // Tembak API uSky
     const response = await fetch('https://api.usky.ai/movie/share', {
       method: 'POST',
       headers: {
         'Authorization': authHeader,
-        // Jangan set Content-Type agar fetch otomatis membuat boundary form-data
+        // Jangan tambahkan Content-Type agar fetch otomatis membuat boundary form-data
       },
       body: formData,
     })
 
     const data = await response.json()
-
-    // 4. Kembalikan respons uSky ke frontend
     return NextResponse.json(data, { status: response.status })
 
   } catch (error) {
