@@ -19,6 +19,8 @@ import {
   VolumeX,
   Copy,
   X,
+  Smartphone, // <-- Icon Portrait
+  Monitor,    // <-- Icon Landscape
 } from 'lucide-react'
 import { Header } from '@/components/header'
 import { ClipComments } from '@/components/clip/clip-comments'
@@ -82,6 +84,9 @@ const VideoItem = ({
   const [commentInput, setCommentInput] = useState('')
   const [isSubmittingComment, setIsSubmittingComment] = useState(false)
   const [showAllComments, setShowAllComments] = useState(false)
+
+  // --- STATE UNTUK ORIENTASI VIDEO ---
+  const [videoOrientation, setVideoOrientation] = useState<'portrait' | 'landscape'>('portrait')
 
   // --- STATE UNTUK VIDEO LIKE ---
   const [videoLikes, setVideoLikes] = useState(parseInt(clip.favorit || '0'))
@@ -352,12 +357,10 @@ const VideoItem = ({
     }
   }
 
-  // --- FUNGSI BARU UNTUK HANDLE SHARE ---
   const handlePlatformShare = async (platform: string) => {
     try {
       const token = localStorage.getItem('user_token')
       
-      // 1. Hit API Share secara background (tanpa memblokir user)
       if (token) {
         fetch(`/api/share-video?id=${clip.id}`, {
           method: 'GET',
@@ -365,12 +368,9 @@ const VideoItem = ({
         }).catch(err => console.error("[v0] Background Share API Error:", err))
       }
 
-      // 2. Siapkan Data URL Share
-      // Karena ini clip, kita asumsikan link sharenya adalah origin domain saat ini + id (Bisa di custom nanti)
       const shareUrl = encodeURIComponent(`${window.location.origin}/clip?id=${clip.id}`)
       const shareText = encodeURIComponent(`Tonton video keren ini: ${clip.name}`)
 
-      // 3. Eksekusi Aksi Buka Tab/Copy sesuai platform
       switch (platform) {
         case 'copy':
           await navigator.clipboard.writeText(`${window.location.origin}/clip?id=${clip.id}`)
@@ -393,7 +393,6 @@ const VideoItem = ({
           break
       }
       
-      // Tutup modal share setelah diklik
       setShowShare(false)
     } catch (error) {
       console.error('[v0] Error sharing platform:', error)
@@ -443,15 +442,34 @@ const VideoItem = ({
           </div>
         </div>
 
-        {/* Kolom tengah: video */}
+        {/* Kolom tengah: video dengan class responsif orientasi */}
         <div className={`${showComments ? 'col-span-4' : 'col-span-6'} h-full flex items-center justify-center py-4 transition-all duration-500`}>
-          <div className="relative w-full h-full max-h-[82vh] aspect-[9/16] rounded-3xl overflow-hidden border border-white/10 shadow-[0_0_50px_-12px_rgba(0,0,0,0.5)] group bg-black">
+          <div className={`relative flex items-center justify-center h-full max-h-[82vh] ${videoOrientation === 'portrait' ? 'aspect-[9/16] w-auto' : 'aspect-video w-full'} rounded-3xl overflow-hidden border border-white/10 shadow-[0_0_50px_-12px_rgba(0,0,0,0.5)] group bg-black transition-all duration-500`}>
+            
+            {/* --- TOMBOL TOGGLE ORIENTASI (DESKTOP) --- */}
+            <div className="absolute top-4 left-4 z-30 flex bg-black/40 backdrop-blur-md rounded-lg p-1 border border-white/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+              <button
+                onClick={(e) => { e.stopPropagation(); setVideoOrientation('portrait'); }}
+                className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-md transition-colors text-xs font-medium ${videoOrientation === 'portrait' ? 'bg-white/20 text-white' : 'text-gray-400 hover:text-white'}`}
+                title="Tampilan Portrait"
+              >
+                <Smartphone className="w-3.5 h-3.5" />
+              </button>
+              <button
+                onClick={(e) => { e.stopPropagation(); setVideoOrientation('landscape'); }}
+                className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-md transition-colors text-xs font-medium ${videoOrientation === 'landscape' ? 'bg-white/20 text-white' : 'text-gray-400 hover:text-white'}`}
+                title="Tampilan Landscape"
+              >
+                <Monitor className="w-3.5 h-3.5" />
+              </button>
+            </div>
+
             <video
               ref={desktopVideoRef}
               src={clip.video_url}
               poster={clip.image_url}   
               preload="metadata"        
-              className="w-full h-full object-cover object-center cursor-pointer"
+              className={`w-full h-full ${videoOrientation === 'portrait' ? 'object-cover' : 'object-contain bg-black'} object-center cursor-pointer`}
               muted={isMuted}
               loop
               playsInline
@@ -460,7 +478,7 @@ const VideoItem = ({
 
             <button
               onClick={toggleMute}
-              className="absolute top-4 right-4 z-20 bg-black/40 backdrop-blur-md p-2.5 rounded-full text-white hover:bg-black/60 transition-all border border-white/10"
+              className="absolute top-4 right-4 z-20 bg-black/40 backdrop-blur-md p-2.5 rounded-full text-white hover:bg-black/60 transition-all border border-white/10 opacity-0 group-hover:opacity-100"
             >
               {isMuted ? <VolumeX className="w-5 h-5" /> : <Volume2 className="w-5 h-5" />}
             </button>
@@ -520,18 +538,37 @@ const VideoItem = ({
           onShowAllComments={setShowAllComments}
           onLikeComment={handleLikeComment}
           isMobile={false}
+          videoOrientation={videoOrientation}
+          onChangeOrientation={setVideoOrientation}
         />
 
       </div>
 
       {/* --- MOBILE LAYOUT (TIKTOK STYLE) --- */}
-      <div className="lg:hidden w-full h-full relative bg-black">
+      <div className="lg:hidden w-full h-full relative bg-black flex items-center justify-center group">
+        
+        {/* --- TOMBOL TOGGLE ORIENTASI (MOBILE) --- */}
+        <div className="absolute top-20 left-4 z-30 flex bg-black/20 backdrop-blur-sm rounded-lg p-1 border border-white/10">
+          <button
+            onClick={(e) => { e.stopPropagation(); setVideoOrientation('portrait'); }}
+            className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-md transition-colors ${videoOrientation === 'portrait' ? 'bg-white/20 text-white' : 'text-gray-400 hover:text-white'}`}
+          >
+            <Smartphone className="w-4 h-4" />
+          </button>
+          <button
+            onClick={(e) => { e.stopPropagation(); setVideoOrientation('landscape'); }}
+            className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-md transition-colors ${videoOrientation === 'landscape' ? 'bg-white/20 text-white' : 'text-gray-400 hover:text-white'}`}
+          >
+            <Monitor className="w-4 h-4" />
+          </button>
+        </div>
+
         <video
           ref={mobileVideoRef}
           src={clip.video_url}
           poster={clip.image_url}     
           preload="metadata"          
-          className="w-full h-full object-cover object-center"
+          className={`w-full h-full ${videoOrientation === 'portrait' ? 'object-cover' : 'object-contain'} object-center transition-all duration-300`}
           muted={isMuted}
           loop
           playsInline
@@ -626,6 +663,8 @@ const VideoItem = ({
           onShowAllComments={setShowAllComments}
           onLikeComment={handleLikeComment}
           isMobile={true}
+          videoOrientation={videoOrientation}
+          onChangeOrientation={setVideoOrientation}
         />
       </div>
 
@@ -694,7 +733,7 @@ const VideoItem = ({
 
               </div>
 
-              {/* Panah Indikator Kiri & Kanan (Muncul saat di hover) */}
+              {/* Panah Indikator Kiri & Kanan */}
               <div className="absolute left-1 top-[40%] -translate-y-1/2 w-8 h-8 rounded-full bg-black/60 flex items-center justify-center pointer-events-none opacity-0 group-hover/share:opacity-100 transition-opacity">
                   <ChevronLeft className="w-4 h-4 text-white" />
               </div>
@@ -885,7 +924,6 @@ export default function ClipsPage() {
             ) : apiClips.length > 0 ? (
               <div className="snap-y snap-mandatory overflow-y-scroll h-full scroll-smooth [&::-webkit-scrollbar]:hidden [-ms-overflow-style:'none'] [scrollbar-width:'none']">
              {apiClips.map((clip: any, index) => {
-                  // Ambil data customer dari API (fallback ke nilai default jika tidak ada)
                   const creatorName = clip.customer?.name || 'Unknown Creator'
                   const creatorAvatarUrl = clip.customer?.avatar_url || 'https://api.dicebear.com/7.x/avataaars/svg?seed=Creator'
 
