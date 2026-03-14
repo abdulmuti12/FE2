@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useRef } from "react"
+import React, { useState, useRef, useEffect } from "react"
 import { Header } from '@/components/header'
 import { Footer } from '@/components/footer'
 import { ChevronRight, Trash2 } from 'lucide-react'
@@ -8,16 +8,51 @@ import { useRouter } from 'next/navigation'
 
 export default function ProfilePage() {
   const router = useRouter()
-  const [formData, setFormData] = useState({
-    name: 'Nama Lengkap',
-  })
-  
+
+  const [formData, setFormData] = useState({ name: '' })
+  const [email, setEmail] = useState('')
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null)
   const [avatarFile, setAvatarFile] = useState<File | null>(null)
   const [loading, setLoading] = useState(false)
+  const [fetchLoading, setFetchLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
+
+  useEffect(() => {
+    const fetchProfile = async () => {
+      try {
+        const token = localStorage.getItem('user_token')
+        if (!token) { router.push('/'); return }
+
+        const response = await fetch('/api/customer-profile', {
+          method: 'GET',
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+        })
+
+        const data = await response.json()
+
+        if (response.ok && data.data) {
+          setFormData({ name: data.data.name || '' })
+          setEmail(data.data.email || '')
+          if (data.data.avatar_url) {
+            setAvatarUrl(data.data.avatar_url)
+          } else if (data.data.avatar) {
+            setAvatarUrl(`http://usky.ai/uploads/${data.data.avatar}`)
+          }
+        }
+      } catch (err) {
+        console.error('[Profile] fetch error:', err)
+      } finally {
+        setFetchLoading(false)
+      }
+    }
+
+    fetchProfile()
+  }, [router])
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target
@@ -27,10 +62,7 @@ export default function ProfilePage() {
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (file) {
-      // Store the file for upload
       setAvatarFile(file)
-      
-      // Show preview
       const reader = new FileReader()
       reader.onload = (event) => setAvatarUrl(event.target?.result as string)
       reader.readAsDataURL(file)
@@ -39,31 +71,20 @@ export default function ProfilePage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    
+
     try {
       setLoading(true)
       setError(null)
       setSuccess(false)
 
       const token = localStorage.getItem('user_token')
-      console.log('[v0] Token available:', !!token)
+      if (!token) { router.push('/'); return }
 
-      if (!token) {
-        console.log('[v0] No token found, redirecting to home')
-        router.push('/')
-        return
-      }
-
-      // Prepare form data
       const submitFormData = new FormData()
       submitFormData.append('name', formData.name)
-
-      // Only append avatar if a new one was selected
       if (avatarFile) {
         submitFormData.append('avatar', avatarFile)
       }
-
-      console.log('[v0] Submitting profile update with avatar:', !!avatarFile)
 
       const response = await fetch('/api/customer-update', {
         method: 'POST',
@@ -74,19 +95,12 @@ export default function ProfilePage() {
       })
 
       const data = await response.json()
-      console.log('[v0] Update response status:', response.status)
-      console.log('[v0] Update response:', data)
 
       if (!response.ok) {
         setError(data.error || 'Failed to update profile')
       } else if (data.status === true || data.message === 'success') {
         setSuccess(true)
-        console.log('[v0] Profile updated successfully')
-        // Reset file input
-        if (fileInputRef.current) {
-          fileInputRef.current.value = ''
-        }
-        // Optionally redirect after success
+        if (fileInputRef.current) fileInputRef.current.value = ''
         setTimeout(() => {
           router.push('/dashboard/myaccount')
         }, 1500)
@@ -94,7 +108,7 @@ export default function ProfilePage() {
         setError('Unexpected response from server')
       }
     } catch (err) {
-      console.error('[v0] Error updating profile:', err)
+      console.error('[Profile] update error:', err)
       setError('Failed to update profile')
     } finally {
       setLoading(false)
@@ -105,20 +119,28 @@ export default function ProfilePage() {
     router.push('/dashboard/myaccount')
   }
 
+  if (fetchLoading) {
+    return (
+      <div className="min-h-screen bg-[#020817] text-white flex flex-col">
+        <Header />
+        <main className="flex-1 flex items-center justify-center">
+          <p className="text-gray-400">Loading profile...</p>
+        </main>
+        <Footer />
+      </div>
+    )
+  }
+
   return (
     <div className="min-h-screen bg-[#020817] text-white font-sans">
       <Header />
 
-      {/* --- Hero Section --- */}
       <div className="relative w-full h-[300px] md:h-[400px] overflow-hidden">
-        {/* Background Image */}
-        <div 
+        <div
           className="absolute inset-0 bg-cover bg-center"
-          style={{ backgroundImage: 'url("/images/privacy-header.jpg")' }} 
+          style={{ backgroundImage: 'url("/images/privacy-header.jpg")' }}
         />
-        {/* Dark Overlay */}
-        <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-[#020817]/60 to-[#020817]"></div>
-
+        <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-[#020817]/60 to-[#020817]" />
         <div className="relative h-full flex flex-col justify-center items-center text-center px-4 pt-10">
           <h1 className="text-4xl md:text-5xl font-bold mb-4">Profile</h1>
           <div className="flex items-center gap-2 text-sm text-gray-400">
@@ -129,7 +151,6 @@ export default function ProfilePage() {
         </div>
       </div>
 
-      {/* --- Main Content --- */}
       <div className="max-w-[1400px] mx-auto px-6 md:px-12 pb-20 -mt-10 relative z-10">
         <h2 className="text-2xl font-bold mb-8 text-white">My Profile</h2>
 
@@ -146,77 +167,96 @@ export default function ProfilePage() {
         )}
 
         <form onSubmit={handleSubmit} className="space-y-8 md:space-y-10">
-          
-          {/* Avatar & Image Buttons Section */}
-          {/* PERBAIKAN DI SINI: Menggunakan flex-row (default) agar avatar & tombol sejajar di mobile */}
+
           <div className="flex flex-row items-center md:items-start gap-5 md:gap-6">
-            
-            {/* Avatar Circle - Ukuran disesuaikan sedikit untuk mobile */}
             <div className="w-20 h-20 md:w-24 md:h-24 rounded-full bg-[#1e293b] flex items-center justify-center overflow-hidden border border-gray-700 shrink-0">
               {avatarUrl ? (
-                <img src={avatarUrl} alt="Avatar" className="w-full h-full object-cover" />
+                <img
+                  src={avatarUrl}
+                  alt="Avatar"
+                  className="w-full h-full object-cover"
+                  onError={(e) => { e.currentTarget.style.display = 'none' }}
+                />
               ) : (
-                <span className="text-2xl md:text-3xl font-medium text-white">CN</span>
+                <span className="text-2xl md:text-3xl font-medium text-white">
+                  {formData.name ? formData.name.charAt(0).toUpperCase() : 'CN'}
+                </span>
               )}
             </div>
 
-            {/* Buttons & Helper Text Container */}
             <div className="flex flex-col gap-2 pt-1">
               <div className="flex items-center gap-3">
-                <button 
+                <button
+                  type="button"
                   onClick={() => fileInputRef.current?.click()}
                   className="px-4 py-2 md:px-6 md:py-2 bg-[#0f172a] border border-gray-700 rounded-full hover:bg-gray-800 transition-all text-xs md:text-sm text-white whitespace-nowrap"
                 >
                   Change Image
                 </button>
-                
-                {/* Desktop Remove Button */}
-                <button 
-                  onClick={() => setAvatarUrl(null)}
+                <button
+                  type="button"
+                  onClick={() => { setAvatarUrl(null); setAvatarFile(null) }}
                   className="hidden md:block px-6 py-2 bg-[#0f172a] border border-gray-700 rounded-full hover:bg-gray-800 transition-all text-sm text-white"
                 >
                   Remove Image
                 </button>
-                
-                {/* Mobile Trash Icon (Lingkaran) */}
-                <button 
-                  onClick={() => setAvatarUrl(null)}
+                <button
+                  type="button"
+                  onClick={() => { setAvatarUrl(null); setAvatarFile(null) }}
                   className="flex md:hidden items-center justify-center w-9 h-9 bg-[#0f172a] border border-gray-700 rounded-full hover:text-red-500 transition-all"
                 >
                   <Trash2 className="w-4 h-4" />
                 </button>
               </div>
-              
               <p className="text-[10px] md:text-xs text-gray-500 leading-tight max-w-[200px] md:max-w-none">
                 Supported formats: JPG, or PNG. Max size 2MB.
               </p>
-              <input ref={fileInputRef} type="file" className="hidden" accept="image/*" onChange={handleImageUpload} />
+              <input
+                ref={fileInputRef}
+                type="file"
+                className="hidden"
+                accept="image/*"
+                onChange={handleImageUpload}
+              />
             </div>
           </div>
 
-          {/* Form Fields */}
-          <div className="space-y-2 max-w-lg">
-            <label className="text-sm font-medium text-gray-200">Name *</label>
-            <input
-              type="text"
-              name="name"
-              value={formData.name}
-              onChange={handleInputChange}
-              className="w-full bg-[#0a1120] border border-gray-800 rounded-lg px-4 py-3 focus:outline-none focus:border-blue-600 transition-all text-gray-300 placeholder-gray-500"
-              required
-            />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-2xl">
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-gray-200">Name *</label>
+              <input
+                type="text"
+                name="name"
+                value={formData.name}
+                onChange={handleInputChange}
+                placeholder="Nama Lengkap"
+                className="w-full bg-[#0a1120] border border-gray-800 rounded-lg px-4 py-3 focus:outline-none focus:border-blue-600 transition-all text-gray-300 placeholder-gray-500"
+                required
+              />
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-gray-200">E-Mail *</label>
+              <input
+                type="email"
+                value={email}
+                readOnly
+                disabled
+                placeholder="email@gmail.com"
+                className="w-full bg-[#0a1120] border border-gray-800 rounded-lg px-4 py-3 text-gray-300 placeholder-gray-500 cursor-not-allowed"
+              />
+            </div>
           </div>
 
-          {/* Action Buttons */}
           <div className="flex items-center gap-4 pt-2">
-            <button 
+            <button
               type="submit"
               disabled={loading}
               className="flex-1 md:flex-none px-6 md:px-8 py-3 bg-white text-black font-semibold rounded-full hover:bg-gray-200 disabled:bg-gray-400 transition-all text-sm whitespace-nowrap"
             >
               {loading ? 'Saving...' : 'Save Changes'}
             </button>
-            <button 
+            <button
               type="button"
               onClick={handleCancel}
               disabled={loading}
