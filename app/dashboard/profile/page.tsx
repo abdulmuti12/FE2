@@ -4,14 +4,19 @@ import React, { useState, useRef } from "react"
 import { Header } from '@/components/header'
 import { Footer } from '@/components/footer'
 import { ChevronRight, Trash2 } from 'lucide-react'
+import { useRouter } from 'next/navigation'
 
 export default function ProfilePage() {
+  const router = useRouter()
   const [formData, setFormData] = useState({
     name: 'Nama Lengkap',
-    email: 'email@gmail.com'
   })
   
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null)
+  const [avatarFile, setAvatarFile] = useState<File | null>(null)
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [success, setSuccess] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -22,10 +27,82 @@ export default function ProfilePage() {
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (file) {
+      // Store the file for upload
+      setAvatarFile(file)
+      
+      // Show preview
       const reader = new FileReader()
       reader.onload = (event) => setAvatarUrl(event.target?.result as string)
       reader.readAsDataURL(file)
     }
+  }
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    
+    try {
+      setLoading(true)
+      setError(null)
+      setSuccess(false)
+
+      const token = localStorage.getItem('user_token')
+      console.log('[v0] Token available:', !!token)
+
+      if (!token) {
+        console.log('[v0] No token found, redirecting to home')
+        router.push('/')
+        return
+      }
+
+      // Prepare form data
+      const submitFormData = new FormData()
+      submitFormData.append('name', formData.name)
+
+      // Only append avatar if a new one was selected
+      if (avatarFile) {
+        submitFormData.append('avatar', avatarFile)
+      }
+
+      console.log('[v0] Submitting profile update with avatar:', !!avatarFile)
+
+      const response = await fetch('/api/customer-update', {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        body: submitFormData,
+      })
+
+      const data = await response.json()
+      console.log('[v0] Update response status:', response.status)
+      console.log('[v0] Update response:', data)
+
+      if (!response.ok) {
+        setError(data.error || 'Failed to update profile')
+      } else if (data.status === true || data.message === 'success') {
+        setSuccess(true)
+        console.log('[v0] Profile updated successfully')
+        // Reset file input
+        if (fileInputRef.current) {
+          fileInputRef.current.value = ''
+        }
+        // Optionally redirect after success
+        setTimeout(() => {
+          router.push('/dashboard/myaccount')
+        }, 1500)
+      } else {
+        setError('Unexpected response from server')
+      }
+    } catch (err) {
+      console.error('[v0] Error updating profile:', err)
+      setError('Failed to update profile')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleCancel = () => {
+    router.push('/dashboard/myaccount')
   }
 
   return (
@@ -56,7 +133,19 @@ export default function ProfilePage() {
       <div className="max-w-[1400px] mx-auto px-6 md:px-12 pb-20 -mt-10 relative z-10">
         <h2 className="text-2xl font-bold mb-8 text-white">My Profile</h2>
 
-        <div className="space-y-8 md:space-y-10">
+        {error && (
+          <div className="mb-6 p-4 bg-red-500/10 border border-red-500 text-red-400 rounded-lg text-sm">
+            {error}
+          </div>
+        )}
+
+        {success && (
+          <div className="mb-6 p-4 bg-green-500/10 border border-green-500 text-green-400 rounded-lg text-sm">
+            Profile updated successfully! Redirecting...
+          </div>
+        )}
+
+        <form onSubmit={handleSubmit} className="space-y-8 md:space-y-10">
           
           {/* Avatar & Image Buttons Section */}
           {/* PERBAIKAN DI SINI: Menggunakan flex-row (default) agar avatar & tombol sejajar di mobile */}
@@ -105,41 +194,39 @@ export default function ProfilePage() {
             </div>
           </div>
 
-          {/* Form Fields - Stacked on Mobile, Grid 2 Col on Desktop */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8 w-full">
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-200">Name *</label>
-              <input
-                type="text"
-                name="name"
-                value={formData.name}
-                onChange={handleInputChange}
-                className="w-full bg-[#0a1120] border border-gray-800 rounded-lg px-4 py-3 focus:outline-none focus:border-blue-600 transition-all text-gray-300 placeholder-gray-500"
-              />
-            </div>
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-200">E-Mail *</label>
-              <input
-                type="email"
-                name="email"
-                value={formData.email}
-                onChange={handleInputChange}
-                className="w-full bg-[#0a1120] border border-gray-800 rounded-lg px-4 py-3 focus:outline-none focus:border-blue-600 transition-all text-gray-300 placeholder-gray-500"
-              />
-            </div>
+          {/* Form Fields */}
+          <div className="space-y-2 max-w-lg">
+            <label className="text-sm font-medium text-gray-200">Name *</label>
+            <input
+              type="text"
+              name="name"
+              value={formData.name}
+              onChange={handleInputChange}
+              className="w-full bg-[#0a1120] border border-gray-800 rounded-lg px-4 py-3 focus:outline-none focus:border-blue-600 transition-all text-gray-300 placeholder-gray-500"
+              required
+            />
           </div>
 
           {/* Action Buttons */}
           <div className="flex items-center gap-4 pt-2">
-            <button className="flex-1 md:flex-none px-6 md:px-8 py-3 bg-white text-black font-semibold rounded-full hover:bg-gray-200 transition-all text-sm whitespace-nowrap">
-              Save Changes
+            <button 
+              type="submit"
+              disabled={loading}
+              className="flex-1 md:flex-none px-6 md:px-8 py-3 bg-white text-black font-semibold rounded-full hover:bg-gray-200 disabled:bg-gray-400 transition-all text-sm whitespace-nowrap"
+            >
+              {loading ? 'Saving...' : 'Save Changes'}
             </button>
-            <button className="flex-1 md:flex-none px-6 md:px-8 py-3 bg-transparent border border-gray-700 text-white font-semibold rounded-full hover:bg-gray-800 transition-all text-sm whitespace-nowrap">
+            <button 
+              type="button"
+              onClick={handleCancel}
+              disabled={loading}
+              className="flex-1 md:flex-none px-6 md:px-8 py-3 bg-transparent border border-gray-700 text-white font-semibold rounded-full hover:bg-gray-800 disabled:border-gray-600 transition-all text-sm whitespace-nowrap"
+            >
               Cancel
             </button>
           </div>
 
-        </div>
+        </form>
       </div>
 
       <Footer />

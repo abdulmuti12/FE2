@@ -27,34 +27,26 @@ interface ContentItem {
   name: string
   image?: string
   image_landscape?: string
-  ipfs?: string
   heart?: string
   viewx?: string
   totalview?: string
   run_time?: string
-  years?: string
   cats?: string
   rates?: string
   id_watch?: string
+  id_like?: string
   asset_name?: string
   thicker?: string
-  id_like?: string
-  txhash?: string
   description?: string
-  video?: string
-  network?: string
-  network_url?: string
-  id_nft_category?: string
-  id_creator?: string
 }
 
 interface ProfileResponse {
   data: ProfileData
   tab: {
-    watched:   ContentItem[]
+    watched: ContentItem[]
     watchlist: ContentItem[]
-    liked:     ContentItem[]
-    view:      ContentItem[]
+    liked: ContentItem[]
+    view: ContentItem[]
   }
   status: boolean
   message: string
@@ -62,16 +54,16 @@ interface ProfileResponse {
 
 export default function MyAccountPage() {
   const router = useRouter()
-  const [activeTab, setActiveTab]     = useState<Tab>('Watched')
+  const [activeTab, setActiveTab] = useState<Tab>('Watched')
   const [profileData, setProfileData] = useState<ProfileData | null>(null)
-  const [tabData, setTabData]         = useState<{
-    watched:   ContentItem[]
+  const [tabData, setTabData] = useState<{
+    watched: ContentItem[]
     watchlist: ContentItem[]
-    liked:     ContentItem[]
-    view:      ContentItem[]
+    liked: ContentItem[]
+    view: ContentItem[]
   }>({ watched: [], watchlist: [], liked: [], view: [] })
   const [loading, setLoading] = useState(true)
-  const [error, setError]     = useState<string | null>(null)
+  const [error, setError] = useState<string | null>(null)
   const [isMounted, setIsMounted] = useState(false)
 
   useEffect(() => { setIsMounted(true) }, [])
@@ -131,28 +123,15 @@ export default function MyAccountPage() {
     return film.viewx ?? '0'
   }
 
-  const getSubtitle = (film: ContentItem): string => {
-    if (activeTab === 'Watchlist') {
-      return [film.asset_name, film.thicker].filter(Boolean).join(' · ')
-    }
-    return film.cats ?? ''
-  }
-
-  // ✅ Strip HTML tags dari description → plain text
   const stripHtml = (html: string): string => {
     return html
       .replace(/<[^>]*>/g, ' ')
       .replace(/&nbsp;/g, ' ')
       .replace(/&amp;/g, '&')
-      .replace(/&lt;/g, '<')
-      .replace(/&gt;/g, '>')
-      .replace(/&quot;/g, '"')
-      .replace(/&#39;/g, "'")
       .replace(/\s+/g, ' ')
       .trim()
   }
 
-  // ✅ Format durasi: "5" → "1h 0m", "90" → "1h 30m"
   const formatDuration = (runTime?: string): string => {
     const mins = parseInt(runTime ?? '0', 10)
     if (!mins) return '0m'
@@ -192,42 +171,28 @@ export default function MyAccountPage() {
       ? `http://usky.ai/uploads/${profileData.avatar}`
       : '/images/pngs.png'
 
-  // ─── Shared card body ────────────────────────────────────────────
   const CardBody = ({ film }: { film: ContentItem }) => (
     <div className="p-4">
-      {/* Judul */}
       <h3 className="text-sm font-semibold text-white/95 line-clamp-1">
         {film.name}
       </h3>
-
-      {/* Subtitle (asset_name · thicker untuk Watchlist, cats untuk lainnya) */}
-      {getSubtitle(film) && (
-        <p className="mt-0.5 text-[10px] text-white/40 line-clamp-1">
-          {getSubtitle(film)}
-        </p>
+      {film.cats && (
+        <p className="mt-0.5 text-[10px] text-white/40 line-clamp-1">{film.cats}</p>
       )}
-
-      {/* ✅ Deskripsi dari field description (strip HTML) */}
       {film.description && (
         <p className="mt-2 text-[11px] leading-relaxed text-white/55 line-clamp-2">
           {stripHtml(film.description)}
         </p>
       )}
-
-      {/* ✅ Genre + Durasi */}
       <div className="mt-2 flex items-center gap-2 text-[10px] text-white/35">
         {film.cats && (
-          <span className="border border-white/15 rounded px-1.5 py-0.5">
-            {film.cats}
-          </span>
+          <span className="border border-white/15 rounded px-1.5 py-0.5">{film.cats}</span>
         )}
         <span className="flex items-center gap-1">
           <Clock className="w-3 h-3" />
           {formatDuration(film.run_time)}
         </span>
       </div>
-
-      {/* Likes + Views */}
       <div className="mt-3 flex items-center gap-4 text-[11px] text-white/45">
         <div className="flex items-center gap-1.5">
           <Heart className="w-4 h-4" />
@@ -263,24 +228,28 @@ export default function MyAccountPage() {
           </div>
         </section>
 
-        {/* =========================
-            MOBILE VERSION (md:hidden)
-            ========================= */}
+        {/* ========================= MOBILE ========================= */}
         <section className="md:hidden px-4 pb-16">
-          <div className="-mt-12">
-            <div className="flex items-start gap-4">
-              <div className="relative w-[88px] h-[88px] flex-none">
+          {/* FIX: mt-6 ganti -mt-12 agar nama/email tidak tertutup hero */}
+          <div className="mt-6">
+            <div className="flex items-center gap-4">
+              {/* Avatar mobile */}
+              <div className="relative w-[72px] h-[72px] flex-none">
                 <img
                   src={avatarSrc}
                   alt={profileData.name}
                   onError={(e) => { e.currentTarget.src = '/images/pngs.png' }}
                   className="w-full h-full rounded-full object-cover"
                 />
-                <div className="absolute inset-0 rounded-full ring-4 ring-[#050b18]" />
+                <div className="absolute inset-0 rounded-full ring-3 ring-[#050b18]" />
               </div>
-              <div className="flex-1 pt-1">
-                <div className="flex items-center gap-2">
-                  <h2 className="text-base font-semibold text-white/95">{profileData.name}</h2>
+
+              {/* Info profil mobile */}
+              <div className="flex-1">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <h2 className="text-base font-semibold text-white">
+                    {profileData.name}
+                  </h2>
                   <Link
                     href="/dashboard/profile"
                     className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/5 hover:bg-white/10 transition-colors px-2.5 py-1"
@@ -289,9 +258,9 @@ export default function MyAccountPage() {
                     <span className="text-[11px] font-medium text-white/90">Edit Profile</span>
                   </Link>
                 </div>
-                <p className="mt-1 text-[11px] text-white/45">{profileData.email}</p>
-                <div className="mt-3 inline-flex items-center gap-2 rounded-md border border-white/10 bg-white/5 px-3 py-2">
-                  <span className="text-[10px] text-white/45">Balance:</span>
+                <p className="mt-0.5 text-[11px] text-white/45">{profileData.email}</p>
+                <div className="mt-2 inline-flex items-center gap-2 rounded-md border border-white/10 bg-white/5 px-3 py-1.5">
+                  <span className="text-[10px] text-white/45">My Reward:</span>
                   <span className="text-xs font-semibold text-white">{profileData.balance} USKY</span>
                 </div>
               </div>
@@ -328,15 +297,11 @@ export default function MyAccountPage() {
                   <div className="relative aspect-[16/10]">
                     <Image src={getImageUrl(film)} alt={film.name} fill className="object-cover" />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/35 via-transparent to-transparent" />
-
-                    {/* Watchlist: ceklis kanan atas */}
                     {activeTab === 'Watchlist' && film.id_watch && (
                       <div className="absolute top-2 right-2 w-7 h-7 rounded-full bg-black/60 flex items-center justify-center">
                         <span className="text-white text-xs">✓</span>
                       </div>
                     )}
-
-                    {/* Favorit: heart icon kanan atas */}
                     {activeTab === 'Favorit' && (
                       <div className="absolute top-2 right-2 w-8 h-8 rounded-full bg-black/60 flex items-center justify-center">
                         <Heart className="w-4 h-4 text-white fill-white" />
@@ -352,9 +317,7 @@ export default function MyAccountPage() {
           </div>
         </section>
 
-        {/* =========================
-            DESKTOP VERSION
-            ========================= */}
+        {/* ========================= DESKTOP ========================= */}
         <section className="hidden md:block mx-auto w-full max-w-[1200px] px-4 md:px-6 lg:px-10 pb-16">
           {/* Profile row */}
           <div className="mt-6 md:mt-8">
@@ -370,7 +333,9 @@ export default function MyAccountPage() {
               </div>
               <div className="flex-1">
                 <div className="flex flex-wrap items-center gap-3">
-                  <h2 className="text-lg md:text-xl lg:text-2xl font-semibold text-white">{profileData.name}</h2>
+                  <h2 className="text-lg md:text-xl lg:text-2xl font-semibold text-white">
+                    {profileData.name}
+                  </h2>
                   <Link
                     href="/dashboard/profile"
                     className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 hover:bg-white/10 transition-colors px-3 py-1.5"
@@ -425,15 +390,11 @@ export default function MyAccountPage() {
                       className="object-cover group-hover:scale-[1.03] transition-transform duration-500"
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
-
-                    {/* Watchlist: ceklis kanan atas */}
                     {activeTab === 'Watchlist' && film.id_watch && (
                       <div className="absolute top-2 right-2 w-7 h-7 rounded-full bg-black/60 flex items-center justify-center">
                         <span className="text-white text-xs">✓</span>
                       </div>
                     )}
-
-                    {/* Favorit: heart icon kanan atas */}
                     {activeTab === 'Favorit' && (
                       <div className="absolute top-2 right-2 w-8 h-8 rounded-full bg-black/60 flex items-center justify-center">
                         <Heart className="w-4 h-4 text-white fill-white" />
