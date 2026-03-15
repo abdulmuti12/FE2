@@ -2,8 +2,27 @@
 
 import { Header } from '@/components/header'
 import { Footer } from '@/components/footer'
-import { MapPin, Clock, Play } from 'lucide-react'
-import { useState } from 'react'
+import { MapPin, Clock, Play, Calendar as CalendarIcon } from 'lucide-react'
+import { useState, useEffect, Suspense } from 'react'
+import { useSearchParams } from 'next/navigation'
+
+interface EventDetailData {
+  id: string
+  title: string
+  description: string
+  address: string
+  image_url: string
+  from_dates: string
+  from_times: string
+  to_times: string
+  total_seat: string
+  price: string
+  sisa: string
+  event_category?: {
+    id: string
+    name: string
+  }
+}
 
 interface EventCard {
   id: number
@@ -11,87 +30,146 @@ interface EventCard {
   subtitle: string
   date: string
   image: string
-  type: string
 }
 
-const relatedEvents: EventCard[] = [
-  {
-    id: 1,
-    title: '[Uduul Event]',
-    subtitle: '[Tipe Event]',
-    date: '22-11-2025',
-    image: '/images/event/example.png',
-    type: 'Tipe Event'
-  },
-  {
-    id: 2,
-    title: '[Uduul Event]',
-    subtitle: '[Tipe Event]',
-    date: '22-11-2025',
-    image: '/images/event/example.png',
-    type: 'Tipe Event'
-  },
-  {
-    id: 3,
-    title: '[Uduul Event]',
-    subtitle: '[Tipe Event]',
-    date: '22-11-2025',
-    image: '/images/event/example.png',
-    type: 'Tipe Event'
-  },
-  {
-    id: 4,
-    title: '[Uduul Event]',
-    subtitle: '[Tipe Event]',
-    date: '22-11-2025',
-    image: '/images/event/example.png',
-    type: 'Tipe Event'
-  }
-]
+function EventDetailContent() {
+  const searchParams = useSearchParams()
+  const id = searchParams.get('id')
 
-const ongoingEvents: EventCard[] = [
-  {
-    id: 1,
-    title: '[Uduul Event]',
-    subtitle: '[Tipe Event]',
-    date: '22-11-2025',
-    image: '/images/event/example.png',
-    type: 'Tipe Event'
-  },
-  {
-    id: 2,
-    title: '[Uduul Event]',
-    subtitle: '[Tipe Event]',
-    date: '22-11-2025',
-    image: '/images/event/example.png',
-    type: 'Tipe Event'
-  },
-  {
-    id: 3,
-    title: '[Uduul Event]',
-    subtitle: '[Tipe Event]',
-    date: '22-11-2025',
-    image: '/images/event/example.png',
-    type: 'Tipe Event'
-  },
-  {
-    id: 4,
-    title: '[Uduul Event]',
-    subtitle: '[Tipe Event]',
-    date: '22-11-2025',
-    image: '/images/event/example.png',
-    type: 'Tipe Event'
-  }
-]
-
-export default function EventDetailPage() {
   const [copied, setCopied] = useState(false)
+  const [eventDetail, setEventDetail] = useState<EventDetailData | null>(null)
+  const [ongoingEvents, setOngoingEvents] = useState<EventCard[]>([])
+  const [relatedEvents, setRelatedEvents] = useState<EventCard[]>([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    const fetchEventDetail = async () => {
+      if (!id) {
+        setLoading(false)
+        return
+      }
+
+      const token = localStorage.getItem('user_token')
+
+      try {
+        const formData = new FormData()
+        formData.append('id', id)
+
+        const response = await fetch('https://api.usky.ai/event/detail', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${token}`
+          },
+          body: formData,
+        })
+
+        const result = await response.json()
+        
+        if (result.status && result.data) {
+          setEventDetail(result.data)
+
+          // Fetch Related Events based on event category ID
+          await fetchRelatedEvents(result.data.event_category?.id);
+        } else {
+          console.error("API Error:", result.message)
+        }
+      } catch (error) {
+        console.error('Error fetching event detail:', error)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    const fetchOngoingEvents = async () => {
+      const token = localStorage.getItem('user_token')
+
+      try {
+        const response = await fetch('https://api.usky.ai/event/ongoing', {
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${token}`
+          },
+        })
+
+        const result = await response.json()
+
+        if (result.status && result.list) {
+          const formattedEvents = result.list.map(event => ({
+            id: Number(event.id),
+            title: event.title,
+            subtitle: event.event_category?.name || "Event",
+            date: `${event.from_dates} - ${event.to_dates}`,
+            image: event.image_url || "/placeholder.svg"
+          }));
+          setOngoingEvents(formattedEvents);
+        } else {
+          console.error("API Error:", result.message)
+        }
+      } catch (error) {
+        console.error('Error fetching ongoing events:', error)
+      }
+    }
+
+    const fetchRelatedEvents = async (categoryId: string | undefined) => {
+      if (!categoryId) return;
+
+      const token = localStorage.getItem('user_token')
+
+      try {
+        const response = await fetch(`/api/event/related?id_category=${categoryId}`, {
+            method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${token}`
+          },
+        })
+
+        const result = await response.json()
+
+        if (result.status && result.list) {
+          const formattedEvents = result.list.map(event => ({
+            id: Number(event.id),
+            title: event.title,
+            subtitle: event.event_category?.name || "Event",
+            date: `${event.from_dates} - ${event.to_dates}`,
+            image: event.image_url || "/placeholder.svg"
+          }));
+          setRelatedEvents(formattedEvents);
+        } else {
+          console.error("API Error:", result.message)
+        }
+      } catch (error) {
+        console.error('Error fetching related events:', error)
+      }
+    }
+
+    fetchEventDetail();
+    fetchOngoingEvents();
+  }, [id])
 
   const handleCopyLink = () => {
     navigator.clipboard.writeText(window.location.href)
     setCopied(true)
     setTimeout(() => setCopied(false), 2000)
   }
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-[#050B14] flex items-center justify-center text-white">
+        <div className="animate-pulse text-xl font-bold">Loading event detail...</div>
+      </div>
+    )
+  }
+
+  if (!eventDetail) {
+    return (
+      <div className="min-h-screen bg-[#050B14] flex items-center justify-center text-white">
+        <div className="text-xl">Event tidak ditemukan atau ID tidak valid.</div>
+      </div>
+    )
+  }
+
+  const priceValue = parseInt(eventDetail.price || '0')
+  const formattedPrice = priceValue === 0 ? "GRATIS" : `Rp${priceValue.toLocaleString('id-ID')}`
 
   return (
     <div className="min-h-screen bg-[#050B14] text-white font-sans selection:bg-yellow-500 selection:text-black">
@@ -101,7 +179,7 @@ export default function EventDetailPage() {
       <div className="relative w-full min-h-screen overflow-visible">
         <div
           className="absolute inset-0 bg-cover bg-center"
-          style={{ backgroundImage: 'url(/images/privacy-header.jpg)' }}
+          style={{ backgroundImage: `url(${eventDetail.image_url || '/images/privacy-header.jpg'})`, filter: 'brightness(0.3)' }}
         >
           <div className="absolute inset-0 bg-gradient-to-r from-[#050B14] via-[#050B14]/60 to-[#050B14]/40"></div>
           <div className="absolute inset-0 bg-gradient-to-t from-[#050B14] via-transparent to-transparent"></div>
@@ -113,98 +191,71 @@ export default function EventDetailPage() {
               {/* Left Content */}
               <div className="lg:col-span-2 space-y-6 pr-8">
                 <div className="flex items-center gap-2">
-                  <span className="px-3 py-1 bg-red-600 text-white text-xs font-bold rounded-full">
-                    LIVE SOON
+                  <span className="px-3 py-1 bg-red-600 text-white text-xs font-bold rounded-full uppercase">
+                    {eventDetail.event_category?.name || "Event"}
                   </span>
                 </div>
 
                 <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-white leading-tight">
-                  [Judul Event]
+                  {eventDetail.title}
                 </h1>
 
                 <div className="space-y-5">
                   <div className="flex flex-wrap items-center gap-6">
                     <div className="flex items-center gap-2">
-                      <Calendar className="w-5 h-5 text-gray-400" />
-                      <span className="text-base md:text-lg text-gray-300">Jun 12</span>
+                      <CalendarIcon className="w-5 h-5 text-gray-400" />
+                      <span className="text-base md:text-lg text-gray-300">{eventDetail.from_dates}</span>
                     </div>
                     <div className="flex items-center gap-2">
                       <Clock className="w-5 h-5 text-gray-400" />
-                      <span className="text-base md:text-lg text-gray-300">10:30 PM - 10:30 PM</span>
+                      <span className="text-base md:text-lg text-gray-300">{eventDetail.from_times} - {eventDetail.to_times}</span>
                     </div>
                   </div>
 
                   <div className="flex items-start gap-3">
                     <MapPin className="w-5 h-5 text-gray-400 flex-shrink-0 mt-1" />
                     <div>
-                      <p className="text-sm text-gray-400">Online</p>
-                      <p className="text-base md:text-lg text-white font-medium">Zoom Meeting</p>
+                      <p className="text-sm text-gray-400">Location</p>
+                      <p className="text-base md:text-lg text-white font-medium">{eventDetail.address}</p>
                     </div>
                   </div>
                 </div>
               </div>
 
               {/* Right Sidebar Card */}
-             {/* Right Sidebar Card */}
               <div className="lg:col-span-1">
-                {/* Tambahkan max-w agar tidak terlalu lebar di layar besar */}
                 <div className="sticky top-24 max-w-sm mx-auto lg:ml-auto w-full">
-                  
-                  {/* Container Border - dikurangi jadi border-2 */}
                   <div className="border-2 border-red-600 rounded-2xl p-1 backdrop-blur shadow-2xl shadow-red-900/20">
-                    
-                    {/* Inner Card - padding diperkecil (p-5) & spacing diperkecil (space-y-4) */}
                     <div className="bg-[#050B14] rounded-xl p-5 space-y-4">
                       
-                      {/* Image */}
                       <div className="relative rounded-lg overflow-hidden shadow-lg group">
                         <img
-                          src="/images/event/example.png"
-                          alt="AI MASTERPLAY 2025"
+                          src={eventDetail.image_url || "/images/event/example.png"}
+                          alt={eventDetail.title}
                           className="w-full h-36 object-cover transform group-hover:scale-105 transition-transform duration-500"
                         />
                       </div>
 
-                      {/* Title & Quote */}
                       <div className="space-y-2">
                         <h3 className="text-xl md:text-2xl font-bold text-yellow-400 leading-tight">
-                          AI MASTERPLAY 2025
+                          {eventDetail.title}
                         </h3>
                         <p className="text-xs text-gray-300 leading-relaxed italic border-l-2 border-gray-700 pl-3">
-                          "Yang Telah Belajar AI, Akan Berpikir Ulang."
+                          Sisa Kursi: <span className="font-bold text-white">{eventDetail.sisa || 0}</span> / {eventDetail.total_seat || 0}
                         </p>
                       </div>
 
-                      {/* Pricing Section - Compact */}
                       <div className="space-y-2 py-3 border-y border-gray-800">
                         <div className="flex justify-between items-end">
-                          <p className="text-[10px] text-gray-500 uppercase tracking-wider">Normal</p>
-                          <p className="text-sm font-semibold text-gray-400 line-through decoration-red-500">Rp20,000</p>
-                        </div>
-                        <div className="flex justify-between items-end">
-                          <p className="text-[10px] text-yellow-500/80 uppercase tracking-wider font-bold">Launch Price</p>
-                          <p className="text-xl font-bold text-yellow-400">Rp20.000</p>
+                          <p className="text-[10px] text-yellow-500/80 uppercase tracking-wider font-bold">Harga Tiket</p>
+                          <p className="text-xl font-bold text-yellow-400">{formattedPrice}</p>
                         </div>
                       </div>
 
-                      {/* Main Button - Padding dikurangi (py-3) */}
                       <button className="w-full bg-yellow-400 hover:bg-yellow-500 text-black font-extrabold py-3 rounded-lg transition-all transform hover:scale-[1.02] text-sm uppercase tracking-wide shadow-[0_0_15px_rgba(250,204,21,0.3)]">
                         Register Now
                       </button>
 
-                      {/* Countdown - Lebih tipis */}
-                      <div className="flex items-center justify-between bg-black/60 rounded-lg px-3 py-2 border border-white/5">
-                        <div className="flex items-center gap-2">
-                          <span className="relative flex h-2 w-2">
-                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
-                            <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>
-                          </span>
-                          <span className="text-[10px] text-gray-400 uppercase">Starts in</span>
-                        </div>
-                        <span className="text-xs font-mono font-bold text-red-400">02d : 14h : 23m</span>
-                      </div>
-
-                      {/* Secondary Buttons - Horizontal Layout */}
                       <div className="flex items-center gap-3">
                         <button className="flex-1 bg-gray-300 hover:bg-gray-400 text-black py-3 rounded-full text-sm font-semibold transition-colors">
                           Claim Your Ticket
@@ -212,11 +263,15 @@ export default function EventDetailPage() {
 
                         <button
                           onClick={handleCopyLink}
-                          className="flex-shrink-0 w-12 h-12 flex items-center justify-center bg-white hover:bg-gray-100 text-black rounded-full transition-colors border-2 border-gray-300"
+                          className={`flex-shrink-0 w-12 h-12 flex items-center justify-center bg-white hover:bg-gray-100 text-black rounded-full transition-colors border-2 ${copied ? 'border-green-500' : 'border-gray-300'}`}
                         >
-                          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-                          </svg>
+                          {copied ? (
+                             <span className="text-xs font-bold text-green-600">Copied</span>
+                          ) : (
+                            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                            </svg>
+                          )}
                         </button>
                       </div>
 
@@ -233,21 +288,11 @@ export default function EventDetailPage() {
       <div className="max-w-7xl mx-auto px-6 md:px-12 py-12 pb-24 space-y-12">
         {/* Event Description */}
         <section>
-          <p className="text-gray-300 leading-relaxed text-base mb-6">
-            [Brief of Event] Lorem ipsum dolor sit amet consectetur. Volupatate Lorem isl slit paxabui ui incidunt. Facilisis quam acdilend eisquise or Airiel faugal na soude well. Et time feugue molies non wilt. Simase wil eu et excepteur. Excepteur tempor wisi auris quil di au rerum felit. Velit esequate opsem dolor id at afet dolorem.
-          </p>
-
-          <p className="text-gray-300 leading-relaxed text-base mb-6">
-            [Brief of Event] Lorem ipsum dolor sit amet consectetur. Volupatate Lorem isl slit paxabui ui incidunt. Facilisis quam acdilend eisquise or Airiel faugal na soude well. Et time feugue molies non wilt. Simase wil eu et excepteur. Excepteur tempor wisi auris quil di au rerum felit.
-          </p>
-
-          <p className="text-gray-300 leading-relaxed text-base mb-6">
-            [Brief of Event] Lorem ipsum dolor sit amet consectetur. Volupatate Lorem isl slit paxabui ui incidunt. Facilisis quam acdilend eisquise or Airiel faugal na soude well.
-          </p>
-
-          <p className="text-gray-300 leading-relaxed text-base">
-            [Brief of Event] Lorem ipsum dolor sit amet consectetur. Volupatate Lorem isl slit paxabui ui incidunt. Facilisis quam acdilend eisquise or Airiel faugal na soude well. Et time feugue molies non wilt. Simase wil eu et excepteur.
-          </p>
+          <h2 className="text-2xl font-bold text-white mb-6">Tentang Event Ini</h2>
+          <div 
+            className="text-gray-300 leading-relaxed text-base mb-6 prose prose-invert max-w-none"
+            dangerouslySetInnerHTML={{ __html: eventDetail.description }} 
+          />
         </section>
 
         {/* Related Events */}
@@ -306,11 +351,10 @@ export default function EventDetailPage() {
   )
 }
 
-function Calendar(props: any) {
+export default function EventDetailPage() {
   return (
-    <svg {...props} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
-      <path d="M16 2v4M8 2v4M3 10h18" />
-    </svg>
+    <Suspense fallback={<div className="min-h-screen bg-[#050B14] flex items-center justify-center"><div className="animate-pulse text-white">Loading...</div></div>}>
+      <EventDetailContent />
+    </Suspense>
   )
 }

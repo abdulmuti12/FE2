@@ -126,7 +126,6 @@ export default function EventPage() {
       })
 
       const data = await response.json()
-      console.log('[v0] Categories Response:', data)
 
       if (data.list && Array.isArray(data.list)) {
         setCategories(data.list)
@@ -155,7 +154,6 @@ export default function EventPage() {
       })
 
       const data = await response.json()
-      console.log('[v0] Upcoming Events Response:', data)
 
       if (data.list && Array.isArray(data.list)) {
         setUpcomingEventsList(data.list.slice(0, 2))
@@ -184,7 +182,6 @@ export default function EventPage() {
       })
 
       const data = await response.json()
-      console.log('[v0] Completed Events Response:', data)
 
       if (data.status && data.list && Array.isArray(data.list)) {
         setCompletedEventsList(data.list.slice(0, 3))
@@ -215,7 +212,6 @@ export default function EventPage() {
       })
 
       const url = `/api/events?${params.toString()}`
-      console.log('[v0] Client request:', url)
 
       const response = await fetch(url, {
         method: 'GET',
@@ -231,17 +227,11 @@ export default function EventPage() {
 
       const data = await response.json()
 
-      console.log('[v0] API Response:', data)
-      console.log('[v0] Pagination data:', data.pagination)
-
       if (data.list && Array.isArray(data.list)) {
         setAllEvents(data.list)
         
-        // Extract pagination data
         if (data.pagination) {
-          console.log('[v0] Setting pagination HTML:', data.pagination)
           setPaginationHtml(data.pagination)
-          // Extract total pages from pagination HTML
           const pageMatches = data.pagination.match(/data-ci-pagination-page="(\d+)"/g)
           if (pageMatches && pageMatches.length > 0) {
             const pages = pageMatches.map((match: string) => parseInt(match.match(/\d+/)?.[0] || '1'))
@@ -314,7 +304,7 @@ export default function EventPage() {
                 <div
                   key={event.id}
                   className="w-[220px] rounded-xl overflow-hidden border border-white/10 cursor-pointer"
-                  onClick={() => router.push('/dashboard/event/detail')}
+                  onClick={() => router.push(`/dashboard/event/detail?id=${event.id}`)}
                 >
                   <img src={event.image_url || event.image} className="w-full h-[280px] object-cover" />
 
@@ -347,7 +337,7 @@ export default function EventPage() {
                 <div
                   key={event.id}
                   className="w-[220px] rounded-xl overflow-hidden border border-white/10 cursor-pointer relative"
-                  onClick={() => router.push('/dashboard/event/detail')}
+                  onClick={() => router.push(`/dashboard/event/detail?id=${event.id}`)}
                 >
                   <div className="relative h-[280px]">
                     <img src={event.image_url || event.image} className="w-full h-full object-cover" />
@@ -373,6 +363,7 @@ export default function EventPage() {
           </div>
         </section>
 
+        {/* Ingat pastikan onClick di dalam AllEvents juga diubah menjadi push router dengan ID jika memungkinkan */}
         <AllEvents
           allEvents={allEvents}
           currentPage={currentPage}
@@ -395,3 +386,4 @@ export default function EventPage() {
     </div>
   )
 }
+
