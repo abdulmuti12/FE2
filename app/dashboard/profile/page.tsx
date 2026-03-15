@@ -13,6 +13,7 @@ export default function ProfilePage() {
   const [email, setEmail] = useState('')
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null)
   const [avatarFile, setAvatarFile] = useState<File | null>(null)
+  const [avatarRemoved, setAvatarRemoved] = useState(false)
   const [loading, setLoading] = useState(false)
   const [fetchLoading, setFetchLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -63,6 +64,7 @@ export default function ProfilePage() {
     const file = e.target.files?.[0]
     if (file) {
       setAvatarFile(file)
+      setAvatarRemoved(false)
       const reader = new FileReader()
       reader.onload = (event) => setAvatarUrl(event.target?.result as string)
       reader.readAsDataURL(file)
@@ -84,13 +86,13 @@ export default function ProfilePage() {
       submitFormData.append('name', formData.name)
       if (avatarFile) {
         submitFormData.append('avatar', avatarFile)
+      } else if (avatarRemoved) {
+        submitFormData.append('avatar', '')
       }
 
       const response = await fetch('/api/customer-update', {
         method: 'POST',
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+        headers: { Authorization: `Bearer ${token}` },
         body: submitFormData,
       })
 
@@ -101,9 +103,7 @@ export default function ProfilePage() {
       } else if (data.status === true || data.message === 'success') {
         setSuccess(true)
         if (fileInputRef.current) fileInputRef.current.value = ''
-        setTimeout(() => {
-          router.push('/dashboard/myaccount')
-        }, 1500)
+        setTimeout(() => { router.push('/dashboard/myaccount') }, 1500)
       } else {
         setError('Unexpected response from server')
       }
@@ -168,8 +168,9 @@ export default function ProfilePage() {
 
         <form onSubmit={handleSubmit} className="space-y-8 md:space-y-10">
 
-          <div className="flex flex-row items-center md:items-start gap-5 md:gap-6">
-            <div className="w-20 h-20 md:w-24 md:h-24 rounded-full bg-[#1e293b] flex items-center justify-center overflow-hidden border border-gray-700 shrink-0">
+          {/* Avatar */}
+          <div className="flex flex-row items-center gap-5 md:gap-6">
+            <div className="w-[90px] h-[90px] rounded-full bg-[#374151] flex items-center justify-center overflow-hidden border border-gray-500 shrink-0">
               {avatarUrl ? (
                 <img
                   src={avatarUrl}
@@ -178,37 +179,39 @@ export default function ProfilePage() {
                   onError={(e) => { e.currentTarget.style.display = 'none' }}
                 />
               ) : (
-                <span className="text-2xl md:text-3xl font-medium text-white">
-                  {formData.name ? formData.name.charAt(0).toUpperCase() : 'CN'}
+                <span className="text-3xl font-semibold text-white">
+                  {formData.name
+                    ? formData.name.split(' ').map((w: string) => w[0]).join('').toUpperCase().slice(0, 2)
+                    : 'CN'}
                 </span>
               )}
             </div>
 
-            <div className="flex flex-col gap-2 pt-1">
+            <div className="flex flex-col gap-2">
               <div className="flex items-center gap-3">
                 <button
                   type="button"
                   onClick={() => fileInputRef.current?.click()}
-                  className="px-4 py-2 md:px-6 md:py-2 bg-[#0f172a] border border-gray-700 rounded-full hover:bg-gray-800 transition-all text-xs md:text-sm text-white whitespace-nowrap"
+                  className="px-5 py-2 bg-[#0f172a] border border-gray-600 rounded-full hover:bg-gray-800 transition-all text-sm text-white whitespace-nowrap"
                 >
                   Change Image
                 </button>
                 <button
                   type="button"
-                  onClick={() => { setAvatarUrl(null); setAvatarFile(null) }}
-                  className="hidden md:block px-6 py-2 bg-[#0f172a] border border-gray-700 rounded-full hover:bg-gray-800 transition-all text-sm text-white"
+                  onClick={() => { setAvatarUrl(null); setAvatarFile(null); setAvatarRemoved(true) }}
+                  className="hidden md:block px-5 py-2 bg-[#0f172a] border border-gray-600 rounded-full hover:bg-gray-800 transition-all text-sm text-white"
                 >
                   Remove Image
                 </button>
                 <button
                   type="button"
-                  onClick={() => { setAvatarUrl(null); setAvatarFile(null) }}
-                  className="flex md:hidden items-center justify-center w-9 h-9 bg-[#0f172a] border border-gray-700 rounded-full hover:text-red-500 transition-all"
+                  onClick={() => { setAvatarUrl(null); setAvatarFile(null); setAvatarRemoved(true) }}
+                  className="flex md:hidden items-center justify-center w-9 h-9 bg-[#0f172a] border border-gray-600 rounded-full hover:text-red-500 transition-all"
                 >
                   <Trash2 className="w-4 h-4" />
                 </button>
               </div>
-              <p className="text-[10px] md:text-xs text-gray-500 leading-tight max-w-[200px] md:max-w-none">
+              <p className="text-xs text-gray-500">
                 Supported formats: JPG, or PNG. Max size 2MB.
               </p>
               <input
@@ -221,38 +224,40 @@ export default function ProfilePage() {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-2xl">
+          {/* Form Name + Email */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-200">Name *</label>
+              <label className="text-sm font-medium text-gray-300">Name *</label>
               <input
                 type="text"
                 name="name"
                 value={formData.name}
                 onChange={handleInputChange}
                 placeholder="Nama Lengkap"
-                className="w-full bg-[#0a1120] border border-gray-800 rounded-lg px-4 py-3 focus:outline-none focus:border-blue-600 transition-all text-gray-300 placeholder-gray-500"
+                className="w-full bg-[#0d1526] border border-gray-700 rounded-lg px-4 py-3 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all text-white placeholder-gray-500 text-sm"
                 required
               />
             </div>
 
             <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-200">E-Mail *</label>
+              <label className="text-sm font-medium text-gray-300">E-Mail *</label>
               <input
                 type="email"
                 value={email}
                 readOnly
                 disabled
                 placeholder="email@gmail.com"
-                className="w-full bg-[#0a1120] border border-gray-800 rounded-lg px-4 py-3 text-gray-300 placeholder-gray-500 cursor-not-allowed"
+                className="w-full bg-[#0d1526] border border-gray-700 rounded-lg px-4 py-3 text-white placeholder-gray-500 cursor-not-allowed text-sm"
               />
             </div>
           </div>
 
+          {/* Action Buttons */}
           <div className="flex items-center gap-4 pt-2">
             <button
               type="submit"
               disabled={loading}
-              className="flex-1 md:flex-none px-6 md:px-8 py-3 bg-white text-black font-semibold rounded-full hover:bg-gray-200 disabled:bg-gray-400 transition-all text-sm whitespace-nowrap"
+              className="px-8 py-3 bg-white text-black font-semibold rounded-full hover:bg-gray-200 disabled:bg-gray-400 transition-all text-sm whitespace-nowrap"
             >
               {loading ? 'Saving...' : 'Save Changes'}
             </button>
@@ -260,7 +265,7 @@ export default function ProfilePage() {
               type="button"
               onClick={handleCancel}
               disabled={loading}
-              className="flex-1 md:flex-none px-6 md:px-8 py-3 bg-transparent border border-gray-700 text-white font-semibold rounded-full hover:bg-gray-800 disabled:border-gray-600 transition-all text-sm whitespace-nowrap"
+              className="px-8 py-3 bg-transparent border border-gray-600 text-white font-semibold rounded-full hover:bg-gray-800 disabled:border-gray-700 transition-all text-sm whitespace-nowrap"
             >
               Cancel
             </button>
