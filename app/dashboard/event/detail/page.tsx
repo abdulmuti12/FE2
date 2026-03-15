@@ -2,10 +2,8 @@
 
 import { Header } from '@/components/header'
 import { Footer } from '@/components/footer'
-// 1. Tambahkan ChevronLeft dan ChevronRight
-import { MapPin, Clock, Play, Calendar as CalendarIcon, ChevronLeft, ChevronRight } from 'lucide-react'
-// 2. Tambahkan useRef
-import { useState, useEffect, Suspense, useRef } from 'react'
+import { MapPin, Clock, Play, Calendar as CalendarIcon } from 'lucide-react'
+import { useState, useEffect, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 
@@ -21,7 +19,7 @@ interface EventDetailData {
   total_seat: string
   price: string
   sisa: string
-  close?: boolean
+  close?: boolean // Ditambahkan untuk menampung status claim dari API
   event_category?: {
     id: string
     name: string
@@ -48,10 +46,7 @@ function EventDetailContent() {
   
   const [isClaiming, setIsClaiming] = useState(false)
 
-  // 3. Siapkan Ref untuk container carousel
-  const relatedCarouselRef = useRef<HTMLDivElement>(null)
-
-  // Fungsi untuk memanggil ulang data detail
+  // Fungsi untuk memanggil ulang data detail (berguna setelah berhasil claim)
   const fetchEventDetail = async () => {
     if (!id) {
       setLoading(false)
@@ -76,6 +71,8 @@ function EventDetailContent() {
       
       if (result.status && result.data) {
         setEventDetail(result.data)
+
+        // Fetch Related Events based on event category ID
         await fetchRelatedEvents(result.data.event_category?.id);
       } else {
         console.error("API Error:", result.message)
@@ -161,7 +158,8 @@ function EventDetailContent() {
     setTimeout(() => setCopied(false), 2000)
   }
 
-  const handleClaimTicket = async () => {
+const handleClaimTicket = async () => {
+    // 1. Pastikan data event sudah ada
     if (!eventDetail || !eventDetail.id) {
        alert("Data event belum siap atau tidak ditemukan!");
        return;
@@ -176,22 +174,32 @@ function EventDetailContent() {
     setIsClaiming(true)
 
     try {
+      // 2. Buat FormData persis seperti endpoint /detail yang sudah sukses
       const formData = new FormData()
+      
+      // 3. Masukkan key 'id_event' (karena server minta ini) dan 'id' (buat jaga-jaga)
       formData.append('id_event', eventDetail.id)
       formData.append('id', eventDetail.id)
 
+      // Log untuk memastikan di inspect element browser bahwa ID benar-benar ada isinya
+      console.log("Mencoba Claim Tiket untuk Event ID:", eventDetail.id)
+
+      // 4. Hit langsung ke API Usky dari client
       const response = await fetch('https://api.usky.ai/event/claim', {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`
+          // PENTING: Jangan tambahkan 'Content-Type' di sini. Biarkan browser yang mengaturnya otomatis untuk FormData.
         },
         body: formData,
       })
 
       const result = await response.json()
+      console.log("Respons dari Server:", result) // Cek balasan asli dari server di console
       
       if (result.status) {
         alert("Berhasil claim tiket!")
+        // Refetch detail event agar tombol otomatis berubah jadi "Claimed"
         fetchEventDetail() 
       } else {
         alert(result.message || "Gagal melakukan claim tiket.")
@@ -203,16 +211,6 @@ function EventDetailContent() {
       setIsClaiming(false)
     }
   }
-
-  // 4. Fungsi untuk Scroll Kiri/Kanan
-  const scrollCarousel = (direction: 'left' | 'right') => {
-    if (relatedCarouselRef.current) {
-      // Geser 300px per klik
-      const scrollAmount = direction === 'left' ? -300 : 300
-      relatedCarouselRef.current.scrollBy({ left: scrollAmount, behavior: 'smooth' })
-    }
-  }
-  
   if (loading) {
     return (
       <div className="min-h-screen bg-[#050B14] flex items-center justify-center text-white">
@@ -234,12 +232,6 @@ function EventDetailContent() {
 
   return (
     <div className="min-h-screen bg-[#050B14] text-white font-sans selection:bg-yellow-500 selection:text-black">
-      {/* 5. Inject CSS untuk menyembunyikan scrollbar bawaan browser agar rapi */}
-      <style dangerouslySetInnerHTML={{__html: `
-        .hide-scrollbar::-webkit-scrollbar { display: none; }
-        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-      `}} />
-
       <Header />
 
       {/* Hero Banner */}
@@ -324,15 +316,16 @@ function EventDetailContent() {
                       </button>
 
                       <div className="flex items-center gap-3">
+                        {/* Tombol Claim yang sudah dicek eventDetail.close */}
                         <button 
                           onClick={handleClaimTicket}
                           disabled={isClaiming || eventDetail.close}
                           className={`flex-1 ${
                             eventDetail.close 
-                              ? 'bg-green-600 text-white cursor-not-allowed'
+                              ? 'bg-green-600 text-white cursor-not-allowed' // Tampilan kalau tiket sudah di-claim
                               : isClaiming 
-                                ? 'bg-gray-400 text-black cursor-not-allowed'
-                                : 'bg-gray-300 hover:bg-gray-400 text-black'
+                                ? 'bg-gray-400 text-black cursor-not-allowed' // Tampilan saat proses API
+                                : 'bg-gray-300 hover:bg-gray-400 text-black'  // Tampilan default (bisa di-click)
                           } py-3 rounded-full text-sm font-semibold transition-colors flex justify-center items-center gap-2`}
                         >
                           {isClaiming ? (
@@ -344,9 +337,9 @@ function EventDetailContent() {
                               Processing...
                             </>
                           ) : eventDetail.close ? (
-                            "Claimed" 
+                            "Claimed" // Teks jika status close: true
                           ) : (
-                            "Claim Your Ticket" 
+                            "Claim Your Ticket" // Teks default jika close: false
                           )}
                         </button>
 
@@ -374,7 +367,7 @@ function EventDetailContent() {
       </div>
 
       {/* Main Content */}
-      <div className="max-w-7xl mx-auto px-6 md:px-12 py-12 pb-24 space-y-12 overflow-hidden">
+      <div className="max-w-7xl mx-auto px-6 md:px-12 py-12 pb-24 space-y-12">
         {/* Event Description */}
         <section>
           <h2 className="text-2xl font-bold text-white mb-6">Tentang Event Ini</h2>
@@ -384,56 +377,32 @@ function EventDetailContent() {
           />
         </section>
 
-        {/* 6. Related Events - Diubah Menjadi Carousel Satu Baris Sesuai Gambar */}
-        <section className="relative group/section">
-          <h2 className="text-2xl font-bold text-white mb-6">Related Event</h2>
-          
-          <div className="relative">
-            {/* Tombol Kiri */}
-            <button 
-              onClick={() => scrollCarousel('left')}
-              className="absolute -left-4 top-1/2 -translate-y-1/2 z-10 w-10 h-10 flex items-center justify-center bg-[#2A303C] hover:bg-gray-600 text-white rounded-full transition-all shadow-lg opacity-0 group-hover/section:opacity-100 disabled:opacity-0"
-            >
-              <ChevronLeft className="w-5 h-5" />
-            </button>
-
-            {/* Container List (Flex Row + Overflow X) */}
-            <div 
-              ref={relatedCarouselRef}
-              className="flex gap-4 overflow-x-auto snap-x snap-mandatory scroll-smooth hide-scrollbar pb-4"
-            >
-              {relatedEvents.map((event) => (
-                // min-w-[200px] atau min-w-[250px] menjaga ukurannya agar tidak mengecil (tetap 1 baris memanjang)
-                <Link href={`/dashboard/event/detail?id=${event.id}`} key={event.id} className="group block min-w-[220px] md:min-w-[260px] flex-shrink-0 snap-start">
-                  <div className="relative aspect-[3/4] rounded-xl overflow-hidden mb-3">
-                    <img
-                      src={event.image || "/placeholder.svg"}
-                      alt={event.title}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
-                      <Play className="w-14 h-14 text-white fill-white" />
-                    </div>
+        {/* Related Events */}
+        <section>
+          <h2 className="text-2xl font-bold text-white mb-8">Related Event</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            {relatedEvents.map((event) => (
+              <Link href={`/dashboard/event/detail?id=${event.id}`} key={event.id} className="group block">
+                <div className="relative aspect-[3/4] rounded-xl overflow-hidden mb-4">
+                  <img
+                    src={event.image || "/placeholder.svg"}
+                    alt={event.title}
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
+                    <Play className="w-16 h-16 text-white fill-white" />
                   </div>
+                </div>
 
-                  <h3 className="text-white font-bold mb-1 truncate">{event.title}</h3>
-                  <p className="text-gray-400 text-sm mb-2 truncate">{event.subtitle}</p>
-                  <p className="text-gray-500 text-xs">{event.date}</p>
-                </Link>
-              ))}
-            </div>
-
-            {/* Tombol Kanan */}
-            <button 
-              onClick={() => scrollCarousel('right')}
-              className="absolute -right-4 top-1/2 -translate-y-1/2 z-10 w-10 h-10 flex items-center justify-center bg-[#2A303C] hover:bg-gray-600 text-white rounded-full transition-all shadow-lg opacity-0 group-hover/section:opacity-100 disabled:opacity-0"
-            >
-              <ChevronRight className="w-5 h-5" />
-            </button>
+                <h3 className="text-white font-bold mb-2">{event.title}</h3>
+                <p className="text-gray-400 text-sm mb-3">{event.subtitle}</p>
+                <p className="text-gray-500 text-xs">{event.date}</p>
+              </Link>
+            ))}
           </div>
         </section>
 
-        {/* On Going Events (Tetap seperti aslinya / bisa diubah jadi carousel juga nantinya jika mau) */}
+        {/* On Going Events */}
         <section>
           <h2 className="text-2xl font-bold text-white mb-8">On Going Events</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
