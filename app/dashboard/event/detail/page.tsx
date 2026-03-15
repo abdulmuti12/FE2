@@ -2,9 +2,12 @@
 
 import { Header } from '@/components/header'
 import { Footer } from '@/components/footer'
-import { MapPin, Clock, Play, Calendar as CalendarIcon } from 'lucide-react'
-import { useState, useEffect, Suspense } from 'react'
+// 1. Tambahkan ChevronLeft dan ChevronRight
+import { MapPin, Clock, Play, Calendar as CalendarIcon, ChevronLeft, ChevronRight } from 'lucide-react'
+// 2. Tambahkan useRef
+import { useState, useEffect, Suspense, useRef } from 'react'
 import { useSearchParams } from 'next/navigation'
+import Link from 'next/link'
 
 interface EventDetailData {
   id: string
@@ -18,6 +21,7 @@ interface EventDetailData {
   total_seat: string
   price: string
   sisa: string
+  close?: boolean
   event_category?: {
     id: string
     name: string
@@ -41,109 +45,114 @@ function EventDetailContent() {
   const [ongoingEvents, setOngoingEvents] = useState<EventCard[]>([])
   const [relatedEvents, setRelatedEvents] = useState<EventCard[]>([])
   const [loading, setLoading] = useState(true)
+  
+  const [isClaiming, setIsClaiming] = useState(false)
+
+  // 3. Siapkan Ref untuk container carousel
+  const relatedCarouselRef = useRef<HTMLDivElement>(null)
+
+  // Fungsi untuk memanggil ulang data detail
+  const fetchEventDetail = async () => {
+    if (!id) {
+      setLoading(false)
+      return
+    }
+
+    const token = localStorage.getItem('user_token')
+
+    try {
+      const formData = new FormData()
+      formData.append('id', id)
+
+      const response = await fetch('https://api.usky.ai/event/detail', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        },
+        body: formData,
+      })
+
+      const result = await response.json()
+      
+      if (result.status && result.data) {
+        setEventDetail(result.data)
+        await fetchRelatedEvents(result.data.event_category?.id);
+      } else {
+        console.error("API Error:", result.message)
+      }
+    } catch (error) {
+      console.error('Error fetching event detail:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const fetchOngoingEvents = async () => {
+    const token = localStorage.getItem('user_token')
+
+    try {
+      const response = await fetch('https://api.usky.ai/event/ongoing', {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        },
+      })
+
+      const result = await response.json()
+
+      if (result.status && result.list) {
+        const formattedEvents = result.list.map((event: any) => ({
+          id: Number(event.id),
+          title: event.title,
+          subtitle: event.event_category?.name || "Event",
+          date: `${event.from_dates} - ${event.to_dates}`,
+          image: event.image_url || "/placeholder.svg"
+        }));
+        setOngoingEvents(formattedEvents);
+      } else {
+        console.error("API Error:", result.message)
+      }
+    } catch (error) {
+      console.error('Error fetching ongoing events:', error)
+    }
+  }
+
+  const fetchRelatedEvents = async (categoryId: string | undefined) => {
+    if (!categoryId) return;
+
+    const token = localStorage.getItem('user_token')
+
+    try {
+      const response = await fetch(`/api/event/related?id_category=${categoryId}`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        },
+      })
+
+      const result = await response.json()
+
+      if (result.status && result.list) {
+        const formattedEvents = result.list.map((event: any) => ({
+          id: Number(event.id),
+          title: event.title,
+          subtitle: event.event_category?.name || "Event",
+          date: `${event.from_dates} - ${event.to_dates}`,
+          image: event.image_url || "/placeholder.svg"
+        }));
+        setRelatedEvents(formattedEvents);
+      } else {
+        console.error("API Error:", result.message)
+      }
+    } catch (error) {
+      console.error('Error fetching related events:', error)
+    }
+  }
 
   useEffect(() => {
-    const fetchEventDetail = async () => {
-      if (!id) {
-        setLoading(false)
-        return
-      }
-
-      const token = localStorage.getItem('user_token')
-
-      try {
-        const formData = new FormData()
-        formData.append('id', id)
-
-        const response = await fetch('https://api.usky.ai/event/detail', {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${token}`
-          },
-          body: formData,
-        })
-
-        const result = await response.json()
-        
-        if (result.status && result.data) {
-          setEventDetail(result.data)
-
-          // Fetch Related Events based on event category ID
-          await fetchRelatedEvents(result.data.event_category?.id);
-        } else {
-          console.error("API Error:", result.message)
-        }
-      } catch (error) {
-        console.error('Error fetching event detail:', error)
-      } finally {
-        setLoading(false)
-      }
-    }
-
-    const fetchOngoingEvents = async () => {
-      const token = localStorage.getItem('user_token')
-
-      try {
-        const response = await fetch('https://api.usky.ai/event/ongoing', {
-          method: 'GET',
-          headers: {
-            'Authorization': `Bearer ${token}`
-          },
-        })
-
-        const result = await response.json()
-
-        if (result.status && result.list) {
-          const formattedEvents = result.list.map(event => ({
-            id: Number(event.id),
-            title: event.title,
-            subtitle: event.event_category?.name || "Event",
-            date: `${event.from_dates} - ${event.to_dates}`,
-            image: event.image_url || "/placeholder.svg"
-          }));
-          setOngoingEvents(formattedEvents);
-        } else {
-          console.error("API Error:", result.message)
-        }
-      } catch (error) {
-        console.error('Error fetching ongoing events:', error)
-      }
-    }
-
-    const fetchRelatedEvents = async (categoryId: string | undefined) => {
-      if (!categoryId) return;
-
-      const token = localStorage.getItem('user_token')
-
-      try {
-        const response = await fetch(`/api/event/related?id_category=${categoryId}`, {
-            method: 'GET',
-          headers: {
-            'Authorization': `Bearer ${token}`
-          },
-        })
-
-        const result = await response.json()
-
-        if (result.status && result.list) {
-          const formattedEvents = result.list.map(event => ({
-            id: Number(event.id),
-            title: event.title,
-            subtitle: event.event_category?.name || "Event",
-            date: `${event.from_dates} - ${event.to_dates}`,
-            image: event.image_url || "/placeholder.svg"
-          }));
-          setRelatedEvents(formattedEvents);
-        } else {
-          console.error("API Error:", result.message)
-        }
-      } catch (error) {
-        console.error('Error fetching related events:', error)
-      }
-    }
-
     fetchEventDetail();
     fetchOngoingEvents();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id])
 
   const handleCopyLink = () => {
@@ -152,6 +161,58 @@ function EventDetailContent() {
     setTimeout(() => setCopied(false), 2000)
   }
 
+  const handleClaimTicket = async () => {
+    if (!eventDetail || !eventDetail.id) {
+       alert("Data event belum siap atau tidak ditemukan!");
+       return;
+    }
+
+    const token = localStorage.getItem('user_token')
+    if (!token) {
+      alert("Anda harus login terlebih dahulu!")
+      return
+    }
+
+    setIsClaiming(true)
+
+    try {
+      const formData = new FormData()
+      formData.append('id_event', eventDetail.id)
+      formData.append('id', eventDetail.id)
+
+      const response = await fetch('https://api.usky.ai/event/claim', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        },
+        body: formData,
+      })
+
+      const result = await response.json()
+      
+      if (result.status) {
+        alert("Berhasil claim tiket!")
+        fetchEventDetail() 
+      } else {
+        alert(result.message || "Gagal melakukan claim tiket.")
+      }
+    } catch (error) {
+      console.error('Error claiming ticket:', error)
+      alert("Terjadi kesalahan pada saat menghubungi server.")
+    } finally {
+      setIsClaiming(false)
+    }
+  }
+
+  // 4. Fungsi untuk Scroll Kiri/Kanan
+  const scrollCarousel = (direction: 'left' | 'right') => {
+    if (relatedCarouselRef.current) {
+      // Geser 300px per klik
+      const scrollAmount = direction === 'left' ? -300 : 300
+      relatedCarouselRef.current.scrollBy({ left: scrollAmount, behavior: 'smooth' })
+    }
+  }
+  
   if (loading) {
     return (
       <div className="min-h-screen bg-[#050B14] flex items-center justify-center text-white">
@@ -173,6 +234,12 @@ function EventDetailContent() {
 
   return (
     <div className="min-h-screen bg-[#050B14] text-white font-sans selection:bg-yellow-500 selection:text-black">
+      {/* 5. Inject CSS untuk menyembunyikan scrollbar bawaan browser agar rapi */}
+      <style dangerouslySetInnerHTML={{__html: `
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+      `}} />
+
       <Header />
 
       {/* Hero Banner */}
@@ -257,8 +324,30 @@ function EventDetailContent() {
                       </button>
 
                       <div className="flex items-center gap-3">
-                        <button className="flex-1 bg-gray-300 hover:bg-gray-400 text-black py-3 rounded-full text-sm font-semibold transition-colors">
-                          Claim Your Ticket
+                        <button 
+                          onClick={handleClaimTicket}
+                          disabled={isClaiming || eventDetail.close}
+                          className={`flex-1 ${
+                            eventDetail.close 
+                              ? 'bg-green-600 text-white cursor-not-allowed'
+                              : isClaiming 
+                                ? 'bg-gray-400 text-black cursor-not-allowed'
+                                : 'bg-gray-300 hover:bg-gray-400 text-black'
+                          } py-3 rounded-full text-sm font-semibold transition-colors flex justify-center items-center gap-2`}
+                        >
+                          {isClaiming ? (
+                            <>
+                              <svg className="animate-spin h-4 w-4 text-black" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                              </svg>
+                              Processing...
+                            </>
+                          ) : eventDetail.close ? (
+                            "Claimed" 
+                          ) : (
+                            "Claim Your Ticket" 
+                          )}
                         </button>
 
                         <button
@@ -285,7 +374,7 @@ function EventDetailContent() {
       </div>
 
       {/* Main Content */}
-      <div className="max-w-7xl mx-auto px-6 md:px-12 py-12 pb-24 space-y-12">
+      <div className="max-w-7xl mx-auto px-6 md:px-12 py-12 pb-24 space-y-12 overflow-hidden">
         {/* Event Description */}
         <section>
           <h2 className="text-2xl font-bold text-white mb-6">Tentang Event Ini</h2>
@@ -295,38 +384,62 @@ function EventDetailContent() {
           />
         </section>
 
-        {/* Related Events */}
-        <section>
-          <h2 className="text-2xl font-bold text-white mb-8">Related Event</h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {relatedEvents.map((event) => (
-              <div key={event.id} className="group">
-                <div className="relative aspect-[3/4] rounded-xl overflow-hidden mb-4 cursor-pointer">
-                  <img
-                    src={event.image || "/placeholder.svg"}
-                    alt={event.title}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
-                    <Play className="w-16 h-16 text-white fill-white" />
-                  </div>
-                </div>
+        {/* 6. Related Events - Diubah Menjadi Carousel Satu Baris Sesuai Gambar */}
+        <section className="relative group/section">
+          <h2 className="text-2xl font-bold text-white mb-6">Related Event</h2>
+          
+          <div className="relative">
+            {/* Tombol Kiri */}
+            <button 
+              onClick={() => scrollCarousel('left')}
+              className="absolute -left-4 top-1/2 -translate-y-1/2 z-10 w-10 h-10 flex items-center justify-center bg-[#2A303C] hover:bg-gray-600 text-white rounded-full transition-all shadow-lg opacity-0 group-hover/section:opacity-100 disabled:opacity-0"
+            >
+              <ChevronLeft className="w-5 h-5" />
+            </button>
 
-                <h3 className="text-white font-bold mb-2">{event.title}</h3>
-                <p className="text-gray-400 text-sm mb-3">{event.subtitle}</p>
-                <p className="text-gray-500 text-xs">{event.date}</p>
-              </div>
-            ))}
+            {/* Container List (Flex Row + Overflow X) */}
+            <div 
+              ref={relatedCarouselRef}
+              className="flex gap-4 overflow-x-auto snap-x snap-mandatory scroll-smooth hide-scrollbar pb-4"
+            >
+              {relatedEvents.map((event) => (
+                // min-w-[200px] atau min-w-[250px] menjaga ukurannya agar tidak mengecil (tetap 1 baris memanjang)
+                <Link href={`/dashboard/event/detail?id=${event.id}`} key={event.id} className="group block min-w-[220px] md:min-w-[260px] flex-shrink-0 snap-start">
+                  <div className="relative aspect-[3/4] rounded-xl overflow-hidden mb-3">
+                    <img
+                      src={event.image || "/placeholder.svg"}
+                      alt={event.title}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
+                      <Play className="w-14 h-14 text-white fill-white" />
+                    </div>
+                  </div>
+
+                  <h3 className="text-white font-bold mb-1 truncate">{event.title}</h3>
+                  <p className="text-gray-400 text-sm mb-2 truncate">{event.subtitle}</p>
+                  <p className="text-gray-500 text-xs">{event.date}</p>
+                </Link>
+              ))}
+            </div>
+
+            {/* Tombol Kanan */}
+            <button 
+              onClick={() => scrollCarousel('right')}
+              className="absolute -right-4 top-1/2 -translate-y-1/2 z-10 w-10 h-10 flex items-center justify-center bg-[#2A303C] hover:bg-gray-600 text-white rounded-full transition-all shadow-lg opacity-0 group-hover/section:opacity-100 disabled:opacity-0"
+            >
+              <ChevronRight className="w-5 h-5" />
+            </button>
           </div>
         </section>
 
-        {/* On Going Events */}
+        {/* On Going Events (Tetap seperti aslinya / bisa diubah jadi carousel juga nantinya jika mau) */}
         <section>
           <h2 className="text-2xl font-bold text-white mb-8">On Going Events</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {ongoingEvents.map((event) => (
-              <div key={event.id} className="group">
-                <div className="relative aspect-[3/4] rounded-xl overflow-hidden mb-4 cursor-pointer">
+              <Link href={`/dashboard/event/detail?id=${event.id}`} key={event.id} className="group block">
+                <div className="relative aspect-[3/4] rounded-xl overflow-hidden mb-4">
                   <img
                     src={event.image || "/placeholder.svg"}
                     alt={event.title}
@@ -340,7 +453,7 @@ function EventDetailContent() {
                 <h3 className="text-white font-bold mb-2">{event.title}</h3>
                 <p className="text-gray-400 text-sm mb-3">{event.subtitle}</p>
                 <p className="text-gray-500 text-xs">{event.date}</p>
-              </div>
+              </Link>
             ))}
           </div>
         </section>

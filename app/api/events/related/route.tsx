@@ -1,11 +1,11 @@
 import { NextResponse } from 'next/server';
 
 export async function GET(request: Request) {
-  // 1. Ambil query parameter (id_category) dari URL request client
+  // 1. Ambil query parameter (id_category)
   const { searchParams } = new URL(request.url);
   const id_category = searchParams.get('id_category');
 
-  // 2. Ambil token dari header Authorization yang dikirim client
+  // 2. Ambil token dari header Authorization
   const authHeader = request.headers.get('authorization');
 
   if (!id_category) {
@@ -16,18 +16,18 @@ export async function GET(request: Request) {
   }
 
   try {
-    // 3. Fetch ke server asli (api.usky.ai) dari sisi server Next.js (Bebas CORS!)
+    // 3. Fetch ke server asli dari sisi server Next.js (Bypass CORS)
     const response = await fetch(`https://api.usky.ai/event/related?id_category=${id_category}`, {
       method: 'GET',
       headers: {
-        'Authorization': authHeader || '', // Teruskan tokennya
+        'Authorization': authHeader || '',
         'Content-Type': 'application/json',
       },
     });
 
     const data = await response.json();
 
-    // 4. Kembalikan data dari server asli ke client kita
+    // 4. Kembalikan data ke client
     return NextResponse.json(data);
   } catch (error) {
     console.error('API Route Error:', error);
