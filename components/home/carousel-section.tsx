@@ -33,11 +33,9 @@ export function CarouselSection({
     <section className="border-t border-border px-4 py-6 md:px-6 md:py-8 lg:px-12">
       <div className="mb-4 flex items-center justify-between md:mb-6">
         <h2 className="text-sm font-bold text-foreground md:text-2xl">{title}</h2>
-        <a
-          href={viewAllLink}
-          className="rounded-xl border border-white/20 px-4 py-2 text-xs font-medium text-white transition-colors hover:text-gray-300 md:rounded-none md:border-0 md:px-0 md:py-0 md:text-sm"
-        >
-          View All
+         <a href="/dashboard/film" className="inline-flex items-center gap-2 font-semibold text-white hover:text-white/80 transition-colors">
+          <span className="text-xs md:text-base">View All</span>
+          <span className="text-white/70">›</span>
         </a>
       </div>
 

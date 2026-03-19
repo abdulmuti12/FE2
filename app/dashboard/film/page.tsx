@@ -18,135 +18,28 @@ interface FilmCard {
   category: string
 }
 
-// const CATEGORIES = ['All', 'Action', 'Adventure', 'Horror', 'Comedy', 'Mystery','Video Clip','Kids','Story','Music','Fantasy']
 const CATEGORIES = ['All', 'Action', 'Adventure']
 
+// (Data film tetap sama, saya persingkat di sini agar rapi)
 const filmData: FilmCard[] = [
-  {
-    id: 1,
-    title: '[Judul Film]',
-    year: 2025,
-    duration: '1h 0m',
-    description:
-      'Watch groundbreaking films crafted by human creativity and artificial intelligence.',
-    genres: ['Action'],
-    image: '/film/film1.png',
-    type: 'film',
-    category: 'Action',
-  },
-  {
-    id: 2,
-    title: '[Judul Film]',
-    year: 2025,
-    duration: '1h 0m',
-    description:
-      'Watch groundbreaking films crafted by human creativity and artificial intelligence.',
-    genres: ['Action'],
-    image: '/film/film2.png',
-    type: 'film',
-    category: 'Action',
-  },
-  {
-    id: 3,
-    title: '[Judul Film]',
-    year: 2025,
-    duration: '1h 0m',
-    description:
-      'Watch groundbreaking films crafted by human creativity and artificial intelligence.',
-    genres: ['Action'],
-    image: '/film/film6.png',
-    type: 'film',
-    category: 'Action',
-  },
-  {
-    id: 4,
-    title: '[Judul Film]',
-    year: 2025,
-    duration: '1h 0m',
-    description:
-      'Watch groundbreaking films crafted by human creativity and artificial intelligence.',
-    genres: ['Action'],
-    image: '/film/film5.png',
-    type: 'film',
-    category: 'Action',
-  },
-  {
-    id: 5,
-    title: '[Judul Film]',
-    year: 2025,
-    duration: '1h 0m',
-    description:
-      'Watch groundbreaking films crafted by human creativity and artificial intelligence.',
-    genres: ['Adventure'],
-    image: '/film/film1.png',
-    type: 'film',
-    category: 'Adventure',
-  },
-  {
-    id: 6,
-    title: '[Judul Film]',
-    year: 2025,
-    duration: '1h 0m',
-    description:
-      'Watch groundbreaking films crafted by human creativity and artificial intelligence.',
-    genres: ['Adventure'],
-    image: '/film/film2.png',
-    type: 'film',
-    category: 'Adventure',
-  },
-  {
-    id: 7,
-    title: '[Judul Film]',
-    year: 2025,
-    duration: '1h 0m',
-    description:
-      'Watch groundbreaking films crafted by human creativity and artificial intelligence.',
-    genres: ['Adventure'],
-    image: '/images/icon/adventure.png',
-    type: 'film',
-    category: 'Adventure',
-  },
-  {
-    id: 8,
-    title: '[Judul Film]',
-    year: 2025,
-    duration: '1h 0m',
-    description:
-      'Watch groundbreaking films crafted by human creativity and artificial intelligence.',
-    genres: ['Adventure'],
-    image: '/film/film4.png',
-    type: 'film',
-    category: 'Action',
-  },
-  {
-    id: 9,
-    title: '[Judul Film]',
-    year: 2025,
-    duration: '1h 0m',
-    description:
-      'Watch groundbreaking films crafted by human creativity and artificial intelligence.',
-    genres: ['Adventure'],
-    image: '/film/film5.png',
-    type: 'film',
-    category: 'Adventure',
-  },
-  {
-    id: 10,
-    title: '[Judul Film]',
-    year: 2025,
-    duration: '1h 0m',
-    description:
-      'Watch groundbreaking films crafted by human creativity and artificial intelligence.',
-    genres: ['Adventure'],
-    image: '/film/film6.png',
-    type: 'film',
-    category: 'Adventure',
-  },
+  { id: 1, title: '[Judul Film]', year: 2025, duration: '1h 0m', description: 'Watch groundbreaking films crafted by human creativity and artificial intelligence', genres: ['Action'], image: '/film/film1.png', type: 'film', category: 'Action' },
+  { id: 2, title: '[Judul Film]', year: 2025, duration: '1h 0m', description: 'Watch groundbreaking films crafted by human creativity and artificial intelligence', genres: ['Action'], image: '/film/film2.png', type: 'film', category: 'Action' },
+  { id: 3, title: '[Judul Film]', year: 2025, duration: '1h 0m', description: 'Watch groundbreaking films crafted by human creativity and artificial intelligence', genres: ['Action'], image: '/film/film6.png', type: 'film', category: 'Action' },
+  { id: 4, title: '[Judul Film]', year: 2025, duration: '1h 0m', description: 'Watch groundbreaking films crafted by human creativity and artificial intelligence', genres: ['Action'], image: '/film/film5.png', type: 'film', category: 'Action' },
+  { id: 5, title: '[Judul Film]', year: 2025, duration: '1h 0m', description: 'Watch groundbreaking films crafted by human creativity and artificial intelligence', genres: ['Adventure'], image: '/film/film1.png', type: 'film', category: 'Adventure' },
+  { id: 6, title: '[Judul Film]', year: 2025, duration: '1h 0m', description: 'Watch groundbreaking films crafted by human creativity and artificial intelligence', genres: ['Adventure'], image: '/film/film2.png', type: 'film', category: 'Adventure' },
+  { id: 7, title: '[Judul Film]', year: 2025, duration: '1h 0m', description: 'Watch groundbreaking films crafted by human creativity and artificial intelligence', genres: ['Adventure'], image: '/images/icon/adventure.png', type: 'film', category: 'Adventure' },
+  { id: 8, title: '[Judul Film]', year: 2025, duration: '1h 0m', description: 'Watch groundbreaking films crafted by human creativity and artificial intelligence', genres: ['Adventure'], image: '/film/film4.png', type: 'film', category: 'Action' },
+  { id: 9, title: '[Judul Film]', year: 2025, duration: '1h 0m', description: 'Watch groundbreaking films crafted by human creativity and artificial intelligence', genres: ['Adventure'], image: '/film/film5.png', type: 'film', category: 'Adventure' },
+  { id: 10, title: '[Judul Film]', year: 2025, duration: '1h 0m', description: 'Watch groundbreaking films crafted by human creativity and artificial intelligence', genres: ['Adventure'], image: '/film/film6.png', type: 'film', category: 'Adventure' },
 ]
 
 export default function FilmPage() {
   const [selectedCategory, setSelectedCategory] = useState('All')
   const [hoveredFilmId, setHoveredFilmId] = useState<number | null>(null)
+  
+  // STATE BARU: Menyimpan status apakah kategori sedang menampilkan semua film atau hanya 1 baris
+  const [expandedCategories, setExpandedCategories] = useState<Record<string, boolean>>({})
 
   const groupedByCategory = useMemo(() => {
     return CATEGORIES.reduce((acc, category) => {
@@ -162,6 +55,14 @@ export default function FilmPage() {
   const categoriesWithContent = CATEGORIES.filter(
     (cat) => groupedByCategory[cat]?.length > 0
   )
+
+  // FUNGSI BARU: Untuk mengubah status expand saat tombol diklik
+  const toggleExpand = (category: string) => {
+    setExpandedCategories((prev) => ({
+      ...prev,
+      [category]: !prev[category],
+    }))
+  }
 
   return (
     <div className="min-h-screen bg-[#020817] text-white font-sans">
@@ -194,79 +95,94 @@ export default function FilmPage() {
             .filter((category) =>
               selectedCategory === 'All' ? true : category === selectedCategory
             )
-            .map((category) => (
-              <div key={category}>
-                <div className="flex items-center justify-between mb-6">
-                  <h2 className="text-lg font-bold text-white">{category}</h2>
-                  <button className="text-sm text-blue-400 flex items-center gap-1">
-                    View Categories
-                    <ChevronRight className="w-4 h-4" />
-                  </button>
-                </div>
+            .map((category) => {
+              // Cek apakah kategori ini sedang di-expand
+              const isExpanded = expandedCategories[category] || false
+              
+              // Jika tidak di-expand, potong array menjadi maksimal 4 item (1 baris)
+              const filmsToShow = isExpanded
+                ? groupedByCategory[category]
+                : groupedByCategory[category].slice(0,5 )
 
-                <div className="overflow-x-auto pb-8">
-                  <div className="flex gap-6 min-w-max items-end">
-                    {groupedByCategory[category].map((film) => {
-                      const isHovered = hoveredFilmId === film.id
+              return (
+                <div key={category}>
+                  <div className="flex items-center justify-between mb-6">
+                    <h2 className="text-lg font-bold text-white">{category}</h2>
+                    
+                    {/* TOMBOL VIEW CATEGORIES DIBUAT INTERAKTIF */}
+                    {groupedByCategory[category].length > 4 && (
+                      <button 
+                        onClick={() => toggleExpand(category)}
+                        className="text-sm text-blue-400 flex items-center gap-1 hover:text-blue-300 transition-colors"
+                      >
+                        {isExpanded ? 'Show Less' : 'View Categories'}
+                        <ChevronRight 
+                          className={`w-4 h-4 transition-transform duration-300 ${isExpanded ? 'rotate-90' : ''}`} 
+                        />
+                      </button>
+                    )}
+                  </div>
 
-                      return (
-                        <div
-                          key={film.id}
-                          className="relative transition-all duration-300 ease-out"
-                          onMouseEnter={() => setHoveredFilmId(film.id)}
-                          onMouseLeave={() => setHoveredFilmId(null)}
-                        >
-                          {/* CARD */}
+                  <div className="pb-8">
+                    <div className="flex flex-wrap gap-6 items-end transition-all duration-500">
+                      {filmsToShow.map((film) => {
+                        const isHovered = hoveredFilmId === film.id
+
+                        return (
                           <div
-                            className={`
-                              relative rounded-2xl overflow-hidden bg-[#0f172a]
-                              transition-all duration-300 ease-out
-                              ${isHovered ? 'w-[520px] h-[300px] z-30' : 'w-[260px] h-[300px]'}
-                            `}
+                            key={film.id}
+                            className="relative transition-all duration-300 ease-out"
+                            onMouseEnter={() => setHoveredFilmId(film.id)}
+                            onMouseLeave={() => setHoveredFilmId(null)}
                           >
-                            <Image
-                              src={film.image}
-                              alt={film.title}
-                              fill
-                              className="object-cover"
-                            />
+                            <div
+                              className={`
+                                relative rounded-2xl overflow-hidden bg-[#0f172a]
+                                transition-all duration-300 ease-out
+                                ${isHovered ? 'w-[520px] h-[300px] z-30' : 'w-[260px] h-[300px]'}
+                              `}
+                            >
+                              <Image
+                                src={film.image}
+                                alt={film.title}
+                                fill
+                                className="object-cover"
+                              />
 
-                            {isHovered && (
-                              <>
-                                <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent" />
-
-                                <div className="absolute left-6 right-6 bottom-6">
-                                  <h3 className="text-white text-xl font-semibold mb-3">
-                                    {film.title}
-                                  </h3>
-
-                                  <div className="flex items-center gap-3 mb-3">
-                                    <button className="flex items-center gap-2 bg-white text-black px-5 py-2 rounded-full text-sm font-semibold">
-                                      <Play className="w-4 h-4 fill-black" />
-                                      Watch Now
-                                    </button>
-
-                                    <button className="w-10 h-10 rounded-full border border-white/30 bg-white/10 flex items-center justify-center">
-                                      <Info className="w-5 h-5 text-white" />
-                                    </button>
+                              {isHovered && (
+                                <>
+                                  <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent" />
+                                  <div className="absolute left-6 right-6 bottom-6">
+                                    <h3 className="text-white text-xl font-semibold mb-3">
+                                      {film.title}
+                                    </h3>
+                                    <div className="flex items-center gap-3 mb-3">
+                                      <button className="flex items-center gap-2 bg-white text-black px-5 py-2 rounded-full text-sm font-semibold">
+                                        <Play className="w-4 h-4 fill-black" />
+                                        Watch Now
+                                      </button>
+                                      <button className="w-10 h-10 rounded-full border border-white/30 bg-white/10 flex items-center justify-center">
+                                        <Info className="w-5 h-5 text-white" />
+                                      </button>
+                                    </div>
+                                    <p className="text-sm text-white/70 line-clamp-2 max-w-[440px]">
+                                      {film.description}
+                                    </p>
                                   </div>
-
-                                  <p className="text-sm text-white/70 line-clamp-2 max-w-[440px]">
-                                    {film.description}
-                                  </p>
-                                </div>
-                              </>
-                            )}
+                                </>
+                              )}
+                            </div>
                           </div>
-                        </div>
-                      )
-                    })}
+                        )
+                      })}
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
+              )
+            })}
         </div>
       </div>
+
 
       <Footer />
     </div>

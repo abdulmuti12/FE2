@@ -3,6 +3,7 @@
 import {
   AlertCircle,
   Calendar,
+  ChevronRight,
   Info,
   Menu,
   Play,
@@ -102,42 +103,39 @@ interface CreatorData {
   total_video?: string
 }
 
+// FIX: id string, pakai field name/image_url/genre sesuai AwardItem interface
 const mockAwards = [
   {
-    id: 1,
-    title: '[Judul Film]',
-    image: '/login-hero.jpg',
+    id: '1',
+    name: '[Judul Film]',
+    image_url: '/login-hero.jpg',
     description:
       '[Brief Synopsis] Watch groundbreaking films crafted by human creativity and artificial intelligence.',
-    category: 'Genre',
-    rating: '8.5/10',
+    genre: 'Genre',
   },
   {
-    id: 2,
-    title: '[Judul Film]',
-    image: '/login-hero.jpg',
+    id: '2',
+    name: '[Judul Film]',
+    image_url: '/login-hero.jpg',
     description:
       '[Brief Synopsis] Watch groundbreaking films crafted by human creativity and artificial intelligence.',
-    category: 'Genre',
-    rating: '9.0/10',
+    genre: 'Genre',
   },
   {
-    id: 3,
-    title: '[Judul Film]',
-    image: '/login-hero.jpg',
+    id: '3',
+    name: '[Judul Film]',
+    image_url: '/login-hero.jpg',
     description:
       '[Brief Synopsis] Watch groundbreaking films crafted by human creativity and artificial intelligence.',
-    category: 'Genre',
-    rating: '8.8/10',
+    genre: 'Genre',
   },
   {
-    id: 4,
-    title: '[Judul Film]',
-    image: '/login-hero.jpg',
+    id: '4',
+    name: '[Judul Film]',
+    image_url: '/login-hero.jpg',
     description:
       '[Brief Synopsis] Watch groundbreaking films crafted by human creativity and artificial intelligence.',
-    category: 'Genre',
-    rating: '8.3/10',
+    genre: 'Genre',
   },
 ]
 
@@ -165,7 +163,7 @@ const mockCreators: CreatorData[] = [
 
 function LatestClipSection({
   title = 'Latest Clip',
-  viewAllLink = '/dashboard/clips',
+  viewAllLink = '/dashboard/clip',
   items = [],
 }: {
   title?: string
@@ -231,8 +229,8 @@ function LatestClipSection({
                   </p>
 
                   <div className="flex items-center justify-between text-[10px] text-white/60 md:text-[11px]">
-                    <span>[Genre]</span>
-                    <span>1h 0m</span>
+                    <span>{film.genre || '[Genre]'}</span>
+                    <span>{film.duration || '1h 0m'}</span>
                   </div>
                 </div>
               </div>
@@ -305,47 +303,36 @@ export default function DashboardPage() {
             Authorization: `Bearer ${token}`,
             'Content-Type': 'application/json',
           },
+          cache: 'no-store',
         })
 
         const data = await response.json()
 
-        if (data.list?.event && Array.isArray(data.list.event)) {
-          setEventData(data.list.event)
-        }
-
         if (data.status === true || data.status !== false) {
+          if (data.list?.trailer && Array.isArray(data.list.trailer)) {
+            setTrailerData(data.list.trailer[0] ?? null)
+          }
           if (data.list?.latest && Array.isArray(data.list.latest)) {
             setLatestFilms(data.list.latest)
           }
-
           if (data.list?.award && Array.isArray(data.list.award)) {
             setLatestAwards(data.list.award)
           }
-
           if (data.list?.watchs && Array.isArray(data.list.watchs)) {
             setMostWatchingFilms(data.list.watchs)
           }
-
           if (data.list?.series && Array.isArray(data.list.series)) {
             setSeriesData(data.list.series)
           }
-
           if (data.list?.category && Array.isArray(data.list.category)) {
             setCategoryApiData(data.list.category)
           }
-
           if (data.list?.creator && Array.isArray(data.list.creator)) {
             setCreatorApiData(data.list.creator)
           }
-
           if (data.list?.event && Array.isArray(data.list.event)) {
             setEventData(data.list.event)
           }
-
-          if (data.list?.trailer && Array.isArray(data.list.trailer)) {
-            setTrailerData(data.list.trailer[0])
-          }
-
           setError(null)
         } else {
           setError(data.message || 'Failed to fetch data')
@@ -377,6 +364,7 @@ export default function DashboardPage() {
       .trim()
   }
 
+  // FIX 1 & 3: year harus number (parseInt), bukan string
   const transformFilmData = (films: FilmData[]) => {
     return films.map((film) => ({
       id: film.id,
@@ -384,19 +372,21 @@ export default function DashboardPage() {
       image: film.image_url || '/login-hero.jpg',
       description:
         film.synopsis ||
-        film.description ||
+        stripHtml(film.description) ||
         'Watch groundbreaking films crafted by human creativity and artificial intelligence.',
       category: film.cats || 'Films',
       rating: film.rates ? `${film.rates}/10` : '8.5/10',
-      year: `${film.years || '2025'} • ${film.run_time_format || '1h 0m'}`,
+      year: parseInt(film.years || '2025', 10), // ← number, bukan string
+      duration: film.run_time_format || '1h 0m',
       categories: [film.cats || 'Genre', 'AI'],
       genre: film.cats || 'Films',
     }))
   }
 
+  // FIX 2: id di-cast ke string agar cocok dengan AwardItem
   const transformAwardData = (awards: AwardData[]) => {
     return awards.map((award) => ({
-      id: award.id,
+      id: String(award.id), // ← string, bukan number
       name: award.name,
       image_url: award.image_url || award.image || '/placeholder.svg',
       description: stripHtml(award.description || award.synopsis || ''),
@@ -618,12 +608,12 @@ export default function DashboardPage() {
       ) : (
         <LatestAwards
           title="Latest Awards"
-          viewAllLink="#"
+          viewAllLink="/dashboard/awards"
           items={displayAwards.length > 0 ? displayAwards : mockAwards}
         />
       )}
 
-      <CategorySection title="Category" viewAllLink="#" items={displayCategories} />
+      <CategorySection title="Category" viewAllLink="/dashboard/film" items={displayCategories} />
 
       <MostWatchingFilm items={displayMostWatching} />
 
@@ -660,9 +650,13 @@ export default function DashboardPage() {
         </div>
 
         <div className="mt-8 flex justify-center">
-          <Button className="border border-white/20 bg-transparent text-white hover:bg-white/10">
-            View All Creators
-          </Button>
+          <Link
+            href="/dashboard/creator"
+            className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/10 px-4 py-1.5 text-xs font-medium text-white/90 transition-colors hover:bg-white/15 md:px-5 md:py-2 md:text-sm"
+          >
+            <span>View all creator</span>
+            <ChevronRight className="h-4 w-4" />
+          </Link>
         </div>
       </section>
 
