@@ -75,7 +75,7 @@ export default function SeriesPage() {
           return
         }
 
-        const response = await fetch('/api/series-categories', {
+        const response = await fetch('/api/series/series-categories', {
           method: 'GET',
           headers: {
             Authorization: `Bearer ${token}`,
@@ -132,7 +132,7 @@ export default function SeriesPage() {
 
       console.log('[v0] Request params:', Object.fromEntries(params))
 
-      const response = await fetch(`/api/series-list?${params.toString()}`, {
+      const response = await fetch(`/api/series/series-list?${params.toString()}`, {
         method: 'GET',
         headers: {
           Authorization: `Bearer ${token}`,
@@ -140,7 +140,6 @@ export default function SeriesPage() {
         },
       })
 
-      console.log('[v0] API response status:', response.status)
 
       if (!response.ok) {
         console.error('[v0] API request failed with status:', response.status)

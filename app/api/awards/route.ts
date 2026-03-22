@@ -16,9 +16,6 @@ export async function GET(request: NextRequest) {
 
     const url = `https://api.usky.ai/award/list?sort=${sort}&id_category=${id_category}&id_creator=${id_creator}`
 
-    console.log('[awards] Fetching:', url)
-    console.log('[awards] Token exists:', !!token)
-
     const response = await fetch(url, {
       method: 'GET',
       headers: {

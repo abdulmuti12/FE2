@@ -19,7 +19,7 @@ interface EventDetailData {
   total_seat: string
   price: string
   sisa: string
-  close?: boolean // Ditambahkan untuk menampung status claim dari API
+  close?: boolean 
   event_category?: {
     id: string
     name: string
@@ -120,7 +120,7 @@ function EventDetailContent() {
     const token = localStorage.getItem('user_token')
 
     try {
-      const response = await fetch(`/api/event/related?id_category=${categoryId}`, {
+      const response = await fetch(`/api/event/events/related?id_category=${categoryId}`, {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${token}`

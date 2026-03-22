@@ -7,34 +7,9 @@ import { AllEvents } from '@/components/event/all-events'
 import { useRouter } from 'next/navigation'
 import { useState, useEffect } from 'react'
 
-const upcomingEvents = [
-  {
-    id: 1,
-    title: 'BALAIRUNG UI MOVIE NIGHT',
-    subtitle: 'Legacy of Heroes',
-    date: '22-11-2025',
-    image: '/images/event/example.png',
-    price: 'GRATIS!'
-  },
-  {
-    id: 2,
-    title: 'AI FILM DAY',
-    subtitle: 'Watch, Learn, Create',
-    date: '22-11-2025',
-    image: '/images/event/example.png',
-    price: 'Rp50.000'
-  }
-]
+const upcomingEvents = []
 
-const recapEvents = [
-  {
-    id: 1,
-    title: 'BALAIRUNG UI RECAP',
-    desc: 'Watch groundbreaking films crafted by human creativity.',
-    image: '/images/landscape1.jpg',
-    type: 'Tipe Event'
-  }
-]
+const recapEvents = []
 
 interface EventItem {
   id: string
@@ -117,7 +92,7 @@ export default function EventPage() {
   const fetchCategories = async (token: string) => {
     try {
       setCategoriesLoading(true)
-      const response = await fetch('/api/event-categories', {
+      const response = await fetch('/api/event/event-categories', {
         method: 'GET',
         headers: {
           Authorization: `Bearer ${token}`,
@@ -145,7 +120,7 @@ export default function EventPage() {
         page: '1',
       })
 
-      const response = await fetch(`/api/upcoming-events?${params.toString()}`, {
+      const response = await fetch(`/api/event/upcoming-events?${params.toString()}`, {
         method: 'GET',
         headers: {
           Authorization: `Bearer ${token}`,
@@ -211,7 +186,7 @@ export default function EventPage() {
         limit: LIMIT.toString(),
       })
 
-      const url = `/api/events?${params.toString()}`
+      const url = `/api/event/events?${params.toString()}`
 
       const response = await fetch(url, {
         method: 'GET',
