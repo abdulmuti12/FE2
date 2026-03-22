@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { Header } from '@/components/header'
@@ -14,240 +14,270 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 
-const GENRES = [
-  'Action',
-  'Adventure',
-  'Comedy',
-  'History',
-  'Horror',
-  'Fantasy',
-  'Mystery',
-  'Religious',
-  'Story',
-]
+interface Category {
+  id: string
+  name: string
+}
+
+interface SeriesItem {
+  id: string
+  name: string
+  description: string
+  run_time: string
+  run_time_format: string
+  years: string
+  image_url: string
+  image_landscape_url: string
+  video_url: string
+  synopsis: string
+  rates: string
+  favorit: string
+  cats: string
+}
+
+interface PaginationMeta {
+  prev_page: number
+  next_page: number
+  total_rows: number
+  per_page: number
+  current_page: number
+  total_pages: number
+  html_links: string
+}
 
 const CREATORS = ['All Creator', 'Creator A', 'Creator B', 'Creator C']
 const SORT_OPTIONS = ['Latest', 'Oldest', 'Popular', 'A-Z']
+const ITEMS_PER_PAGE = 8
 
 export default function SeriesPage() {
+  const [genres, setGenres] = useState<Category[]>([])
   const [selectedGenre, setSelectedGenre] = useState('All Genre')
+  const [selectedGenreId, setSelectedGenreId] = useState('')
   const [selectedCreator, setSelectedCreator] = useState('All Creator')
   const [selectedSort, setSelectedSort] = useState('Latest')
   const [searchGenre, setSearchGenre] = useState('')
   const [isGenreDropdownOpen, setIsGenreDropdownOpen] = useState(false)
+  const [loadingCategories, setLoadingCategories] = useState(true)
+  
+  const [seriesData, setSeriesData] = useState<SeriesItem[]>([])
+  const [loadingSeries, setLoadingSeries] = useState(false)
+  const [currentPage, setCurrentPage] = useState(1)
+  const [pagination, setPagination] = useState<PaginationMeta | null>(null)
 
-  const filteredGenres = GENRES.filter((genre) =>
-    genre.toLowerCase().includes(searchGenre.toLowerCase())
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const token = localStorage.getItem('user_token')
+        
+        if (!token) {
+          setGenres([])
+          setLoadingCategories(false)
+          return
+        }
+
+        const response = await fetch('/api/series-categories', {
+          method: 'GET',
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+        })
+
+        const data = await response.json()
+        console.log('[v0] Categories response:', data)
+
+        if (data.status === true && data.list && Array.isArray(data.list)) {
+          const categoriesWithIds = data.list.map((cat: any) => ({
+            id: cat.id,
+            name: cat.name,
+          }))
+          console.log('[v0] Categories loaded:', categoriesWithIds.length)
+          setGenres(categoriesWithIds)
+        } else {
+          console.error('[v0] Invalid categories response format')
+          setGenres([])
+        }
+      } catch (error) {
+        console.error('[v0] Error fetching categories:', error)
+        setGenres([])
+      } finally {
+        setLoadingCategories(false)
+      }
+    }
+
+    fetchCategories()
+  }, [])
+
+  const fetchSeries = async (pageNum: number = 1) => {
+    try {
+      setLoadingSeries(true)
+      console.log('[v0] Fetching series list - Page:', pageNum, 'Category:', selectedGenreId)
+
+      const token = localStorage.getItem('user_token')
+      if (!token) {
+        console.log('[v0] No token found')
+        setSeriesData([])
+        setLoadingSeries(false)
+        return
+      }
+
+      const sortValue = selectedSort === 'Latest' ? 'latest' : selectedSort.toLowerCase()
+      const params = new URLSearchParams()
+      params.append('sort', sortValue)
+      if (selectedGenreId) {
+        params.append('id_category', selectedGenreId)
+      }
+      params.append('page', pageNum.toString())
+      params.append('limit', ITEMS_PER_PAGE.toString())
+
+      console.log('[v0] Request params:', Object.fromEntries(params))
+
+      const response = await fetch(`/api/series-list?${params.toString()}`, {
+        method: 'GET',
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      })
+
+      console.log('[v0] API response status:', response.status)
+
+      if (!response.ok) {
+        console.error('[v0] API request failed with status:', response.status)
+        const errorData = await response.json().catch(() => ({}))
+        console.error('[v0] Error details:', errorData)
+        setSeriesData([])
+        return
+      }
+
+      const data = await response.json()
+      console.log('[v0] Series list response:', {
+        status: data.status,
+        listCount: data.list?.length || 0,
+        meta: data.meta,
+      })
+
+      if (data.status === true && data.list && Array.isArray(data.list)) {
+        console.log('[v0] Series data loaded successfully')
+        setSeriesData(data.list)
+        if (data.meta) {
+          setPagination(data.meta)
+        }
+        setCurrentPage(pageNum)
+      } else {
+        console.error('[v0] Invalid response format:', {
+          hasStatus: !!data.status,
+          hasList: !!data.list,
+          isArray: Array.isArray(data.list),
+        })
+        setSeriesData([])
+      }
+    } catch (error) {
+      console.error('[v0] Error fetching series:', error)
+      setSeriesData([])
+    } finally {
+      setLoadingSeries(false)
+    }
+  }
+
+  // Fetch series when genre or sort changes
+  useEffect(() => {
+    fetchSeries(1)
+  }, [selectedGenreId, selectedSort])
+
+  const filteredGenres = genres.filter((genre) =>
+    genre.name.toLowerCase().includes(searchGenre.toLowerCase())
   )
 
-  const [seriesData] = useState([
-    {
-      id: 1,
-      title: '[Judul Series]',
-      synopsis:
-        '[Brief Synopsis] Watch groundbreaking films crafted by human creativity and arti...',
-      genre: '[Genre]',
-      duration: '1h 0m',
-      image: '/film/film2.png',
-    },
-    {
-      id: 2,
-      title: '[Judul Series]',
-      synopsis:
-        '[Brief Synopsis] Watch groundbreaking films crafted by human creativity and arti...',
-      genre: '[Genre]',
-      duration: '1h 0m',
-      image:
-        'https://hebbkx1anhila5yf.public.blob.vercel-storage.com/0938af323a7fb3c821e2c95b6766a49090cd1e0b-M2XYI31in3J9xgYB1jeAqN6qUyAvW6.png',
-    },
-    {
-      id: 3,
-      title: '[Judul Series]',
-      synopsis:
-        '[Brief Synopsis] Watch groundbreaking films crafted by human creativity and arti...',
-      genre: '[Genre]',
-      duration: '1h 0m',
-      image: '/film/film2.png',
-    },
-    {
-      id: 4,
-      title: '[Judul Series]',
-      synopsis:
-        '[Brief Synopsis] Watch groundbreaking films crafted by human creativity and arti...',
-      genre: '[Genre]',
-      duration: '1h 0m',
-      image: '/film/film2.png',
-    },
-    {
-      id: 5,
-      title: '[Judul Series]',
-      synopsis:
-        '[Brief Synopsis] Watch groundbreaking films crafted by human creativity and arti...',
-      genre: '[Genre]',
-      duration: '1h 0m',
-      image:
-        'https://hebbkx1anhila5yf.public.blob.vercel-storage.com/0938af323a7fb3c821e2c95b6766a49090cd1e0b-M2XYI31in3J9xgYB1jeAqN6qUyAvW6.png',
-    },
-    {
-      id: 6,
-      title: '[Judul Series]',
-      synopsis:
-        '[Brief Synopsis] Watch groundbreaking films crafted by human creativity and arti...',
-      genre: '[Genre]',
-      duration: '1h 0m',
-      image:
-        'https://hebbkx1anhila5yf.public.blob.vercel-storage.com/0938af323a7fb3c821e2c95b6766a49090cd1e0b-M2XYI31in3J9xgYB1jeAqN6qUyAvW6.png',
-    },
-    {
-      id: 7,
-      title: '[Judul Series]',
-      synopsis:
-        '[Brief Synopsis] Watch groundbreaking films crafted by human creativity and arti...',
-      genre: '[Genre]',
-      duration: '1h 0m',
-      image:
-        'https://hebbkx1anhila5yf.public.blob.vercel-storage.com/0938af323a7fb3c821e2c95b6766a49090cd1e0b-M2XYI31in3J9xgYB1jeAqN6qUyAvW6.png',
-    },
-    {
-      id: 8,
-      title: '[Judul Series]',
-      synopsis:
-        '[Brief Synopsis] Watch groundbreaking films crafted by human creativity and arti...',
-      genre: '[Genre]',
-      duration: '1h 0m',
-      image:
-        'https://hebbkx1anhila5yf.public.blob.vercel-storage.com/0938af323a7fb3c821e2c95b6766a49090cd1e0b-M2XYI31in3J9xgYB1jeAqN6qUyAvW6.png',
-    },
-  ])
-
-  const [displayCount, setDisplayCount] = useState(8)
-  const handleLoadMore = () => setDisplayCount((prev) => prev + 4)
-
   return (
-    <div className="min-h-screen bg-[#020817] text-white font-sans">
+    <div className="min-h-screen bg-[#050B14] text-white font-sans">
       <Header />
 
-      {/* Hero Section */}
-      <div className="relative w-full h-[240px] md:h-[400px] overflow-hidden">
-        <div
-          className="absolute inset-0 bg-cover bg-center"
-          style={{ backgroundImage: 'url("/images/imageheader.png")' }}
-        />
-        <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-[#020817]/60 to-[#020817]" />
-        <div className="relative h-full flex flex-col justify-center items-center text-center px-4">
-          <h1 className="text-3xl md:text-5xl font-bold mb-4">Series</h1>
-        </div>
-      </div>
-
-      {/* Main Content */}
-      <div className="max-w-[1400px] mx-auto px-4 sm:px-6 md:px-12 pb-20 -mt-10 relative z-10">
+      <div className="max-w-7xl mx-auto px-6 md:px-12 py-12 pb-24">
         {/* Filter Section */}
         <div className="mb-8">
-          <div
-            className="
-              flex flex-col lg:flex-row lg:items-center justify-between gap-4
-              rounded-xl border border-gray-800 bg-[#0b1222]/70 p-4
-              md:rounded-none md:border-0 md:bg-transparent md:p-0
-            "
-          >
-            {/* Filter By Genre + Sort */}
-            <div className="grid grid-cols-1 gap-3 sm:flex sm:flex-row sm:gap-4 sm:items-center">
-              {/* FILTER BY + Genre */}
-              <div className="grid grid-cols-1 gap-2 sm:flex sm:items-center sm:gap-2">
-                <span className="text-xs sm:text-sm font-semibold text-white">
-                  FILTER BY
-                </span>
+          {/* Title */}
+          <h1 className="text-4xl md:text-5xl font-bold mb-8">Series</h1>
 
-                <DropdownMenu
-                  open={isGenreDropdownOpen}
-                  onOpenChange={setIsGenreDropdownOpen}
-                >
-                  <DropdownMenuTrigger asChild>
-                    <button
-                      className="
-                        flex w-full items-center justify-between gap-2
-                        px-4 py-2 bg-[#1e293b] border border-gray-700 rounded-lg
-                        text-white text-sm hover:bg-[#334155] transition-colors
-                        sm:w-auto sm:justify-start
-                      "
-                    >
-                      {selectedGenre}
-                      <ChevronDown className="w-4 h-4" />
-                    </button>
-                  </DropdownMenuTrigger>
+          {/* Filter Controls */}
+          <div className="flex flex-wrap items-center justify-between gap-4 md:gap-6">
+            {/* Left Filter Group */}
+            <div className="flex flex-wrap items-center gap-4 md:gap-6">
+              {/* Genre Dropdown */}
+              <div className="relative w-full md:w-48">
+              <DropdownMenu open={isGenreDropdownOpen} onOpenChange={setIsGenreDropdownOpen}>
+                <DropdownMenuTrigger asChild>
+                  <button className="w-full flex items-center justify-between px-4 py-2 bg-[#0f172a] border border-gray-700 rounded-lg text-white hover:bg-gray-900 transition-colors">
+                    <span className="truncate">{selectedGenre}</span>
+                    <ChevronDown className="w-4 h-4 ml-2 flex-shrink-0" />
+                  </button>
+                </DropdownMenuTrigger>
 
-                  <DropdownMenuContent className="w-64 bg-[#0f172a] border-gray-700">
-                    <div className="p-3 border-b border-gray-700">
-                      <div className="flex items-center gap-2 bg-[#1e293b] rounded-md px-3 py-2">
-                        <Search className="w-4 h-4 text-gray-400" />
+                <DropdownMenuContent className="w-48 bg-[#0f172a] border border-gray-700 rounded-lg">
+                  {/* Search Input */}
+                  {genres.length > 0 && (
+                    <div className="px-3 py-2 border-b border-gray-700">
+                      <div className="flex items-center gap-2 bg-[#1a1a2e] rounded px-2 py-1">
+                        <Search className="w-4 h-4 text-gray-500" />
                         <input
                           type="text"
-                          placeholder="Find a Genre"
+                          placeholder="Search genre..."
                           value={searchGenre}
                           onChange={(e) => setSearchGenre(e.target.value)}
-                          className="bg-transparent text-white text-sm outline-none flex-1 placeholder-gray-500"
+                          className="flex-1 bg-transparent outline-none text-white text-sm placeholder-gray-500"
                         />
                       </div>
                     </div>
+                  )}
 
-                    <div className="max-h-64 overflow-y-auto">
-                      <DropdownMenuItem
-                        onClick={() => {
-                          setSelectedGenre('All Genre')
-                          setIsGenreDropdownOpen(false)
-                        }}
-                        className="px-4 py-2 text-white hover:bg-[#1e293b] cursor-pointer"
-                      >
-                        Select Genre
-                      </DropdownMenuItem>
+                  {/* Genre Options */}
+                  <DropdownMenuItem
+                    onClick={() => {
+                      setSelectedGenre('All Genre')
+                      setSelectedGenreId('')
+                      setIsGenreDropdownOpen(false)
+                      setSearchGenre('')
+                    }}
+                    className="px-4 py-2 text-white hover:bg-[#1e293b] cursor-pointer"
+                  >
+                    All Genre
+                  </DropdownMenuItem>
+                  {filteredGenres.map((genre) => (
+                    <DropdownMenuItem
+                      key={genre.id}
+                      onClick={() => {
+                        setSelectedGenre(genre.name)
+                        setSelectedGenreId(genre.id)
+                        setIsGenreDropdownOpen(false)
+                        setSearchGenre('')
+                      }}
+                      className="px-4 py-2 text-white hover:bg-[#1e293b] cursor-pointer"
+                    >
+                      {genre.name}
+                    </DropdownMenuItem>
+                  ))}
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
 
-                      {filteredGenres.map((genre) => (
-                        <DropdownMenuItem
-                          key={genre}
-                          onClick={() => {
-                            setSelectedGenre(genre)
-                            setIsGenreDropdownOpen(false)
-                            setSearchGenre('')
-                          }}
-                          className="px-4 py-2 text-white hover:bg-[#1e293b] cursor-pointer"
-                        >
-                          {genre}
-                        </DropdownMenuItem>
-                      ))}
-                    </div>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </div>
-
-              {/* SORT BY */}
-              <div className="grid grid-cols-1 gap-2 sm:flex sm:items-center sm:gap-2">
-                <span className="text-xs sm:text-sm font-semibold text-white">
-                  SORT BY
-                </span>
-
+              {/* Sort Dropdown */}
+              <div className="relative w-full md:w-48">
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <button
-                      className="
-                        flex w-full items-center justify-between gap-2
-                        px-4 py-2 bg-[#1e293b] border border-gray-700 rounded-lg
-                        text-white text-sm hover:bg-[#334155] transition-colors
-                        sm:w-auto sm:justify-start
-                      "
-                    >
-                      {selectedSort}
-                      <ChevronDown className="w-4 h-4" />
+                    <button className="w-full flex items-center justify-between px-4 py-2 bg-[#0f172a] border border-gray-700 rounded-lg text-white hover:bg-gray-900 transition-colors">
+                      <span>{selectedSort}</span>
+                      <ChevronDown className="w-4 h-4 ml-2" />
                     </button>
                   </DropdownMenuTrigger>
 
-                  <DropdownMenuContent className="bg-[#0f172a] border-gray-700">
-                    {SORT_OPTIONS.map((option) => (
+                  <DropdownMenuContent className="w-48 bg-[#0f172a] border border-gray-700 rounded-lg">
+                    {SORT_OPTIONS.map((sort) => (
                       <DropdownMenuItem
-                        key={option}
-                        onClick={() => setSelectedSort(option)}
+                        key={sort}
+                        onClick={() => setSelectedSort(sort)}
                         className="px-4 py-2 text-white hover:bg-[#1e293b] cursor-pointer"
                       >
-                        {option}
+                        {sort}
                       </DropdownMenuItem>
                     ))}
                   </DropdownMenuContent>
@@ -255,28 +285,17 @@ export default function SeriesPage() {
               </div>
             </div>
 
-            {/* Featuring Creator */}
-            <div className="grid grid-cols-1 gap-2 sm:flex sm:items-center sm:gap-2">
-              <span className="text-xs sm:text-sm font-semibold text-white">
-                FEATURING
-              </span>
-
+            {/* Creator Dropdown - Right Side */}
+            <div className="w-full md:w-48">
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <button
-                    className="
-                      flex w-full items-center justify-between gap-2
-                      px-4 py-2 bg-[#1e293b] border border-gray-700 rounded-lg
-                      text-white text-sm hover:bg-[#334155] transition-colors
-                      sm:w-auto sm:justify-start
-                    "
-                  >
+                  <button className="w-full flex items-center justify-between px-4 py-2 bg-[#0f172a] border border-gray-700 rounded-lg text-white hover:bg-gray-900 transition-colors">
                     <span>{selectedCreator}</span>
-                    <ChevronDown className="w-4 h-4" />
+                    <ChevronDown className="w-4 h-4 ml-2" />
                   </button>
                 </DropdownMenuTrigger>
 
-                <DropdownMenuContent className="bg-[#0f172a] border-gray-700">
+                <DropdownMenuContent className="w-48 bg-[#0f172a] border border-gray-700 rounded-lg">
                   {CREATORS.map((creator) => (
                     <DropdownMenuItem
                       key={creator}
@@ -292,64 +311,110 @@ export default function SeriesPage() {
           </div>
         </div>
 
+        {/* Loading State */}
+        {loadingSeries && (
+          <div className="flex items-center justify-center py-12">
+            <div className="text-center">
+              <div className="w-12 h-12 border-4 border-white/20 border-t-white rounded-full animate-spin mx-auto mb-4" />
+              <p className="text-gray-400">Loading series...</p>
+            </div>
+          </div>
+        )}
+
         {/* Series Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 md:gap-6">
-          {seriesData.slice(0, displayCount).map((series) => (
-            <Link 
-              key={series.id}
-              href={`/dashboard/series/detail?id=${series.id}`}
-              className="group relative overflow-hidden rounded-2xl md:rounded-lg bg-[#1e293b] hover:shadow-lg transition-all duration-300"
-            >
-              {/* Image Container */}
-              <div className="relative w-full aspect-[3/4] overflow-hidden bg-gray-800">
-                <Image
-                  src={series.image}
-                  alt={series.title}
-                  fill
-                  className="object-cover group-hover:scale-105 transition-transform duration-300"
-                />
+        {!loadingSeries && seriesData.length > 0 && (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 md:gap-6">
+            {seriesData.map((series) => (
+              <Link 
+                key={series.id}
+                href={`/dashboard/series/detail?id=${series.id}`}
+                className="group relative overflow-hidden rounded-2xl md:rounded-lg bg-[#1e293b] hover:shadow-lg transition-all duration-300"
+              >
+                {/* Image Container */}
+                <div className="relative w-full aspect-[3/4] overflow-hidden bg-gray-800">
+                  <Image
+                    src={series.image_landscape_url || series.image_url || '/film/film2.png'}
+                    alt={series.name}
+                    fill
+                    className="object-cover group-hover:scale-105 transition-transform duration-300"
+                  />
 
-                {/* ALWAYS-ON overlay like target */}
-                <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/35 to-transparent" />
+                  {/* Overlay */}
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/35 to-transparent" />
 
-                {/* Text overlay */}
-                <div className="absolute inset-0 flex flex-col justify-end p-4">
-                  <h3 className="text-2xl font-bold text-white leading-tight mb-2 line-clamp-2">
-                    {series.title}
-                  </h3>
+                  {/* Text overlay */}
+                  <div className="absolute inset-0 flex flex-col justify-end p-4">
+                    <h3 className="text-2xl font-bold text-white leading-tight mb-2 line-clamp-2">
+                      {series.name}
+                    </h3>
 
-                  <p className="text-white/75 text-base leading-snug mb-6 line-clamp-3">
-                    {series.synopsis}
-                  </p>
+                    <p className="text-white/75 text-base leading-snug mb-6 line-clamp-3">
+                      {series.synopsis}
+                    </p>
 
-                  <div className="flex items-end justify-between text-white/70">
-                    <span className="text-xl font-medium">{series.genre}</span>
-                    <span className="text-xl font-medium">{series.duration}</span>
+                    <div className="flex items-end justify-between text-white/70">
+                      <span className="text-sm font-medium">{series.cats}</span>
+                      <span className="text-sm font-medium">{series.run_time_format}</span>
+                    </div>
+                  </div>
+
+                  {/* Hover Play */}
+                  <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
+                    <button className="w-12 h-12 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center hover:bg-white/30 transition-colors">
+                      <Play className="w-6 h-6 text-white fill-white" />
+                    </button>
                   </div>
                 </div>
+              </Link>
+            ))}
+          </div>
+        )}
 
-                {/* Hover Play (optional tetap ada) */}
-                <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
-                  <button className="w-12 h-12 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center hover:bg-white/30 transition-colors">
-                    <Play className="w-6 h-6 text-white fill-white" />
-                  </button>
-                </div>
-              </div>
+        {/* Empty State */}
+        {!loadingSeries && seriesData.length === 0 && (
+          <div className="flex items-center justify-center py-12">
+            <p className="text-gray-400 text-lg">No series found</p>
+          </div>
+        )}
 
-            
-            </Link>
-          ))}
-        </div>
-
-        {/* Load More Button */}
-        {displayCount < seriesData.length && (
-          <div className="flex justify-center mt-12">
+        {/* Pagination */}
+        {!loadingSeries && pagination && pagination.total_pages > 1 && (
+          <div className="flex items-center justify-center gap-4 mt-12 flex-wrap">
             <Button
-              onClick={handleLoadMore}
+              onClick={() => fetchSeries(currentPage - 1)}
+              disabled={!pagination.prev_page || currentPage === 1}
               variant="outline"
-              className="bg-[#0f172a] border border-gray-700 text-white hover:bg-gray-900 px-8 py-2"
+              className="bg-[#0f172a] border border-gray-700 text-white hover:bg-gray-900 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              Load More
+              Previous
+            </Button>
+
+            <div className="flex items-center gap-2 flex-wrap justify-center">
+              {Array.from({ length: Math.min(pagination.total_pages, 5) }, (_, i) => {
+                const startPage = Math.max(1, currentPage - 2)
+                return startPage + i
+              }).map((page) => (
+                <button
+                  key={page}
+                  onClick={() => fetchSeries(page)}
+                  className={`w-10 h-10 rounded flex items-center justify-center font-medium transition-all ${
+                    currentPage === page
+                      ? 'bg-white text-black'
+                      : 'bg-[#0f172a] border border-gray-700 text-white hover:bg-gray-900'
+                  }`}
+                >
+                  {page}
+                </button>
+              ))}
+            </div>
+
+            <Button
+              onClick={() => fetchSeries(currentPage + 1)}
+              disabled={!pagination.next_page || currentPage === pagination.total_pages}
+              variant="outline"
+              className="bg-[#0f172a] border border-gray-700 text-white hover:bg-gray-900 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              Next
             </Button>
           </div>
         )}
