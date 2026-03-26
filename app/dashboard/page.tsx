@@ -313,7 +313,7 @@ export default function DashboardPage() {
             setTrailerData(data.list.trailer[0] ?? null)
           }
           if (data.list?.latest && Array.isArray(data.list.latest)) {
-            setLatestFilms(data.list.latest)
+            setLatestFilms(data.list.films)
           }
           if (data.list?.award && Array.isArray(data.list.award)) {
             setLatestAwards(data.list.award)
