@@ -60,6 +60,18 @@ interface FilmData {
   my_favorit?: string
 }
 
+// Tambahan: Interface untuk Latest Clip (dari list.latest)
+interface LatestClipData {
+  id: string
+  name: string
+  short_desc?: string | null
+  description?: string
+  image?: string
+  image_url?: string
+  cats?: string
+  run_time_format?: string
+}
+
 interface AwardData {
   id: string
   name: string
@@ -103,7 +115,6 @@ interface CreatorData {
   total_video?: string
 }
 
-// FIX: id string, pakai field name/image_url/genre sesuai AwardItem interface
 const mockAwards = [
   {
     id: '1',
@@ -200,13 +211,13 @@ function LatestClipSection({
           className="flex gap-3 overflow-x-auto scroll-smooth pb-2 pr-8 md:gap-6 md:pr-12"
           style={{ scrollbarWidth: 'none' }}
         >
-          {items.map((film) => (
-            <div key={film.id} className="w-[200px] flex-shrink-0 md:w-[260px] lg:w-[280px]">
+          {items.map((clip) => (
+            <div key={clip.id} className="w-[200px] flex-shrink-0 md:w-[260px] lg:w-[280px]">
               <div className="group relative overflow-hidden rounded-xl bg-black md:rounded-2xl">
                 <div className="relative h-[260px] w-full md:h-[360px]">
                   <Image
-                    src={film.image || '/placeholder.svg'}
-                    alt={film.title}
+                    src={clip.image || '/placeholder.svg'}
+                    alt={clip.title}
                     fill
                     className="object-cover object-center transition-transform duration-500 group-hover:scale-105"
                   />
@@ -222,15 +233,15 @@ function LatestClipSection({
 
                 <div className="absolute bottom-0 left-0 right-0 p-3 md:p-4">
                   <p className="mb-1 line-clamp-1 text-xs font-semibold text-white md:text-sm">
-                    {film.title}
+                    {clip.title}
                   </p>
                   <p className="mb-2 hidden line-clamp-2 text-[10px] leading-relaxed text-white/70 md:mb-3 md:block md:text-[11px]">
-                    {film.description}
+                    {clip.description}
                   </p>
 
                   <div className="flex items-center justify-between text-[10px] text-white/60 md:text-[11px]">
-                    <span>{film.genre || '[Genre]'}</span>
-                    <span>{film.duration || '1h 0m'}</span>
+                    <span>{clip.genre || '[Genre]'}</span>
+                    <span>{clip.duration || '-'}</span>
                   </div>
                 </div>
               </div>
@@ -253,6 +264,10 @@ function LatestClipSection({
 export default function DashboardPage() {
   const [trailerData, setTrailerData] = useState<TrailerData | null>(null)
   const [latestFilms, setLatestFilms] = useState<FilmData[]>([])
+  
+  // Tambahan State:
+  const [latestClips, setLatestClips] = useState<LatestClipData[]>([])
+  
   const [latestAwards, setLatestAwards] = useState<AwardData[]>([])
   const [mostWatchingFilms, setMostWatchingFilms] = useState<FilmData[]>([])
   const [seriesData, setSeriesData] = useState<SeriesData[]>([])
@@ -312,8 +327,13 @@ export default function DashboardPage() {
           if (data.list?.trailer && Array.isArray(data.list.trailer)) {
             setTrailerData(data.list.trailer[0] ?? null)
           }
-          if (data.list?.latest && Array.isArray(data.list.latest)) {
+          // Diperbaiki: Ambil data films ke state LatestFilms
+          if (data.list?.films && Array.isArray(data.list.films)) {
             setLatestFilms(data.list.films)
+          }
+          // Tambahan: Ambil data latest ke state LatestClips
+          if (data.list?.latest && Array.isArray(data.list.latest)) {
+            setLatestClips(data.list.latest)
           }
           if (data.list?.award && Array.isArray(data.list.award)) {
             setLatestAwards(data.list.award)
@@ -364,7 +384,6 @@ export default function DashboardPage() {
       .trim()
   }
 
-  // FIX 1 & 3: year harus number (parseInt), bukan string
   const transformFilmData = (films: FilmData[]) => {
     return films.map((film) => ({
       id: film.id,
@@ -376,17 +395,16 @@ export default function DashboardPage() {
         'Watch groundbreaking films crafted by human creativity and artificial intelligence.',
       category: film.cats || 'Films',
       rating: film.rates ? `${film.rates}/10` : '8.5/10',
-      year: parseInt(film.years || '2025', 10), // ← number, bukan string
+      year: parseInt(film.years || '2025', 10),
       duration: film.run_time_format || '1h 0m',
       categories: [film.cats || 'Genre', 'AI'],
       genre: film.cats || 'Films',
     }))
   }
 
-  // FIX 2: id di-cast ke string agar cocok dengan AwardItem
   const transformAwardData = (awards: AwardData[]) => {
     return awards.map((award) => ({
-      id: String(award.id), // ← string, bukan number
+      id: String(award.id),
       name: award.name,
       image_url: award.image_url || award.image || '/placeholder.svg',
       description: stripHtml(award.description || award.synopsis || ''),
@@ -394,7 +412,32 @@ export default function DashboardPage() {
     }))
   }
 
+  // Tambahan: Transformer untuk object Latest Clip
+const transformClipData = (clips: LatestClipData[]) => {
+    return clips.map((clip) => {
+      // 1. Bersihkan tag HTML
+      const cleanDesc = stripHtml(clip.short_desc || clip.description || '')
+      
+      // 2. Potong teks jika lebih dari 70 karakter (bisa disesuaikan angkanya)
+      const maxLength = 70
+      const truncatedDesc = cleanDesc.length > maxLength 
+        ? cleanDesc.substring(0, maxLength).trim() + '...' 
+        : cleanDesc
+
+      return {
+        id: clip.id,
+        title: clip.name,
+        image: clip.image_url || clip.image || '/placeholder.svg',
+        description: truncatedDesc, // Gunakan deskripsi yang sudah dipotong
+        genre: clip.cats || 'Clip',
+        duration: clip.run_time_format || '0m',
+      }
+    })
+  }
+  
   const displayFilms = latestFilms.length > 0 ? transformFilmData(latestFilms) : []
+  // Menggunakan transformer baru untuk clips
+  const displayClips = latestClips.length > 0 ? transformClipData(latestClips) : []
   const displayAwards = latestAwards.length > 0 ? transformAwardData(latestAwards) : []
   const displayMostWatching =
     mostWatchingFilms.length > 0 ? transformFilmData(mostWatchingFilms) : []
@@ -421,6 +464,7 @@ export default function DashboardPage() {
         </div>
       )}
 
+      {/* Hero Section ... */}
       <section className="relative min-h-[50vh] overflow-hidden md:min-h-[70vh] lg:min-h-screen">
         {isTrailerPlaying && heroVideo ? (
           <video
@@ -490,6 +534,7 @@ export default function DashboardPage() {
 
       <LatestFilm items={displayFilms} />
 
+      {/* Latest Series Section ... */}
       <section className="border-t border-white/10 px-4 py-6 md:px-6 md:py-10 lg:px-12">
         <div className="mb-4 flex items-center justify-between md:mb-6">
           <h2 className="text-sm font-semibold text-white md:text-lg">Latest Series</h2>
@@ -590,7 +635,8 @@ export default function DashboardPage() {
         </div>
       </section>
 
-      <LatestClipSection title="Latest Clip" items={loading ? [] : displayFilms} />
+      {/* Diperbarui: Pasing displayClips untuk memunculkan data latest yang benar */}
+      <LatestClipSection title="Latest Clip" items={loading ? [] : displayClips} />
 
       <UpcomingEventsSection title="Upcoming Events" items={eventData} />
 
