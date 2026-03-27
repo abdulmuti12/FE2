@@ -9,6 +9,7 @@ interface Film {
   year?: number
   description?: string
   categories?: string[]
+  cats?: string
 }
 
 interface LatestFilmProps {

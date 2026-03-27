@@ -70,7 +70,8 @@ export function CarouselSection({
                       </p>
 
                       <div className="flex flex-wrap gap-2">
-                        {film.categories?.slice(0, 2).map((cat: string, idx: number) => (
+                        {/* Perubahan di sini: Tambahkan filter untuk mengecualikan 'AI' di tampilan Mobile */}
+                        {film.categories?.filter((cat: string) => cat !== 'AI').slice(0, 2).map((cat: string, idx: number) => (
                           <Button
                             key={idx}
                             size="sm"
@@ -146,7 +147,8 @@ export function CarouselSection({
                       {film.description}
                     </p>
                     <div className="hidden flex-wrap gap-2 md:flex">
-                      {film.categories?.map((cat: string, idx: number) => (
+                      {/* Perubahan di sini: Tambahkan filter untuk mengecualikan 'AI' di tampilan Desktop */}
+                      {film.categories?.filter((cat: string) => cat !== 'AI').map((cat: string, idx: number) => (
                         <Button
                           key={idx}
                           size="sm"
