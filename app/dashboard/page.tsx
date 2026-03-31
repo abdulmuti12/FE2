@@ -123,31 +123,7 @@ const mockAwards = [
     description:
       '[Brief Synopsis] Watch groundbreaking films crafted by human creativity and artificial intelligence.',
     genre: 'Genre',
-  },
-  {
-    id: '2',
-    name: '[Judul Film]',
-    image_url: '/login-hero.jpg',
-    description:
-      '[Brief Synopsis] Watch groundbreaking films crafted by human creativity and artificial intelligence.',
-    genre: 'Genre',
-  },
-  {
-    id: '3',
-    name: '[Judul Film]',
-    image_url: '/login-hero.jpg',
-    description:
-      '[Brief Synopsis] Watch groundbreaking films crafted by human creativity and artificial intelligence.',
-    genre: 'Genre',
-  },
-  {
-    id: '4',
-    name: '[Judul Film]',
-    image_url: '/login-hero.jpg',
-    description:
-      '[Brief Synopsis] Watch groundbreaking films crafted by human creativity and artificial intelligence.',
-    genre: 'Genre',
-  },
+  }
 ]
 
 const mockSeries: SeriesData[] = []
@@ -163,13 +139,13 @@ const fallbackCategoryData = [
 ]
 
 const mockCreators: CreatorData[] = [
-  { id: '1', name: '[Creator]', avatar_url: '/images/pngs.png', total_video: '3' },
-  { id: '2', name: '[Creator]', avatar_url: '/images/pngs.png', total_video: '3' },
-  { id: '3', name: '[Creator]', avatar_url: '/images/pngs.png', total_video: '3' },
-  { id: '4', name: '[Creator]', avatar_url: '/images/pngs.png', total_video: '3' },
-  { id: '5', name: '[Creator]', avatar_url: '/images/pngs.png', total_video: '3' },
-  { id: '6', name: '[Creator]', avatar_url: '/images/pngs.png', total_video: '3' },
-  { id: '7', name: '[Creator]', avatar_url: '/images/pngs.png', total_video: '3' },
+  // { id: '1', name: '[Creator]', avatar_url: '/images/pngs.png', total_video: '3' },
+  // { id: '2', name: '[Creator]', avatar_url: '/images/pngs.png', total_video: '3' },
+  // { id: '3', name: '[Creator]', avatar_url: '/images/pngs.png', total_video: '3' },
+  // { id: '4', name: '[Creator]', avatar_url: '/images/pngs.png', total_video: '3' },
+  // { id: '5', name: '[Creator]', avatar_url: '/images/pngs.png', total_video: '3' },
+  // { id: '6', name: '[Creator]', avatar_url: '/images/pngs.png', total_video: '3' },
+  // { id: '7', name: '[Creator]', avatar_url: '/images/pngs.png', total_video: '3' },
 ]
 
 function LatestClipSection({
@@ -277,7 +253,10 @@ export default function DashboardPage() {
   const [error, setError] = useState<string | null>(null)
   const router = useRouter()
   const heroTitle = trailerData?.name || '[Judul Film]'
-  const [isTrailerPlaying, setIsTrailerPlaying] = useState(false)
+  
+  // UBAH: Default bernilai true agar video langsung main jika ada
+  const [isTrailerPlaying, setIsTrailerPlaying] = useState(true) 
+  
   const [eventData, setEventData] = useState<EventData[]>([])
 
   const heroImage =
@@ -326,6 +305,12 @@ export default function DashboardPage() {
         if (data.status === true || data.status !== false) {
           if (data.list?.trailer && Array.isArray(data.list.trailer)) {
             setTrailerData(data.list.trailer[0] ?? null)
+            // UBAH: Jika video tersedia dari API, set isTrailerPlaying ke true
+            if (data.list.trailer[0]?.video_url || data.list.trailer[0]?.video) {
+              setIsTrailerPlaying(true)
+            } else {
+              setIsTrailerPlaying(false) // Matikan jika tidak ada video
+            }
           }
           // Diperbaiki: Ambil data films ke state LatestFilms
           if (data.list?.films && Array.isArray(data.list.films)) {
@@ -466,6 +451,7 @@ const transformClipData = (clips: LatestClipData[]) => {
 
       {/* Hero Section ... */}
       <section className="relative min-h-[50vh] overflow-hidden md:min-h-[70vh] lg:min-h-screen">
+        {/* UBAH: Logika render video */}
         {isTrailerPlaying && heroVideo ? (
           <video
             key={heroVideo}
@@ -475,6 +461,8 @@ const transformClipData = (clips: LatestClipData[]) => {
             playsInline
             controls={false}
             className="absolute inset-0 h-full w-full object-cover"
+            // Tambahkan poster agar saat loading video tidak blank hitam
+            poster={heroImage} 
           >
             <source src={heroVideo} type="video/mp4" />
             Browser Anda tidak mendukung video.
@@ -502,20 +490,24 @@ const transformClipData = (clips: LatestClipData[]) => {
             </p>
 
             <div className="flex gap-3">
-              <Button
-                onClick={handleWatchTrailer}
-                disabled={!heroVideo}
-                className="bg-white py-2 text-sm text-background hover:bg-gray-200 disabled:opacity-50 md:py-2.5 md:text-base"
-              >
-                ▶ Watch Now
-              </Button>
+              {/* UBAH: Sembunyikan tombol "Watch Now" jika video sedang diputar (autoplay) */}
+              {!isTrailerPlaying && (
+                <Button
+                  onClick={handleWatchTrailer}
+                  disabled={!heroVideo}
+                  className="bg-white py-2 text-sm text-background hover:bg-gray-200 disabled:opacity-50 md:py-2.5 md:text-base"
+                >
+                  ▶ Watch Now
+                </Button>
+              )}
 
+              {/* Tombol Close tetap bisa dimunculkan atau disembunyikan sesuai selera */}
               {isTrailerPlaying && (
                 <Button
                   onClick={handleCloseTrailer}
                   className="border border-white/20 bg-black/30 py-2 text-sm text-white hover:bg-black/50 md:py-2.5 md:text-base"
                 >
-                  ✕ Close
+                  ✕ Close Video
                 </Button>
               )}
             </div>
@@ -532,6 +524,7 @@ const transformClipData = (clips: LatestClipData[]) => {
         </div>
       </section>
 
+      {/* SISA KODE KE BAWAH TETAP SAMA */}
       <LatestFilm items={displayFilms} />
 
       {/* Latest Series Section ... */}
