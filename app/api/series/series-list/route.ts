@@ -26,7 +26,7 @@ export async function GET(request: NextRequest) {
     queryParams.append('page', page)
     queryParams.append('limit', limit)
 
-    const apiUrl = `https://api.usky.ai/series/list?${queryParams.toString()}`
+    const apiUrl = `https://api.usky.ai/series/list-group?${queryParams.toString()}`
 
     const response = await fetch(apiUrl, {
       method: 'GET',

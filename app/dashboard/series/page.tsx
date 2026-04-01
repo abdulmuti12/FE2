@@ -158,7 +158,7 @@ export default function SeriesPage() {
       <Header />
 
       {/* Hero Banner Section */}
-      <div className="relative w-full h-[200px] sm:h-[260px] md:h-[320px] overflow-hidden">
+      {/* <div className="relative w-full h-[200px] sm:h-[260px] md:h-[320px] overflow-hidden">
         <Image
           src="/images/imageheader.png"
           alt="Series Banner"
@@ -172,7 +172,7 @@ export default function SeriesPage() {
             Series
           </h1>
         </div>
-      </div>
+      </div> */}
 
       {/* Main Content Area */}
       <div className="w-full mx-auto px-4 sm:px-6 lg:px-10 xl:px-14 py-8 md:py-12 pb-24">
@@ -194,7 +194,7 @@ export default function SeriesPage() {
             {seriesData.map((series) => (
               <Link 
                 key={series.id}
-                href={`/dashboard/series/detail?id=${series.id}`}
+                href={`/dashboard/series/detail?id_group=${series.id}`}
                 className="group relative block rounded-2xl md:rounded-xl overflow-hidden bg-[#0a1628] border border-white/5 hover:border-[#D4A84B]/50 transition-all duration-300"
               >
                 {/* Image Container */}

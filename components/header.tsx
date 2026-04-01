@@ -2,6 +2,7 @@
 
 import Image from 'next/image'
 import Link from 'next/link'
+import { Video } from 'lucide-react'
 import { useState, useRef, useEffect } from 'react'
 import { usePathname, useRouter } from 'next/navigation'
 import { Search, User, Calendar, Ticket, CreditCard, Settings, LogOut, X } from 'lucide-react'
@@ -145,6 +146,15 @@ export function Header() {
               >
                 <Settings className="w-5 h-5 text-white/70" />
                 <span>Change Password</span>
+              </Link>
+
+              <Link 
+                href="https://creator.usky.ai/login" target="_blank"
+                onClick={closeMobileMenu}
+                className="flex items-center gap-4 px-5 py-4 text-white/90 hover:bg-white/5 transition-colors"
+              >
+                <Video className="w-5 h-5 text-white/70" />
+                <span>My Video</span>
               </Link>
             </div>
 
@@ -305,10 +315,18 @@ export function Header() {
                       <CreditCard className="w-5 h-5" /> My Account
                     </Link>
 
-                    <Link href="/dashboard/changepass">
-                      <button className="w-full flex items-center gap-4 px-6 py-3 text-sm text-gray-300 hover:bg-white/5 transition-colors">
-                        <Settings className="w-5 h-5" /> Change Password
-                      </button>
+                    <Link 
+                      href="/dashboard/changepass"
+                      className="w-full flex items-center gap-4 px-6 py-3 text-sm text-gray-300 hover:bg-white/5 transition-colors"
+                    >
+                      <Settings className="w-5 h-5" /> Change Password
+                    </Link>
+                    
+                    <Link 
+                      href="https://creator.usky.ai/login" target="_blank"
+                      className="w-full flex items-center gap-4 px-6 py-3 text-sm text-gray-300 hover:bg-white/5 transition-colors"
+                    >
+                      <Video className="w-5 h-5" /> My Video
                     </Link>
                   </div>
 

@@ -2,12 +2,13 @@
 
 import {
   AlertCircle,
-  Calendar,
   ChevronRight,
   Info,
   Menu,
   Play,
   X,
+  Volume2,
+  VolumeX,
 } from 'lucide-react'
 import Image from 'next/image'
 import Link from 'next/link'
@@ -28,6 +29,7 @@ import {
   AwardSkeleton,
 } from '@/components/skeleton-loaders'
 
+// --- Interfaces ---
 interface TrailerData {
   id: string
   name?: string
@@ -56,17 +58,13 @@ interface FilmData {
   run_time_format?: string
   years?: string
   rates?: string | null
-  favorit?: string
-  my_favorit?: string
 }
 
-// Tambahan: Interface untuk Latest Clip (dari list.latest)
 interface LatestClipData {
   id: string
   name: string
   short_desc?: string | null
   description?: string
-  image?: string
   image_url?: string
   cats?: string
   run_time_format?: string
@@ -76,8 +74,6 @@ interface AwardData {
   id: string
   name: string
   image_url?: string
-  image?: string
-  video_url?: string
   description?: string
   type?: string
   synopsis?: string
@@ -88,664 +84,299 @@ interface SeriesData {
   name: string
   asset_name?: string
   run_time_format?: string
-  image?: string
   image_url?: string
-  image_landscape?: string
   image_landscape_url?: string
-  title?: string
-  episode?: string
-  duration?: string
 }
 
 interface CategoryApiData {
   id: string
   name: string
-  images?: string
   images_url?: string
   total_movie?: string
 }
 
 interface CreatorData {
   id: string
-  sid?: string
   name: string
-  email?: string
-  avatar?: string
   avatar_url?: string
   total_video?: string
 }
 
-const mockAwards = [
-  {
-    id: '1',
-    name: '[Judul Film]',
-    image_url: '/login-hero.jpg',
-    description:
-      '[Brief Synopsis] Watch groundbreaking films crafted by human creativity and artificial intelligence.',
-    genre: 'Genre',
-  }
-]
+// --- Helper Functions ---
+function stripHtml(html?: string) {
+  if (!html) return ''
+  return html
+    .replace(/<[^>]*>/g, ' ')
+    .replace(/&nbsp;/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+}
 
-const mockSeries: SeriesData[] = []
-
-const fallbackCategoryData = [
-  { id: '1', name: 'Genre', count: '3.2K', image: '/placeholder.svg' },
-  { id: '2', name: 'Drama', count: '2.8K', image: '/placeholder.svg' },
-  { id: '3', name: 'Action', count: '2.1K', image: '/placeholder.svg' },
-  { id: '4', name: 'Sci-Fi', count: '1.9K', image: '/placeholder.svg' },
-  { id: '5', name: 'Comedy', count: '1.5K', image: '/placeholder.svg' },
-  { id: '6', name: 'Horror', count: '1.2K', image: '/placeholder.svg' },
-  { id: '7', name: 'Anime', count: '1.8K', image: '/placeholder.svg' },
-]
-
-const mockCreators: CreatorData[] = [
-  // { id: '1', name: '[Creator]', avatar_url: '/images/pngs.png', total_video: '3' },
-  // { id: '2', name: '[Creator]', avatar_url: '/images/pngs.png', total_video: '3' },
-  // { id: '3', name: '[Creator]', avatar_url: '/images/pngs.png', total_video: '3' },
-  // { id: '4', name: '[Creator]', avatar_url: '/images/pngs.png', total_video: '3' },
-  // { id: '5', name: '[Creator]', avatar_url: '/images/pngs.png', total_video: '3' },
-  // { id: '6', name: '[Creator]', avatar_url: '/images/pngs.png', total_video: '3' },
-  // { id: '7', name: '[Creator]', avatar_url: '/images/pngs.png', total_video: '3' },
-]
-
-function LatestClipSection({
-  title = 'Latest Clip',
-  viewAllLink = '/dashboard/clip',
-  items = [],
-}: {
-  title?: string
-  viewAllLink?: string
-  items?: any[]
-}) {
+// --- Components ---
+function LatestClipSection({ items = [] }: { items?: any[] }) {
   const scrollerRef = useRef<HTMLDivElement | null>(null)
 
-  const scrollByAmount = (dir: 'left' | 'right') => {
-    const el = scrollerRef.current
-    if (!el) return
-    const amount = Math.round(el.clientWidth * 0.85)
-    el.scrollBy({ left: dir === 'right' ? amount : -amount, behavior: 'smooth' })
+  const scroll = (dir: 'left' | 'right') => {
+    if (!scrollerRef.current) return
+    const amount = scrollerRef.current.clientWidth * 0.8
+    scrollerRef.current.scrollBy({ left: dir === 'right' ? amount : -amount, behavior: 'smooth' })
   }
 
-  return (
-    <section className="border-t border-white/10 px-4 py-6 md:px-6 md:py-8 lg:px-12">
-      <div className="mb-4 flex items-center justify-between md:mb-6">
-        <Link href={viewAllLink} className="inline-flex items-center gap-2 font-semibold text-white">
-          <span className="text-xs md:text-base">{title}</span>
-          <span className="text-white/70">›</span>
-        </Link>
+  if (items.length === 0) return null
 
-        <div className="flex items-center gap-1">
-          <span className="h-[2px] w-2 rounded-full bg-white/80 md:w-3" />
-          <span className="h-[2px] w-2 rounded-full bg-white/40 md:w-3" />
-          <span className="h-[2px] w-2 rounded-full bg-white/30 md:w-3" />
-        </div>
+  return (
+    <section className="border-t border-white/10 px-4 py-6 md:px-6 lg:px-12">
+      <div className="mb-4 flex items-center justify-between">
+        <Link href="/dashboard/clip" className="font-semibold text-white flex items-center gap-2">
+          Latest Clip <span className="text-white/70">›</span>
+        </Link>
       </div>
 
-      <div className="relative">
-        <div
-          ref={scrollerRef}
-          className="flex gap-3 overflow-x-auto scroll-smooth pb-2 pr-8 md:gap-6 md:pr-12"
-          style={{ scrollbarWidth: 'none' }}
-        >
+      <div className="relative group">
+        <div ref={scrollerRef} className="flex gap-4 overflow-x-auto scrollbar-hide pb-4">
           {items.map((clip) => (
-            <div key={clip.id} className="w-[200px] flex-shrink-0 md:w-[260px] lg:w-[280px]">
-              <div className="group relative overflow-hidden rounded-xl bg-black md:rounded-2xl">
-                <div className="relative h-[260px] w-full md:h-[360px]">
-                  <Image
-                    src={clip.image || '/placeholder.svg'}
-                    alt={clip.title}
-                    fill
-                    className="object-cover object-center transition-transform duration-500 group-hover:scale-105"
-                  />
-
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <div className="flex h-8 w-8 items-center justify-center rounded-full border border-white/20 bg-black/35 backdrop-blur-sm md:h-10 md:w-10">
-                      <Play className="h-3 w-3 fill-white text-white md:h-4 md:w-4" />
-                    </div>
+            <div key={clip.id} className="w-[200px] md:w-[280px] flex-shrink-0">
+              <div className="group relative aspect-[3/4] overflow-hidden rounded-2xl bg-black">
+                <Image src={clip.image || '/placeholder.svg'} alt={clip.title} fill className="object-cover transition-transform group-hover:scale-105" />
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <div className="h-10 w-10 flex items-center justify-center rounded-full bg-black/40 backdrop-blur-sm border border-white/20">
+                    <Play className="h-4 w-4 fill-white text-white" />
                   </div>
-
-                  <div className="absolute inset-x-0 bottom-0 h-40 bg-gradient-to-t from-black/90 via-black/55 to-transparent md:h-44" />
                 </div>
-
-                <div className="absolute bottom-0 left-0 right-0 p-3 md:p-4">
-                  <p className="mb-1 line-clamp-1 text-xs font-semibold text-white md:text-sm">
-                    {clip.title}
-                  </p>
-                  <p className="mb-2 hidden line-clamp-2 text-[10px] leading-relaxed text-white/70 md:mb-3 md:block md:text-[11px]">
-                    {clip.description}
-                  </p>
-
-                  <div className="flex items-center justify-between text-[10px] text-white/60 md:text-[11px]">
-                    <span>{clip.genre || '[Genre]'}</span>
-                    <span>{clip.duration || '-'}</span>
-                  </div>
+                <div className="absolute inset-x-0 bottom-0 p-4 bg-gradient-to-t from-black via-black/60 to-transparent">
+                  <p className="font-semibold text-sm text-white line-clamp-1">{clip.title}</p>
+                  <p className="text-[11px] text-white/70 line-clamp-2 mt-1">{clip.description}</p>
                 </div>
               </div>
             </div>
           ))}
         </div>
-
-        <button
-          onClick={() => scrollByAmount('right')}
-          className="absolute right-0 top-1/2 flex h-8 w-8 translate-x-2 -translate-y-1/2 items-center justify-center rounded-lg bg-white/95 text-black shadow-md transition-colors hover:bg-white md:h-10 md:w-10 md:translate-x-4 lg:translate-x-6"
-          aria-label="Next"
-        >
-          <span className="text-lg leading-none md:text-xl">›</span>
+        <button onClick={() => scroll('right')} className="absolute right-0 top-1/2 -translate-y-1/2 h-10 w-10 bg-white text-black rounded-full shadow-xl flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+          ›
         </button>
       </div>
     </section>
   )
 }
 
+// --- Main Page ---
 export default function DashboardPage() {
-  const [trailerData, setTrailerData] = useState<TrailerData | null>(null)
+  const router = useRouter()
+  const videoRef = useRef<HTMLVideoElement | null>(null)
+  
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const [isMuted, setIsMuted] = useState(true)
+
+  const [trailers, setTrailers] = useState<TrailerData[]>([])
+  const [currentTrailerIndex, setCurrentTrailerIndex] = useState(0)
+  
   const [latestFilms, setLatestFilms] = useState<FilmData[]>([])
-  
-  // Tambahan State:
   const [latestClips, setLatestClips] = useState<LatestClipData[]>([])
-  
   const [latestAwards, setLatestAwards] = useState<AwardData[]>([])
   const [mostWatchingFilms, setMostWatchingFilms] = useState<FilmData[]>([])
   const [seriesData, setSeriesData] = useState<SeriesData[]>([])
   const [categoryApiData, setCategoryApiData] = useState<CategoryApiData[]>([])
   const [creatorApiData, setCreatorApiData] = useState<CreatorData[]>([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-  const router = useRouter()
-  const heroTitle = trailerData?.name || '[Judul Film]'
-  
-  // UBAH: Default bernilai true agar video langsung main jika ada
-  const [isTrailerPlaying, setIsTrailerPlaying] = useState(true) 
-  
   const [eventData, setEventData] = useState<EventData[]>([])
 
-  const heroImage =
-    trailerData?.image_url ||
-    (trailerData?.image
-      ? `https://api.usky.ai/uploads/${trailerData.image}`
-      : '/login-hero.jpg')
-
-  const heroVideo =
-    trailerData?.video_url ||
-    (trailerData?.video
-      ? `https://api.usky.ai/uploads/${trailerData.video}`
-      : '')
-
-  const handleWatchTrailer = () => {
-    if (!heroVideo) return
-    setIsTrailerPlaying(true)
-  }
-
-  const handleCloseTrailer = () => {
-    setIsTrailerPlaying(false)
-  }
-
   useEffect(() => {
-    const fetchDashboardData = async () => {
+    const fetchData = async () => {
       try {
         setLoading(true)
         const token = localStorage.getItem('user_token')
+        if (!token) { router.push('/'); return }
 
-        if (!token) {
-          router.push('/')
-          return
-        }
-
-        const response = await fetch('/api/home', {
-          method: 'GET',
-          headers: {
-            Authorization: `Bearer ${token}`,
-            'Content-Type': 'application/json',
-          },
-          cache: 'no-store',
+        const res = await fetch('/api/home', {
+          headers: { Authorization: `Bearer ${token}` },
+          cache: 'no-store'
         })
+        const json = await res.json()
 
-        const data = await response.json()
-
-        if (data.status === true || data.status !== false) {
-          if (data.list?.trailer && Array.isArray(data.list.trailer)) {
-            setTrailerData(data.list.trailer[0] ?? null)
-            // UBAH: Jika video tersedia dari API, set isTrailerPlaying ke true
-            if (data.list.trailer[0]?.video_url || data.list.trailer[0]?.video) {
-              setIsTrailerPlaying(true)
-            } else {
-              setIsTrailerPlaying(false) // Matikan jika tidak ada video
-            }
-          }
-          // Diperbaiki: Ambil data films ke state LatestFilms
-          if (data.list?.films && Array.isArray(data.list.films)) {
-            setLatestFilms(data.list.films)
-          }
-          // Tambahan: Ambil data latest ke state LatestClips
-          if (data.list?.latest && Array.isArray(data.list.latest)) {
-            setLatestClips(data.list.latest)
-          }
-          if (data.list?.award && Array.isArray(data.list.award)) {
-            setLatestAwards(data.list.award)
-          }
-          if (data.list?.watchs && Array.isArray(data.list.watchs)) {
-            setMostWatchingFilms(data.list.watchs)
-          }
-          if (data.list?.series && Array.isArray(data.list.series)) {
-            setSeriesData(data.list.series)
-          }
-          if (data.list?.category && Array.isArray(data.list.category)) {
-            setCategoryApiData(data.list.category)
-          }
-          if (data.list?.creator && Array.isArray(data.list.creator)) {
-            setCreatorApiData(data.list.creator)
-          }
-          if (data.list?.event && Array.isArray(data.list.event)) {
-            setEventData(data.list.event)
-          }
-          setError(null)
-        } else {
-          setError(data.message || 'Failed to fetch data')
+        if (json.status === true) {
+          const list = json.list
+          setTrailers(list.trailer || [])
+          setLatestFilms(list.films || [])
+          setLatestClips(list.latest || [])
+          setLatestAwards(list.award || [])
+          setMostWatchingFilms(list.watchs || [])
+          setSeriesData(list.series || [])
+          setCategoryApiData(list.category || [])
+          setCreatorApiData(list.creator || [])
+          setEventData(list.event || [])
         }
       } catch (err) {
-        console.error('[v0] Dashboard fetch error:', err)
-        setError('Failed to fetch dashboard data')
+        setError('Failed to load dashboard')
       } finally {
         setLoading(false)
       }
     }
-
-    fetchDashboardData()
+    fetchData()
   }, [router])
 
-  function stripHtml(html?: string) {
-    if (!html) return ''
-    return html
-      .replace(/<[^>]*>/g, ' ')
-      .replace(/&nbsp;/g, ' ')
-      .replace(/&amp;/g, '&')
-      .replace(/&quot;/g, '"')
-      .replace(/&#39;/g, "'")
-      .replace(/&ldquo;|&rdquo;/g, '"')
-      .replace(/&lsquo;|&rsquo;/g, "'")
-      .replace(/&mdash;/g, '—')
-      .replace(/&bull;/g, '•')
-      .replace(/\s+/g, ' ')
-      .trim()
+  const toggleMute = () => {
+    if (videoRef.current) {
+      videoRef.current.muted = !videoRef.current.muted
+      setIsMuted(videoRef.current.muted)
+    }
   }
 
-  const transformFilmData = (films: FilmData[]) => {
-    return films.map((film) => ({
-      id: film.id,
-      title: film.name,
-      image: film.image_url || '/login-hero.jpg',
-      description:
-        film.synopsis ||
-        stripHtml(film.description) ||
-        'Watch groundbreaking films crafted by human creativity and artificial intelligence.',
-      category: film.cats || 'Films',
-      rating: film.rates ? `${film.rates}/10` : '8.5/10',
-      year: parseInt(film.years || '2025', 10),
-      duration: film.run_time_format || '1h 0m',
-      categories: [film.cats || 'Genre', 'AI'],
-      genre: film.cats || 'Films',
-    }))
+  const handleVideoEnded = () => {
+    if (trailers.length > 1) {
+      setCurrentTrailerIndex((prevIndex) => (prevIndex + 1) % trailers.length)
+    }
   }
 
-  const transformAwardData = (awards: AwardData[]) => {
-    return awards.map((award) => ({
-      id: String(award.id),
-      name: award.name,
-      image_url: award.image_url || award.image || '/placeholder.svg',
-      description: stripHtml(award.description || award.synopsis || ''),
-      genre: award.type || '',
-    }))
-  }
+  // --- Transformers ---
+  const displayFilms = latestFilms.map(f => ({
+    id: f.id,
+    title: f.name,
+    image: f.image_url || '/login-hero.jpg',
+    description: f.synopsis || stripHtml(f.description) || 'Watch groundbreaking films.',
+    category: f.cats || 'Films',
+    rating: f.rates ? `${f.rates}/10` : '8.5/10',
+    year: 2025,
+    duration: '1h 0m',
+    genre: f.cats || 'Films',
+  }))
 
-  // Tambahan: Transformer untuk object Latest Clip
-const transformClipData = (clips: LatestClipData[]) => {
-    return clips.map((clip) => {
-      // 1. Bersihkan tag HTML
-      const cleanDesc = stripHtml(clip.short_desc || clip.description || '')
-      
-      // 2. Potong teks jika lebih dari 70 karakter (bisa disesuaikan angkanya)
-      const maxLength = 70
-      const truncatedDesc = cleanDesc.length > maxLength 
-        ? cleanDesc.substring(0, maxLength).trim() + '...' 
-        : cleanDesc
+  const displayClips = latestClips.map(c => ({
+    id: c.id,
+    title: c.name,
+    image: c.image_url || '/placeholder.svg',
+    description: stripHtml(c.short_desc || c.description).substring(0, 70) + '...',
+  }))
 
-      return {
-        id: clip.id,
-        title: clip.name,
-        image: clip.image_url || clip.image || '/placeholder.svg',
-        description: truncatedDesc, // Gunakan deskripsi yang sudah dipotong
-        genre: clip.cats || 'Clip',
-        duration: clip.run_time_format || '0m',
-      }
-    })
-  }
-  
-  const displayFilms = latestFilms.length > 0 ? transformFilmData(latestFilms) : []
-  // Menggunakan transformer baru untuk clips
-  const displayClips = latestClips.length > 0 ? transformClipData(latestClips) : []
-  const displayAwards = latestAwards.length > 0 ? transformAwardData(latestAwards) : []
-  const displayMostWatching =
-    mostWatchingFilms.length > 0 ? transformFilmData(mostWatchingFilms) : []
-  const displaySeries = seriesData.length > 0 ? seriesData : mockSeries
-  const displayCategories =
-    categoryApiData.length > 0
-      ? categoryApiData.map((item) => ({
-          id: item.id,
-          name: item.name,
-          count: item.total_movie || '0',
-          image: item.images_url || '/placeholder.svg',
-        }))
-      : fallbackCategoryData
-  const displayCreators = creatorApiData.length > 0 ? creatorApiData : mockCreators
+  const currentTrailer = trailers[currentTrailerIndex]
+  const heroVideo = currentTrailer?.video_url || (currentTrailer?.video ? `https://api.usky.ai/uploads/${currentTrailer.video}` : '')
+  const heroImage = currentTrailer?.image_url || '/login-hero.jpg'
 
   return (
     <div className="min-h-screen bg-[#0a1628] text-foreground dark">
       <Header />
 
-      {error && (
-        <div className="mx-4 mt-4 flex items-center gap-3 rounded-lg border border-red-500/30 bg-red-950/30 px-4 py-4 md:mx-6 lg:mx-12">
-          <AlertCircle className="h-5 w-5 text-red-500" />
-          <p className="text-sm text-red-300">{error}</p>
-        </div>
-      )}
-
-      {/* Hero Section ... */}
-      <section className="relative min-h-[50vh] overflow-hidden md:min-h-[70vh] lg:min-h-screen">
-        {/* UBAH: Logika render video */}
-        {isTrailerPlaying && heroVideo ? (
-          <video
-            key={heroVideo}
-            autoPlay
-            muted
-            loop
-            playsInline
-            controls={false}
-            className="absolute inset-0 h-full w-full object-cover"
-            // Tambahkan poster agar saat loading video tidak blank hitam
-            poster={heroImage} 
-          >
-            <source src={heroVideo} type="video/mp4" />
-            Browser Anda tidak mendukung video.
-          </video>
+      {/* Hero Section with Autoplay & Audio Toggle */}
+      <section className="relative min-h-[60vh] lg:min-h-screen overflow-hidden">
+        {heroVideo ? (
+          <div className="absolute inset-0 w-full h-full">
+            <video
+              ref={videoRef}
+              key={heroVideo}
+              autoPlay
+              muted={isMuted}
+              playsInline
+              onEnded={handleVideoEnded}
+              className="w-full h-full object-cover"
+              poster={heroImage}
+            >
+              <source src={heroVideo} type="video/mp4" />
+            </video>
+            
+            {/* Audio Toggle Button (Bottom Right) */}
+            <div className="absolute bottom-20 right-6 md:bottom-32 lg:right-12 z-30">
+              <button onClick={toggleMute} className="h-10 w-10 flex items-center justify-center rounded-full bg-black/40 backdrop-blur-md border border-white/20 text-white transition-all">
+                {isMuted ? <VolumeX className="h-5 w-5" /> : <Volume2 className="h-5 w-5" />}
+              </button>
+            </div>
+          </div>
         ) : (
-          <Image
-            src={heroImage}
-            alt={heroTitle}
-            fill
-            priority
-            className="object-cover"
-          />
+          <Image src={heroImage} alt="Hero" fill className="object-cover" />
         )}
 
-        <div className="absolute inset-0 bg-gradient-to-t from-background via-black/20 to-transparent" />
-
+        <div className="absolute inset-0 bg-gradient-to-t from-[#0a1628] via-black/10 to-transparent" />
+        
         <div className="absolute inset-0 flex items-end">
-          <div className="w-full px-4 pb-[60px] md:px-6 md:pb-[112px] lg:px-12 lg:pb-[112px]">
-            <h1 className="mb-2 text-xl font-bold text-white md:mb-3 md:text-4xl lg:text-5xl">
-              {heroTitle}
-            </h1>
-
-            <p className="mb-4 max-w-2xl line-clamp-2 text-xs text-gray-300 md:mb-5 md:line-clamp-none md:text-base lg:text-lg">
+          <div className="w-full px-4 pb-16 md:px-12 md:pb-28 z-20">
+            <h1 className="text-2xl md:text-5xl font-bold text-white mb-4">{currentTrailer?.name || 'Arena Zero'}</h1>
+            <p className="max-w-xl text-sm md:text-lg text-gray-300 mb-6 line-clamp-2">
               Watch groundbreaking films crafted by human creativity and artificial intelligence.
             </p>
-
-            <div className="flex gap-3">
-              {/* UBAH: Sembunyikan tombol "Watch Now" jika video sedang diputar (autoplay) */}
-              {!isTrailerPlaying && (
-                <Button
-                  onClick={handleWatchTrailer}
-                  disabled={!heroVideo}
-                  className="bg-white py-2 text-sm text-background hover:bg-gray-200 disabled:opacity-50 md:py-2.5 md:text-base"
-                >
-                  ▶ Watch Now
-                </Button>
-              )}
-
-              {/* Tombol Close tetap bisa dimunculkan atau disembunyikan sesuai selera */}
-              {isTrailerPlaying && (
-                <Button
-                  onClick={handleCloseTrailer}
-                  className="border border-white/20 bg-black/30 py-2 text-sm text-white hover:bg-black/50 md:py-2.5 md:text-base"
-                >
-                  ✕ Close Video
-                </Button>
-              )}
+            <div className="flex gap-4">
+              <Button 
+                onClick={() => router.push(`/dashboard/series/detail?id_group=${currentTrailer?.id}`)}
+                className="bg-white text-black hover:bg-gray-200 px-8 py-6 rounded-md font-bold flex items-center gap-2"
+              >
+                <Play className="h-5 w-5 fill-black" /> Watch Now
+              </Button>
             </div>
           </div>
         </div>
-
-        <div className="absolute bottom-[60px] left-1/2 -translate-x-1/2 md:bottom-[112px] lg:bottom-[112px]">
-          <div className="flex gap-1">
-            <div className="h-1 w-6 rounded-full bg-white" />
-            <div className="h-1 w-1 rounded-full bg-gray-400" />
-            <div className="h-1 w-1 rounded-full bg-gray-400" />
-            <div className="h-1 w-1 rounded-full bg-gray-400" />
-          </div>
-        </div>
       </section>
 
-      {/* SISA KODE KE BAWAH TETAP SAMA */}
-      <LatestFilm items={displayFilms} />
-
-      {/* Latest Series Section ... */}
-      <section className="border-t border-white/10 px-4 py-6 md:px-6 md:py-10 lg:px-12">
-        <div className="mb-4 flex items-center justify-between md:mb-6">
-          <h2 className="text-sm font-semibold text-white md:text-lg">Latest Series</h2>
-          <Link
-            href="/dashboard/series"
-            className="rounded-full border border-white/10 bg-white/10 px-3 py-1 text-xs font-medium text-white/90 transition-colors hover:bg-white/15 md:px-4 md:py-1.5"
-          >
-            View All
-          </Link>
-        </div>
-
-        <div className="grid grid-cols-1 gap-4 md:gap-6 lg:grid-cols-[1fr_340px]">
-          {loading ? (
-            <FeaturedSkeleton />
-          ) : displaySeries[0] ? (
-            <Link href={`/dashboard/series/detail?id=${displaySeries[0].id}`} className="group block">
-              <div className="relative aspect-[16/10] w-full overflow-hidden rounded-xl bg-black md:aspect-[1066/660] md:rounded-3xl">
-                <Image
-                  src={
-                    displaySeries[0].image_landscape_url ||
-                    displaySeries[0].image_url ||
-                    displaySeries[0].image ||
-                    '/login-hero.jpg'
-                  }
-                  alt={displaySeries[0].name}
-                  fill
-                  priority
-                  sizes="(min-width: 1066px) 65vw, 100vw"
-                  className="absolute inset-0 h-full w-full object-cover object-center transition-transform duration-500 group-hover:scale-105"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/30 to-transparent" />
-
-                <div className="absolute bottom-4 left-4 right-4 md:bottom-6 md:left-6 md:right-6">
-                  <h3 className="mb-3 text-base font-semibold text-white md:mb-4 md:text-xl">
-                    {displaySeries[0].name}
-                  </h3>
-
-                  <p className="mb-3 text-xs text-white/70 md:mb-4 md:text-sm">
-                    {displaySeries[0].asset_name} • {displaySeries[0].run_time_format}
-                  </p>
-
-                  <div className="flex items-center gap-2 md:gap-3">
-                    <button className="inline-flex items-center gap-2 rounded-full bg-white px-4 py-1.5 text-xs font-semibold text-black transition-colors hover:bg-gray-200 md:px-5 md:py-2 md:text-sm">
-                      <Play className="h-3 w-3 fill-black md:h-4 md:w-4" />
-                      Watch Now
-                    </button>
-                    <button className="flex h-9 w-9 items-center justify-center rounded-full border border-white/10 bg-white/10 text-white transition-colors hover:bg-white/20 md:h-10 md:w-10">
-                      <Info className="h-4 w-4 md:h-5 md:w-5" />
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </Link>
-          ) : null}
-
-          <div className="flex flex-col gap-3 md:gap-6">
-            {loading ? (
-              <>
-                <SeriesSkeleton />
-                <SeriesSkeleton />
-                <SeriesSkeleton />
-              </>
-            ) : (
-              displaySeries.slice(1, 4).map((series) => (
-                <Link
-                  key={series.id}
-                  href={`/dashboard/series/detail?id=${series.id}`}
-                  className="group relative overflow-hidden rounded-lg md:rounded-2xl"
-                >
-                  <div className="relative aspect-[16/9] w-full bg-black md:aspect-[302/160]">
-                    <Image
-                      src={
-                        series.image_landscape_url ||
-                        series.image_url ||
-                        series.image ||
-                        '/placeholder.svg'
-                      }
-                      alt={series.name}
-                      fill
-                      className="object-cover transition-transform duration-500 group-hover:scale-105"
-                    />
-                  </div>
-
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/30 to-transparent" />
-
-                  <div className="absolute bottom-3 left-3 right-3 md:bottom-4 md:left-4 md:right-4">
-                    <p className="truncate text-xs font-semibold text-white md:text-sm">
-                      {series.name}
-                    </p>
-                    <p className="mt-0.5 text-[10px] text-white/70 md:mt-1 md:text-xs">
-                      {series.asset_name} • {series.run_time_format}
-                    </p>
-                  </div>
-                </Link>
-              ))
+      {/* Content Sections */}
+      <div className="relative z-10 -mt-10">
+        <LatestFilm items={displayFilms} />
+        
+        {/* Latest Series */}
+        <section className="px-4 py-10 md:px-12 border-t border-white/10">
+          <div className="flex justify-between items-center mb-6">
+            <h2 className="text-xl font-bold text-white">Latest Series</h2>
+            <Link href="/dashboard/series" className="bg-white/10 px-4 py-1.5 rounded-full text-xs text-white">View All</Link>
+          </div>
+          <div className="grid grid-cols-1 lg:grid-cols-[1.5fr_1fr] gap-6">
+            {loading ? <FeaturedSkeleton /> : seriesData[0] && (
+              <Link href={`/dashboard/series/detail?id_group=${seriesData[0].id}`} className="group relative aspect-video rounded-3xl overflow-hidden block">
+                <Image src={seriesData[0].image_landscape_url || seriesData[0].image_url || ''} alt={seriesData[0].name} fill className="object-cover transition-transform group-hover:scale-105" />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent" />
+                <div className="absolute bottom-6 left-6"><h3 className="text-2xl font-bold text-white">{seriesData[0].name}</h3></div>
+              </Link>
             )}
+            <div className="flex flex-col gap-4">
+              {seriesData.slice(1, 4).map(s => (
+                <Link key={s.id} href={`/dashboard/series/detail?id_group=${s.id}`} className="group relative h-32 rounded-2xl overflow-hidden flex items-center bg-white/5 border border-white/5">
+                  <div className="relative h-full aspect-video"><Image src={s.image_url || ''} alt={s.name} fill className="object-cover" /></div>
+                  <div className="px-4"><p className="font-bold text-white text-sm line-clamp-1">{s.name}</p></div>
+                </Link>
+              ))}
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
 
-      {/* Diperbarui: Pasing displayClips untuk memunculkan data latest yang benar */}
-      <LatestClipSection title="Latest Clip" items={loading ? [] : displayClips} />
+        <LatestClipSection items={displayClips} />
+        <UpcomingEventsSection items={eventData} />
+        
+        {latestAwards.length > 0 && (
+          <LatestAwards title="Latest Awards" items={latestAwards.map(a => ({ ...a, id: String(a.id), image_url: a.image_url || '' }))} />
+        )}
 
-      <UpcomingEventsSection title="Upcoming Events" items={eventData} />
+        <CategorySection 
+          items={categoryApiData.map(c => ({ id: c.id, name: c.name, count: c.total_movie || '0', image: c.images_url || '/placeholder.svg' }))} 
+        />
 
-      {loading ? (
-        <section className="px-4 py-6 md:px-6 md:py-8 lg:px-12">
-          <div className="mb-4 flex items-center justify-between md:mb-6">
-            <h2 className="text-lg font-bold text-foreground md:text-2xl">Latest Awards</h2>
-          </div>
-          <div className="grid grid-cols-1 gap-4 md:gap-6 sm:grid-cols-2 lg:grid-cols-4">
-            {[1, 2, 3, 4].map((i) => (
-              <AwardSkeleton key={i} />
+        <MostWatchingFilm items={transformFilmData(mostWatchingFilms)} />
+
+        {/* Creators */}
+        <section className="px-4 py-12 lg:px-12 border-t border-white/10">
+          <h2 className="text-2xl font-bold mb-8">Creators</h2>
+          <div className="flex gap-8 overflow-x-auto pb-4 scrollbar-hide">
+            {creatorApiData.map(creator => (
+              <div key={creator.id} className="flex flex-col items-center flex-shrink-0">
+                <div className="relative h-24 w-24 rounded-full overflow-hidden mb-3 border-2 border-white/10">
+                  <Image src={creator.avatar_url || '/images/pngs.png'} alt={creator.name} fill className="object-cover" />
+                </div>
+                <p className="font-semibold text-sm">{creator.name}</p>
+                <p className="text-xs text-gray-500">{creator.total_video} movies</p>
+              </div>
             ))}
           </div>
         </section>
-      ) : (
-        <LatestAwards
-          title="Latest Awards"
-          viewAllLink="/dashboard/awards"
-          items={displayAwards.length > 0 ? displayAwards : mockAwards}
-        />
-      )}
-
-      <CategorySection title="Category" viewAllLink="/dashboard/film" items={displayCategories} />
-
-      <MostWatchingFilm items={displayMostWatching} />
-
-      <section className="border-t border-border px-4 py-6 md:px-6 md:py-8 lg:px-12">
-        <div className="mb-4 flex items-center justify-between md:mb-6">
-          <h2 className="text-lg font-bold text-foreground md:text-2xl">Creator</h2>
-          <div className="flex gap-2">
-            <button className="rounded-full bg-accent/20 p-1.5 transition-colors hover:bg-accent/40 md:p-2">
-              <X className="h-4 w-4 text-white md:h-5 md:w-5" />
-            </button>
-            <button className="rounded-full bg-accent/20 p-1.5 transition-colors hover:bg-accent/40 md:p-2">
-              <Menu className="h-4 w-4 text-white md:h-5 md:w-5" />
-            </button>
-          </div>
-        </div>
-
-        <div className="flex gap-3 overflow-x-auto pb-4 md:gap-6">
-          {displayCreators.map((creator) => (
-            <div key={creator.id} className="flex flex-shrink-0 flex-col items-center">
-              <div className="relative mb-2 h-16 w-16 overflow-hidden rounded-full bg-white/10 md:mb-4 md:h-24 md:w-24">
-                <Image
-                  src={creator.avatar_url || '/images/pngs.png'}
-                  alt={creator.name}
-                  fill
-                  className="object-cover"
-                />
-              </div>
-              <p className="text-center text-sm font-semibold text-foreground">{creator.name}</p>
-              <p className="text-center text-xs text-muted-foreground">
-                {creator.total_video || '0'} movies
-              </p>
-            </div>
-          ))}
-        </div>
-
-        <div className="mt-8 flex justify-center">
-          <Link
-            href="/dashboard/creator"
-            className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/10 px-4 py-1.5 text-xs font-medium text-white/90 transition-colors hover:bg-white/15 md:px-5 md:py-2 md:text-sm"
-          >
-            <span>View all creator</span>
-            <ChevronRight className="h-4 w-4" />
-          </Link>
-        </div>
-      </section>
-
-      <section className="border-t border-border px-4 py-8 md:px-6 md:py-12 lg:px-12">
-        <div className="relative min-h-96 overflow-hidden rounded-xl md:min-h-[500px]">
-          <div className="absolute inset-0">
-            <Image src="/images/design-mode/a.png" alt="Banner Background" fill className="object-cover" />
-          </div>
-
-          <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/60 to-transparent" />
-
-          <FutureFilmmaking />
-        </div>
-      </section>
-
-      <section className="mx-4 mb-6 mt-8 md:mx-6 md:mb-8 md:mt-12 lg:mx-12">
-        <div className="relative overflow-hidden rounded-lg border border-white/10">
-          <div className="absolute inset-0">
-            <Image src="/images/usky-tv-bg.png" alt="Background" fill className="object-cover" />
-          </div>
-          <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/60 to-black/40" />
-
-          <div className="relative flex flex-col items-center justify-between gap-4 px-4 py-6 md:gap-8 md:px-6 md:py-8 lg:flex-row lg:px-12 lg:py-12">
-            <div className="max-w-md flex-1">
-              <div className="mb-3 inline-block rounded-full bg-foreground px-3 py-1 text-xs font-semibold text-background md:mb-4">
-                Coming Soon
-              </div>
-              <h2 className="mb-3 text-2xl font-bold leading-tight text-foreground md:mb-4 md:text-3xl lg:text-4xl">
-                Get the USKY TV for free
-              </h2>
-              <ul className="space-y-1.5 text-xs text-muted-foreground md:space-y-2 md:text-sm">
-                <li className="flex items-start gap-2">
-                  <span className="mt-1 text-accent">•</span>
-                  <span>Live events, films and shows</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="mt-1 text-accent">•</span>
-                  <span>Offline viewing</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="mt-1 text-accent">•</span>
-                  <span>Event reminders</span>
-                </li>
-              </ul>
-            </div>
-          </div>
-        </div>
-      </section>
+      </div>
 
       <Footer />
     </div>
   )
+}
+
+function transformFilmData(films: FilmData[]) {
+  return films.map(f => ({
+    id: f.id,
+    title: f.name,
+    image: f.image_url || '/login-hero.jpg',
+    description: f.synopsis || 'Watch groundbreaking films.',
+    category: f.cats || 'Films',
+    rating: f.rates ? `${f.rates}/10` : '8.5/10',
+    year: 2025,
+    duration: '1h 0m',
+    genre: f.cats || 'Films',
+  }))
 }
