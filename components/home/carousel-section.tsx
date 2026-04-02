@@ -182,7 +182,7 @@ export function CarouselSection({
                               className="rounded-full bg-white px-4 text-xs text-black hover:bg-gray-200 font-semibold"
                               variant="default"
                             >
-                      {film.genre}
+                              Film
                             </Button>
                           </Link>
                           <Button
@@ -190,7 +190,7 @@ export function CarouselSection({
                             className="rounded-full bg-gray-200 px-4 text-xs text-black hover:bg-gray-300"
                             variant="default"
                           >
-                            Add List
+                      {film.genre}
                           </Button>
                         </>
                       )}
