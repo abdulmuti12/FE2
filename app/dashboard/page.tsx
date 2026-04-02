@@ -125,12 +125,20 @@ function LatestClipSection({ items = [] }: { items?: any[] }) {
   if (items.length === 0) return null
 
   return (
-    <section className="border-t border-white/10 px-4 py-6 md:px-6 lg:px-12">
-      <div className="mb-4 flex items-center justify-between">
-        <Link href="/dashboard/clip" className="font-semibold text-white flex items-center gap-2">
-          Latest Clip <span className="text-white/70">›</span>
-        </Link>
+    <section className="border-t border-white/10 px-4 py-8 md:px-6 lg:px-12">
+      {/* --- BAGIAN HEADER YANG DIUBAH --- */}
+      <div className="flex justify-between items-center mb-6">
+        <h2 className="text-xl font-bold text-white">Latest Clip</h2>
+        {/* <Link 
+          href="/dashboard/clip" 
+          className="bg-white/10 hover:bg-white/20 transition-colors px-4 py-1.5 rounded-full text-xs text-white"
+        >
+          View All
+        </Link> */}
+                    <Link href="/dashboard/clip" className="bg-white/10 px-4 py-1.5 rounded-full text-xs text-white">View All</Link>
+
       </div>
+      {/* --------------------------------- */}
 
       <div className="relative group">
         <div ref={scrollerRef} className="flex gap-4 overflow-x-auto scrollbar-hide pb-4">
@@ -231,7 +239,7 @@ export default function DashboardPage() {
   const displayFilms = latestFilms.map(f => ({
     id: f.id,
     title: f.name,
-    image: f.image_url || '/login-hero.jpg',
+    image: f.image_url ,
     description: f.synopsis || stripHtml(f.description) || 'Watch groundbreaking films.',
     category: f.cats || 'Films',
     rating: f.rates ? `${f.rates}/10` : '8.5/10',
@@ -249,7 +257,7 @@ export default function DashboardPage() {
 
   const currentTrailer = trailers[currentTrailerIndex]
   const heroVideo = currentTrailer?.video_url || (currentTrailer?.video ? `https://api.usky.ai/uploads/${currentTrailer.video}` : '')
-  const heroImage = currentTrailer?.image_url || '/login-hero.jpg'
+  const heroImage = currentTrailer?.image_url 
 
   return (
     <div className="min-h-screen bg-[#0a1628] text-foreground dark">
@@ -371,7 +379,7 @@ function transformFilmData(films: FilmData[]) {
   return films.map(f => ({
     id: f.id,
     title: f.name,
-    image: f.image_url || '/login-hero.jpg',
+    image: f.image_url,
     description: f.synopsis || 'Watch groundbreaking films.',
     category: f.cats || 'Films',
     rating: f.rates ? `${f.rates}/10` : '8.5/10',

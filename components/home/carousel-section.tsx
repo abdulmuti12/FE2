@@ -4,6 +4,7 @@ import { useState } from 'react'
 import Image from 'next/image'
 import { ChevronLeft, ChevronRight, X, Menu } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import Link from 'next/link'
 
 const creatorData = [
   { name: 'Creator 1', count: '5 movies' }
@@ -33,10 +34,13 @@ export function CarouselSection({
     <section className="border-t border-border px-4 py-6 md:px-6 md:py-8 lg:px-12">
       <div className="mb-4 flex items-center justify-between md:mb-6">
         <h2 className="text-sm font-bold text-foreground md:text-2xl">{title}</h2>
-         <a href="/dashboard/film" className="inline-flex items-center gap-2 font-semibold text-white hover:text-white/80 transition-colors">
+         {/* <a href="/dashboard/film" className="inline-flex items-center gap-2 font-semibold text-white hover:text-white/80 transition-colors">
           <span className="text-xs md:text-base">View All</span>
           <span className="text-white/70">›</span>
-        </a>
+        </a> */}
+                            <Link href="/dashboard/film" className="bg-white/10 px-4 py-1.5 rounded-full text-xs text-white">View All</Link>
+
+        
       </div>
 
       {layout === 'default' && (
