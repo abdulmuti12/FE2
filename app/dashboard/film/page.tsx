@@ -15,7 +15,7 @@ interface Film {
   years: string
   run_time_format: string
   synopsis: string
-  cats: string
+  genre: string
 }
 
 interface Category {

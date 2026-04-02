@@ -182,7 +182,7 @@ export function CarouselSection({
                               className="rounded-full bg-white px-4 text-xs text-black hover:bg-gray-200 font-semibold"
                               variant="default"
                             >
-                              Watch
+                      {film.genre}
                             </Button>
                           </Link>
                           <Button
