@@ -5,6 +5,7 @@ import { Header } from '@/components/header'
 import { Footer } from '@/components/footer'
 import { ChevronRight, Play, Info } from 'lucide-react'
 import Image from 'next/image'
+import Link from 'next/link' // 1. Import Link dari next/link
 
 interface Film {
   id: string
@@ -212,48 +213,52 @@ export default function FilmPage() {
                           return (
                             <div
                               key={film.id}
-                              className="relative transition-all duration-300 ease-out"
+                              className="relative transition-all duration-300 ease-out cursor-pointer"
                               onMouseEnter={() => setHoveredFilmId(film.id)}
                               onMouseLeave={() => setHoveredFilmId(null)}
                             >
-                              <div
-                                className={`
-                                  relative rounded-2xl overflow-hidden bg-[#0f172a]
-                                  transition-all duration-300 ease-out
-                                  ${isHovered ? 'w-[520px] h-[300px] z-30' : 'w-[260px] h-[300px]'}
-                                `}
-                              >
-                                <Image
-                                  src={film.image_url}
-                                  alt={film.name}
-                                  fill
-                                  className="object-cover"
-                                  unoptimized
-                                />
+                              {/* 2. Bungkus dengan Link mengarah ke halaman detail */}
+                              <Link href={`/dashboard/film/detail?id=${film.id}`} className="block">
+                                <div
+                                  className={`
+                                    relative rounded-2xl overflow-hidden bg-[#0f172a]
+                                    transition-all duration-300 ease-out
+                                    ${isHovered ? 'w-[520px] h-[300px] z-30 shadow-2xl' : 'w-[260px] h-[300px]'}
+                                  `}
+                                >
+                                  <Image
+                                    src={film.image_url}
+                                    alt={film.name}
+                                    fill
+                                    className="object-cover"
+                                    unoptimized
+                                  />
 
-                                {isHovered && (
-                                  <>
-                                    <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent" />
-                                    <div className="absolute left-6 right-6 bottom-6">
-                                      <h3 className="text-white text-xl font-semibold mb-3">
-                                        {film.name}
-                                      </h3>
-                                      <div className="flex items-center gap-3 mb-3">
-                                        <button className="flex items-center gap-2 bg-white text-black px-5 py-2 rounded-full text-sm font-semibold hover:bg-gray-100 transition-colors">
-                                          <Play className="w-4 h-4 fill-black" />
-                                          Watch Now
-                                        </button>
-                                        <button className="w-10 h-10 rounded-full border border-white/30 bg-white/10 flex items-center justify-center hover:bg-white/20 transition-colors">
-                                          <Info className="w-5 h-5 text-white" />
-                                        </button>
+                                  {isHovered && (
+                                    <>
+                                      <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent" />
+                                      <div className="absolute left-6 right-6 bottom-6">
+                                        <h3 className="text-white text-xl font-semibold mb-3">
+                                          {film.name}
+                                        </h3>
+                                        <div className="flex items-center gap-3 mb-3">
+                                          {/* 3. Ubah button menjadi div agar valid HTML saat di dalam Link */}
+                                          <div className="flex items-center gap-2 bg-white text-black px-5 py-2 rounded-full text-sm font-semibold hover:bg-gray-100 transition-colors">
+                                            <Play className="w-4 h-4 fill-black" />
+                                            Watch Now
+                                          </div>
+                                          <div className="w-10 h-10 rounded-full border border-white/30 bg-white/10 flex items-center justify-center hover:bg-white/20 transition-colors">
+                                            <Info className="w-5 h-5 text-white" />
+                                          </div>
+                                        </div>
+                                        <p className="text-sm text-white/70 line-clamp-2 max-w-[440px]">
+                                          {film.synopsis || `${film.name} • ${film.years} • ${film.run_time_format}`}
+                                        </p>
                                       </div>
-                                      <p className="text-sm text-white/70 line-clamp-2 max-w-[440px]">
-                                        {film.synopsis || `${film.name} • ${film.years} • ${film.run_time_format}`}
-                                      </p>
-                                    </div>
-                                  </>
-                                )}
-                              </div>
+                                    </>
+                                  )}
+                                </div>
+                              </Link>
                             </div>
                           )
                         })}
