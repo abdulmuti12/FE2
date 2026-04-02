@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation' // 1. Import useRouter
 import { Header } from '@/components/header'
 import { Footer } from '@/components/footer'
 import { Play, Search, ChevronDown } from 'lucide-react'
@@ -39,7 +40,7 @@ interface PaginationMeta {
   html_links: string
 }
 
-const ITEMS_PER_PAGE = 12 // Disesuaikan menjadi kelipatan 4 agar grid selalu penuh di halaman
+const ITEMS_PER_PAGE = 12 
 
 const truncateText = (text: string | null | undefined, maxLength: number = 75) => {
   if (!text) return ""
@@ -49,6 +50,8 @@ const truncateText = (text: string | null | undefined, maxLength: number = 75) =
 }
 
 export default function SeriesPage() {
+  const router = useRouter() // 2. Inisialisasi router
+
   const [genres, setGenres] = useState<Category[]>([])
   const [selectedGenre, setSelectedGenre] = useState('All Genre')
   const [selectedGenreId, setSelectedGenreId] = useState('')
@@ -63,13 +66,21 @@ export default function SeriesPage() {
   const [currentPage, setCurrentPage] = useState(1)
   const [pagination, setPagination] = useState<PaginationMeta | null>(null)
 
+  // 3. Tambahkan pengecekan token tersendiri (opsional tapi disarankan agar lebih cepat)
+  useEffect(() => {
+    const token = localStorage.getItem('user_token')
+    if (!token) {
+      router.push('/')
+    }
+  }, [router])
+
   useEffect(() => {
     const fetchCategories = async () => {
       try {
         const token = localStorage.getItem('user_token')
         if (!token) {
-          setGenres([])
-          setLoadingCategories(false)
+          // 4. Redirect jika tidak ada token
+          router.push('/')
           return
         }
         const response = await fetch('/api/series/series-categories', {
@@ -97,15 +108,15 @@ export default function SeriesPage() {
       }
     }
     fetchCategories()
-  }, [])
+  }, [router])
 
   const fetchSeries = async (pageNum: number = 1) => {
     try {
       setLoadingSeries(true)
       const token = localStorage.getItem('user_token')
       if (!token) {
-        setSeriesData([])
-        setLoadingSeries(false)
+        // 5. Redirect jika tidak ada token
+        router.push('/')
         return
       }
 
@@ -151,28 +162,11 @@ export default function SeriesPage() {
 
   useEffect(() => {
     fetchSeries(1)
-  }, [selectedGenreId, selectedSort])
+  }, [selectedGenreId, selectedSort, router])
 
   return (
     <div className="min-h-screen bg-[#050B14] text-white font-sans">
       <Header />
-
-      {/* Hero Banner Section */}
-      {/* <div className="relative w-full h-[200px] sm:h-[260px] md:h-[320px] overflow-hidden">
-        <Image
-          src="/images/imageheader.png"
-          alt="Series Banner"
-          fill
-          className="object-cover object-center"
-          priority
-        />
-        <div className="absolute inset-0 bg-gradient-to-b from-[#050B14]/30 via-transparent to-[#050B14]" />
-        <div className="absolute inset-0 flex items-center justify-center pt-8 md:pt-0">
-          <h1 className="text-3xl md:text-5xl lg:text-6xl font-bold text-white tracking-wide">
-            Series
-          </h1>
-        </div>
-      </div> */}
 
       {/* Main Content Area */}
       <div className="w-full mx-auto px-4 sm:px-6 lg:px-10 xl:px-14 py-8 md:py-12 pb-24">
@@ -188,7 +182,6 @@ export default function SeriesPage() {
         )}
 
         {/* Series Grid */}
-        {/* PERUBAHAN UTAMA: lg:grid-cols-4 agar selalu 4 item per baris di desktop */}
         {!loadingSeries && seriesData.length > 0 && (
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-5 lg:gap-6">
             {seriesData.map((series) => (
