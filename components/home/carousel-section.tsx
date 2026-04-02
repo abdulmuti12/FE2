@@ -34,15 +34,12 @@ export function CarouselSection({
     <section className="border-t border-border px-4 py-6 md:px-6 md:py-8 lg:px-12">
       <div className="mb-4 flex items-center justify-between md:mb-6">
         <h2 className="text-sm font-bold text-foreground md:text-2xl">{title}</h2>
-         {/* <a href="/dashboard/film" className="inline-flex items-center gap-2 font-semibold text-white hover:text-white/80 transition-colors">
-          <span className="text-xs md:text-base">View All</span>
-          <span className="text-white/70">›</span>
-        </a> */}
-                            <Link href="/dashboard/film" className="bg-white/10 px-4 py-1.5 rounded-full text-xs text-white">View All</Link>
-
-        
+        <Link href="/dashboard/film" className="bg-white/10 px-4 py-1.5 rounded-full text-xs text-white hover:bg-white/20 transition-colors">
+          View All
+        </Link>
       </div>
 
+      {/* TAMPILAN MOBILE */}
       {layout === 'default' && (
         <div className="relative md:hidden">
           <div className="overflow-hidden">
@@ -53,19 +50,26 @@ export function CarouselSection({
               {items.map((film) => (
                 <div key={film.id} className="w-[88%] flex-shrink-0">
                   <div className="overflow-hidden rounded-xl bg-black">
-                    <div className="relative h-[170px] w-full">
-                      <Image
-                        src={film.image || '/placeholder.svg'}
-                        alt={film.title}
-                        fill
-                        className="object-cover"
-                      />
-                    </div>
+                    
+                    {/* 1. Bungkus Gambar Mobile dengan Link */}
+                    <Link href={`/dashboard/film/detail?id=${film.id}`}>
+                      <div className="relative h-[170px] w-full">
+                        <Image
+                          src={film.image || '/placeholder.svg'}
+                          alt={film.title}
+                          fill
+                          className="object-cover"
+                        />
+                      </div>
+                    </Link>
 
                     <div className="p-3">
-                      <p className="mb-1 line-clamp-1 text-[15px] font-semibold text-white">
-                        {film.title}
-                      </p>
+                      {/* 2. Judul juga bisa di-klik */}
+                      <Link href={`/dashboard/film/detail?id=${film.id}`}>
+                        <p className="mb-1 line-clamp-1 text-[15px] font-semibold text-white hover:text-blue-400 transition-colors">
+                          {film.title}
+                        </p>
+                      </Link>
 
                       {film.year && <p className="mb-2 text-[12px] text-gray-400">{film.year}</p>}
 
@@ -74,7 +78,6 @@ export function CarouselSection({
                       </p>
 
                       <div className="flex flex-wrap gap-2">
-                        {/* Perubahan di sini: Tambahkan filter untuk mengecualikan 'AI' di tampilan Mobile */}
                         {film.categories?.filter((cat: string) => cat !== 'AI').slice(0, 2).map((cat: string, idx: number) => (
                           <Button
                             key={idx}
@@ -113,6 +116,7 @@ export function CarouselSection({
         </div>
       )}
 
+      {/* TAMPILAN DESKTOP */}
       <div className={`${layout === 'default' ? 'hidden md:block' : 'block'} relative`}>
         <div className="overflow-hidden">
           <div
@@ -121,7 +125,7 @@ export function CarouselSection({
           >
             {layout === 'creator'
               ? creatorData.map((item, idx) => (
-                  <div key={idx} className="w-1/3 flex-shrink-0 text-center sm:w-1/4 lg:w-1/7">
+                  <div key={idx} className="w-1/3 flex-shrink-0 text-center sm:w-1/4 lg:w-1/7 cursor-pointer">
                     <div className="mb-2 flex aspect-square w-full items-center justify-center rounded-full bg-gradient-to-br from-[#7c4c9f] to-[#4a2a6a] md:mb-3">
                       <span className="text-xl text-white md:text-4xl">👤</span>
                     </div>
@@ -133,25 +137,33 @@ export function CarouselSection({
                 ))
               : items.map((film) => (
                   <div key={film.id} className="w-1/2 flex-shrink-0 md:w-1/4 lg:w-1/4">
-                    <div className="group relative mb-2 h-32 overflow-hidden rounded-lg md:mb-4 md:h-60">
-                      <Image
-                        src={film.image || '/placeholder.svg'}
-                        alt={film.title}
-                        fill
-                        className="object-cover transition-transform duration-300 hover:scale-105"
-                      />
-                    </div>
-                    <p className="mb-1 line-clamp-1 text-xs font-semibold text-foreground md:text-base">
-                      {film.title}
-                    </p>
+                    
+                    {/* 3. Bungkus Gambar Desktop dengan Link */}
+                    <Link href={`/dashboard/film/detail?id=${film.id}`}>
+                      <div className="group relative mb-2 h-32 overflow-hidden rounded-lg md:mb-4 md:h-60 cursor-pointer">
+                        <Image
+                          src={film.image || '/placeholder.svg'}
+                          alt={film.title}
+                          fill
+                          className="object-cover transition-transform duration-300 group-hover:scale-105"
+                        />
+                      </div>
+                    </Link>
+
+                    <Link href={`/dashboard/film/detail?id=${film.id}`}>
+                      <p className="mb-1 line-clamp-1 text-xs font-semibold text-foreground md:text-base hover:text-blue-400 transition-colors cursor-pointer">
+                        {film.title}
+                      </p>
+                    </Link>
+
                     {film.year && (
                       <p className="hidden text-xs text-muted-foreground md:block">{film.year}</p>
                     )}
                     <p className="mb-2 hidden line-clamp-2 text-xs text-muted-foreground md:mb-3 md:block">
                       {film.description}
                     </p>
+
                     <div className="hidden flex-wrap gap-2 md:flex">
-                      {/* Perubahan di sini: Tambahkan filter untuk mengecualikan 'AI' di tampilan Desktop */}
                       {film.categories?.filter((cat: string) => cat !== 'AI').map((cat: string, idx: number) => (
                         <Button
                           key={idx}
@@ -163,13 +175,16 @@ export function CarouselSection({
                         </Button>
                       )) || (
                         <>
-                          <Button
-                            size="sm"
-                            className="rounded-full bg-gray-200 px-4 text-xs text-black hover:bg-gray-300"
-                            variant="default"
-                          >
-                            Watch
-                          </Button>
+                          {/* 4. Bungkus Button "Watch" dengan Link */}
+                          <Link href={`/dashboard/film/detail?id=${film.id}`}>
+                            <Button
+                              size="sm"
+                              className="rounded-full bg-white px-4 text-xs text-black hover:bg-gray-200 font-semibold"
+                              variant="default"
+                            >
+                              Watch
+                            </Button>
+                          </Link>
                           <Button
                             size="sm"
                             className="rounded-full bg-gray-200 px-4 text-xs text-black hover:bg-gray-300"
