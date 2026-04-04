@@ -64,9 +64,11 @@ export function LatestAwards({ title, viewAllLink = '#', items = [] }: LatestAwa
                     {award.name || award.title}
                   </h3>
 
-                  <p className="mb-3 line-clamp-2 px-2 text-center text-xs text-gray-400">
-                    {award.description || award.synopsis}
-                  </p>
+                  {/* BAGIAN YANG DIUBAH */}
+                  <div 
+                    className="mb-3 line-clamp-2 px-2 text-center text-xs text-gray-400"
+                    dangerouslySetInnerHTML={{ __html: award.description || award.synopsis || '' }}
+                  />
 
                   {(award.genre || award.category || award.cats) && (
                     <button className="inline-block rounded-full bg-white px-4 py-1 text-[11px] font-medium text-black transition-colors hover:bg-gray-200">

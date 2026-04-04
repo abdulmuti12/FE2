@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import Image from 'next/image'
-import { ChevronRight } from 'lucide-react'
+import { ChevronLeft, ChevronRight } from 'lucide-react'
 
 interface Creator {
   id: string
@@ -18,70 +18,85 @@ interface CreatorSectionProps {
   viewAllLink?: string
 }
 
+// 💡 DUMMY DATA: Dipakai sementara jika props 'creators' yang dikirim kosong
+const DUMMY_CREATORS: Creator[] = Array(6).fill(null).map((_, i) => ({
+  id: `dummy-${i + 1}`,
+  name: '[Creator]',
+  total_video: '3'
+}))
+
 export function CreatorSection({ 
   creators = [], 
-  title = 'Top Creators',
+  title = 'Creator',
   viewAllLink = '/dashboard/creator'
 }: CreatorSectionProps) {
-  // Display max 6 creators in the section
-  const displayedCreators = creators.slice(0, 6)
+  
+  // Jika creators kosong, pakaikan dummy data agar UI tetap bisa di-test
+  const activeData = creators.length > 0 ? creators : DUMMY_CREATORS
+  const displayedCreators = activeData.slice(0, 6)
 
   return (
-    <section className="border-t border-white/10 px-4 py-6 md:px-6 md:py-8 lg:px-12">
-      {/* Header with title and View All button */}
+    <section className="border-t border-white/10 px-4 py-6 md:px-6 md:py-8 lg:px-12 bg-[#020817]">
+      {/* Header dengan title dan panah navigasi */}
       <div className="mb-6 flex items-center justify-between">
-        <h2 className="text-sm font-semibold text-white md:text-lg">{title}</h2>
-        <Link
-          href={viewAllLink}
-          className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/10 px-4 py-1.5 text-xs font-medium text-white/90 transition-colors hover:bg-white/15 md:px-5 md:py-2 md:text-sm"
-        >
-          <span>View all creator</span>
-          <ChevronRight className="h-4 w-4" />
-        </Link>
+        <h2 className="text-lg font-bold text-white md:text-xl">{title}</h2>
+        <div className="flex items-center gap-4 text-gray-400">
+          <button className="transition-colors hover:text-white" aria-label="Previous">
+            <ChevronLeft className="h-5 w-5" />
+          </button>
+          <button className="transition-colors hover:text-white" aria-label="Next">
+            <ChevronRight className="h-5 w-5" />
+          </button>
+        </div>
       </div>
 
       {/* Creators Grid */}
-      {displayedCreators.length > 0 ? (
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 md:gap-6">
-          {displayedCreators.map((creator) => (
-            <Link
-              key={creator.id}
-              href={`/dashboard/creator?id=${creator.id}`}
-              className="group flex flex-col items-center cursor-pointer"
-            >
-              {/* Avatar Circle */}
-              <div className="relative w-24 h-24 md:w-32 md:h-32 rounded-full overflow-hidden mb-3 md:mb-4 border-4 border-[#020817] shadow-lg transition-transform duration-300 group-hover:scale-110 bg-gradient-to-br from-cyan-500 via-purple-500 to-pink-500">
-                {creator.avatar_url || creator.avatar ? (
-                  <Image
-                    src={creator.avatar_url || creator.avatar || '/placeholder.svg'}
-                    alt={creator.name}
-                    fill
-                    className="object-cover"
-                  />
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-cyan-400 via-purple-400 to-pink-400">
-                    <div className="text-white font-bold text-xl">
-                      {creator.name.charAt(0).toUpperCase()}
-                    </div>
+      <div className="grid grid-cols-2 gap-4 md:grid-cols-3 md:gap-6 lg:grid-cols-6">
+        {displayedCreators.map((creator) => (
+          <Link
+            key={creator.id}
+            href={`/dashboard/creator?id=${creator.id}`}
+            className="group flex cursor-pointer flex-col items-center"
+          >
+            {/* Avatar Circle */}
+            <div className="relative mb-3 h-24 w-24 overflow-hidden rounded-full border-4 border-[#020817] bg-gray-800 shadow-lg transition-transform duration-300 group-hover:scale-110 md:mb-4 md:h-32 md:w-32">
+              {creator.avatar_url || creator.avatar ? (
+                <Image
+                  src={creator.avatar_url || creator.avatar || '/placeholder.svg'}
+                  alt={creator.name}
+                  fill
+                  className="object-cover"
+                />
+              ) : (
+                <div className="flex h-full w-full items-center justify-center bg-gray-200">
+                   {/* Placeholder Pixel-art style as seen on image can be complex, using simple text for now */}
+                  <div className="text-xl font-bold text-gray-600">
+                    {creator.name.replace(/[^a-zA-Z]/g, '').charAt(0).toUpperCase()}
                   </div>
-                )}
-              </div>
+                </div>
+              )}
+            </div>
 
-              {/* Creator Info */}
-              <h3 className="text-white font-semibold text-sm md:text-base text-center mb-1 group-hover:text-blue-400 transition-colors">
-                {creator.name}
-              </h3>
-              <p className="text-gray-400 text-xs md:text-sm text-center">
-                {creator.total_video || '0'} Videos
-              </p>
-            </Link>
-          ))}
-        </div>
-      ) : (
-        <div className="flex items-center justify-center py-12">
-          <p className="text-gray-400 text-sm">No creators available</p>
-        </div>
-      )}
+            {/* Creator Info */}
+            <h3 className="mb-1 text-center text-sm font-semibold text-white transition-colors group-hover:text-blue-400 md:text-base">
+              {creator.name}
+            </h3>
+            <p className="text-center text-xs text-gray-400 md:text-sm">
+              {creator.total_video || '0'} Films
+            </p>
+          </Link>
+        ))}
+      </div>
+
+      {/* Tombol View All Creators - Pindah ke bawah tengah */}
+      <div className="mt-8 flex justify-center">
+        <Link
+          href={viewAllLink}
+          className="rounded-lg border border-white/20 bg-transparent px-6 py-2 text-sm font-medium text-white transition-colors hover:bg-white/10 md:px-8 md:py-2.5"
+        >
+          View All Creators
+        </Link>
+      </div>
     </section>
   )
 }
