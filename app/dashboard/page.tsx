@@ -301,7 +301,7 @@ export default function DashboardPage() {
             </p>
             <div className="flex gap-4">
               <Button 
-                onClick={() => router.push(`/dashboard/series/detail?id_group=${currentTrailer?.id}`)}
+                onClick={() => router.push(`/dashboard/film/detail?id=${currentTrailer?.id}`)}
                 className="bg-white text-black hover:bg-gray-200 px-8 py-6 rounded-md font-bold flex items-center gap-2"
               >
                 <Play className="h-5 w-5 fill-black" /> Watch Now
