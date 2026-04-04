@@ -1,53 +1,37 @@
 'use client'
-
+ 
 import { Header } from '@/components/header'
 import { Footer } from '@/components/footer'
 import { Heart, Eye, Search, Plus, Clock, FileText, Trophy, Play } from 'lucide-react'
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import Image from 'next/image'
-
+ 
 interface AwardSubmission {
-  id: number
-  title: string
-  creator: string
-  image: string
-  likes: number | string
-  views: number | string
-  category: string
+  id: string | number
+  name: string
+  image_url: string
+  likes?: number | string
+  views?: number | string
+  play?: number | string
 }
-
+ 
 const FILTER_OPTIONS = ['Trending', 'Latest', 'Most Liked', 'Most Viewed']
 const TABS = ['Projects', 'Theme', 'Terms']
-
-const AWARD_SUBMISSIONS: AwardSubmission[] = [
-  { id: 1,  title: '[Judul Film]', creator: 'by Jennie Kim', image: '/film/film5.png', likes: 12, views: 15, category: 'Film' },
-  { id: 2,  title: '[Judul Film]', creator: 'by Jennie Kim', image: '/film/film2.png', likes: 12, views: 15, category: 'Film' },
-  { id: 3,  title: '[Judul Film]', creator: 'by Jennie Kim', image: '/film/film6.png', likes: 12, views: 15, category: 'Film' },
-  { id: 4,  title: '[Judul Film]', creator: 'by Jennie Kim', image: '/film/film4.png', likes: 12, views: 15, category: 'Film' },
-  { id: 5,  title: '[Judul Film]', creator: 'by Jennie Kim', image: '/film/film4.png', likes: 12, views: 15, category: 'Film' },
-  { id: 6,  title: '[Judul Film]', creator: 'by Jennie Kim', image: '/film/film5.png', likes: 12, views: 15, category: 'Film' },
-  { id: 7,  title: '[Judul Film]', creator: 'by Jennie Kim', image: '/film/film2.png', likes: 12, views: 15, category: 'Film' },
-  { id: 8,  title: '[Judul Film]', creator: 'by Jennie Kim', image: '/film/film6.png', likes: 12, views: 15, category: 'Film' },
-  { id: 9,  title: '[Judul Film]', creator: 'by Jennie Kim', image: '/film/film5.png', likes: 12, views: 15, category: 'Film' },
-  { id: 10, title: '[Judul Film]', creator: 'by Jennie Kim', image: '/film/film2.png', likes: 12, views: 15, category: 'Film' },
-  { id: 11, title: '[Judul Film]', creator: 'by Jennie Kim', image: '/film/film4.png', likes: 12, views: 15, category: 'Film' },
-  { id: 12, title: '[Judul Film]', creator: 'by Jennie Kim', image: '/film/film6.png', likes: 12, views: 15, category: 'Film' },
-]
-
+ 
 const PRIZE_BREAKDOWN = [
   { label: '1st',                amount: 'IDR 300,000,000' },
   { label: '2nd',                amount: 'IDR 200,000,000' },
   { label: '3rd',                amount: 'IDR 100,000,000' },
   { label: 'Honorable Mentions', amount: 'IDR 10,000,000'  },
 ]
-
+ 
 const FAQS = [
-  { q: 'Who can join the competition?',              a: "Anyone — whether you're a student, professional, digital artist, or simply an AI enthusiast — everyone is welcome to submit their AI-powered short films." },
+  { q: 'Who can join the competition?',               a: "Anyone — whether you're a student, professional, digital artist, or simply an AI enthusiast — everyone is welcome to submit their AI-powered short films." },
   { q: 'Does my film have to be fully made with AI?', a: "AI must play a meaningful role in your production process, but you don't have to use AI for every single element. Human creativity combined with AI tools is encouraged." },
   { q: 'Can I use copyrighted materials in my film?', a: 'No. All submitted films must use original or properly licensed content. Using copyrighted music, footage, or images without permission will result in disqualification.' },
-  { q: 'How long should the film be?',               a: 'Minimum 30 seconds, maximum 15 minutes depending on category. Please check the specific category guidelines for exact duration requirements.' },
+  { q: 'How long should the film be?',                a: 'Minimum 30 seconds, maximum 15 minutes depending on category. Please check the specific category guidelines for exact duration requirements.' },
 ]
-
+ 
 const SPECIAL_CATEGORIES = [
   { name: 'Best AI Short Film',  icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4 text-gray-400"><rect x="2" y="6" width="20" height="12" rx="2"/><polygon points="10 9 15 12 10 15 10 9"/></svg> },
   { name: 'Best AI Advertising', icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4 text-gray-400"><path d="M11 20H7a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h4"/><path d="M11 4v16"/><path d="M11 8h6l3-2v12l-3-2h-6"/><path d="M3 14v4a2 2 0 0 0 2 2h2"/></svg> },
@@ -56,14 +40,14 @@ const SPECIAL_CATEGORIES = [
   { name: 'Best AI Long Film',   icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4 text-gray-400"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg> },
   { name: 'Best AI Music Video', icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4 text-gray-400"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M10 8l6 4-6 4V8z"/></svg> },
 ]
-
+ 
 const TIMELINE = [
   { label: 'Submission',      date: '1–30 July 2025' },
   { label: 'Public Voting',   date: '15 July – 15 August 2025' },
   { label: 'Jury Evaluating', date: '16 August 2025' },
   { label: 'Finalist Reveal', date: '16 August 2025' },
 ]
-
+ 
 const JUDGING_CRITERIA = [
   { icon: '🎬', text: 'Storytelling & Narrative Strength' },
   { icon: '🤖', text: 'Creative Use of AI' },
@@ -71,14 +55,14 @@ const JUDGING_CRITERIA = [
   { icon: '💡', text: 'Originality & Innovation' },
   { icon: '🎯', text: 'Overall Impact & Execution' },
 ]
-
+ 
 const SUBMIT_STEPS = [
   { num: '1', title: 'Log in as a Creator', desc: "Access the platform at usky.ai and log in using your Creator account. If you're not registered yet, sign up first to get started." },
   { num: '2', title: 'Go to "Video List"',  desc: 'After logging in, open the Video List section from your dashboard.' },
   { num: '3', title: 'Click "Add Film"',    desc: 'Begin your submission by selecting Add Film to create a new entry.' },
   { num: '4', title: 'Complete Submission', desc: 'Fill in the submission form, genre, and other required info to fully submit your AI Short Film for peer viewing quality.' },
 ]
-
+ 
 const TERMS_SECTIONS = [
   { title: 'Eligibility',              items: ['Open to individuals aged 15 years and above.', 'Participants may enter as individuals or teams (max 5 members).', 'Open to Indonesian citizens and residents only for the 2025 edition.'] },
   { title: 'Film Requirements',        items: ['The duration depends on the category of the AI film you are submitting.', 'Language: Any, but English or Bahasa Indonesia subtitles are mandatory.', 'The film must incorporate AI tools in at least one area: script, visual, animation, voice, or editing.', 'Genre must be selected from the provided list.'] },
@@ -87,11 +71,11 @@ const TERMS_SECTIONS = [
   { title: 'Judging & Audience Votes', items: ['60% Jury Score: Based on creativity, use of AI, storytelling, visual execution, and impact.', '40% Audience Score: Based on Plays, Likes, Shares, Views, and Watchlists on USKY.AI platform.', 'All decisions by the judges and organizers are final and binding.'] },
   { title: 'Rights & Usage',           items: ['Participants retain ownership of their films.', 'By submitting, participants grant USKY.AI the non-exclusive right to showcase, promote, and distribute the film for non-commercial promotional purposes with proper credit.', 'Plagiarism, copyright infringement, offensive content, or violation of any rule will result in immediate disqualification.'] },
 ]
-
+ 
 // ─────────────────────────────────────────────
 // SHARED COMPONENTS
 // ─────────────────────────────────────────────
-
+ 
 function PrizeSidebar() {
   return (
     <div className="sticky top-4 space-y-3 max-w-[380px] ml-auto">
@@ -145,7 +129,7 @@ function PrizeSidebar() {
     </div>
   )
 }
-
+ 
 function FaqAccordion({ faqs }: { faqs: { q: string; a: string }[] }) {
   const [open, setOpen] = useState<number | null>(null)
   return (
@@ -164,12 +148,66 @@ function FaqAccordion({ faqs }: { faqs: { q: string; a: string }[] }) {
     </div>
   )
 }
-
+ 
+// ─────────────────────────────────────────────
+// TYPES FOR LEADERBOARD
+// ─────────────────────────────────────────────
+ 
+interface Creator {
+  id: string | number
+  name: string
+  email?: string
+  avatar?: string | null
+  watch?: string | number
+  likes?: string | number
+  vote?: string | number
+  views?: string | number
+  play?: string | number
+  totals?: string | number
+}
+ 
+interface AwardCategory {
+  id: string | number
+  name: string
+  duration_from?: string | number
+  duration_to?: string | number
+  creator?: Creator[]
+}
+ 
 // ─────────────────────────────────────────────
 // TAB: THEME
 // ─────────────────────────────────────────────
-
+ 
 function ThemeContent() {
+  const [leaderboardData, setLeaderboardData] = useState<AwardCategory[]>([])
+  const [leaderboardLoading, setLeaderboardLoading] = useState(true)
+  const [selectedCategory, setSelectedCategory] = useState<string | number>('1')
+ 
+  useEffect(() => {
+    const fetchLeaderboard = async () => {
+      try {
+        setLeaderboardLoading(true)
+        const response = await fetch('/api/awards/leaderboard')
+        const data = await response.json()
+        if (data.count && Array.isArray(data.count)) {
+          setLeaderboardData(data.count)
+          if (data.count.length > 0) {
+            setSelectedCategory(data.count[0].id)
+          }
+        }
+      } catch (error) {
+        console.error('[v0] Failed to fetch leaderboard:', error)
+        setLeaderboardData([])
+      } finally {
+        setLeaderboardLoading(false)
+      }
+    }
+    fetchLeaderboard()
+  }, [])
+ 
+  const currentCategory = leaderboardData.find(cat => cat.id === selectedCategory)
+  const creators = currentCategory?.creator || []
+ 
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mt-2">
       <div className="md:col-span-2 space-y-8">
@@ -193,7 +231,8 @@ function ThemeContent() {
           <p className="text-gray-400 text-base">🤖 AI tools allowed: text-to-video, image generation, AI voice, AI editing, AI compositing, and more.</p>
         </div>
         <p className="text-gray-300 text-base font-semibold italic">This is your moment to redefine filmmaking in the AI era.</p>
-
+ 
+        {/* Prize Pool Podium */}
         <div className="w-full">
           <p className="text-white text-2xl font-bold mb-5 uppercase tracking-tight">💰 Prize Pool — IDR 1,000,000,000 Total</p>
           <div className="flex items-end justify-center gap-3 md:gap-6 mb-10 mt-16 w-full max-w-6xl mx-auto px-4">
@@ -253,7 +292,8 @@ function ThemeContent() {
             </div>
           </div>
         </div>
-
+ 
+        {/* Special Categories */}
         <div className="max-w-3xl">
           <p className="text-white text-xl font-bold mb-4">⭐ Special Category Winners</p>
           <div className="grid grid-cols-3 gap-3">
@@ -265,7 +305,8 @@ function ThemeContent() {
             ))}
           </div>
         </div>
-
+ 
+        {/* Honorable Mentions */}
         <div>
           <p className="text-white text-xl font-bold mb-4">🎖 Honorable Mentions</p>
           <p className="text-gray-400 text-sm mb-3">Up to 10 selected films receive IDR 10,000,000 each.</p>
@@ -278,7 +319,8 @@ function ThemeContent() {
             ))}
           </div>
         </div>
-
+ 
+        {/* Timeline */}
         <div>
           <p className="text-white text-xl font-bold mb-6">Timeline</p>
           <div className="relative">
@@ -294,7 +336,8 @@ function ThemeContent() {
             </div>
           </div>
         </div>
-
+ 
+        {/* Judging Criteria */}
         <div>
           <p className="text-white text-xl font-bold mb-2">Judging Criteria</p>
           <p className="text-gray-400 text-base mb-4">Our expert panel evaluates entries based on:</p>
@@ -304,7 +347,8 @@ function ThemeContent() {
             ))}
           </ul>
         </div>
-
+ 
+        {/* Submit Steps */}
         <div className="max-w-5xl">
           <p className="text-white text-xl font-bold mb-2">Submit Your Film</p>
           <p className="text-gray-400 text-base mb-4">Step-by-step guide to submit your AI-powered short film to the platform.</p>
@@ -318,22 +362,120 @@ function ThemeContent() {
             ))}
           </div>
         </div>
-
+ 
+        {/* FAQ */}
         <div className="max-w-2xl">
           <p className="text-white text-xl font-bold mb-4">Frequently Asked Questions</p>
           <FaqAccordion faqs={FAQS} />
         </div>
+ 
+        {/* Leaderboard Section */}
+        <div className="mt-12 pt-8 border-t border-white/10">
+          <h3 className="text-white font-bold text-2xl mb-6">🏆 Leaderboard</h3>
+ 
+          {/* Category Selector */}
+          <div className="flex gap-3 overflow-x-auto pb-4 mb-6">
+            {leaderboardData.map((category) => (
+              <button
+                key={category.id}
+                onClick={() => setSelectedCategory(category.id)}
+                className={`px-4 py-2.5 rounded-lg text-sm font-semibold whitespace-nowrap transition-all ${
+                  selectedCategory === category.id
+                    ? 'bg-yellow-400 text-black'
+                    : 'bg-[#0b1d35] text-gray-300 border border-white/10 hover:border-white/30'
+                }`}
+              >
+                {category.name}
+              </button>
+            ))}
+          </div>
+ 
+          {/* Leaderboard Table */}
+          <div className="bg-[#0b1d35] border border-white/10 rounded-xl overflow-hidden">
+            {leaderboardLoading ? (
+              <div className="flex items-center justify-center py-16">
+                <div className="text-gray-400">Loading leaderboard...</div>
+              </div>
+            ) : creators.length === 0 ? (
+              <div className="flex items-center justify-center py-16">
+                <div className="text-gray-400">No leaderboard data available</div>
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full text-left text-sm">
+                  <thead>
+                    <tr className="border-b border-white/10 bg-[#0f2847]">
+                      <th className="px-6 py-4 font-semibold text-gray-300">Rank</th>
+                      <th className="px-6 py-4 font-semibold text-gray-300">Creator</th>
+                      <th className="px-6 py-4 font-semibold text-gray-300 text-right">Watches</th>
+                      <th className="px-6 py-4 font-semibold text-gray-300 text-right">Likes</th>
+                      <th className="px-6 py-4 font-semibold text-gray-300 text-right">Votes</th>
+                      <th className="px-6 py-4 font-semibold text-gray-300 text-right">Views</th>
+                      <th className="px-6 py-4 font-semibold text-gray-300 text-right">Plays</th>
+                      <th className="px-6 py-4 font-semibold text-yellow-400 text-right">Total Points</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {creators.map((creator, index) => (
+                      <tr
+                        key={creator.id}
+                        className={`border-b border-white/5 transition-colors ${
+                          index === 0 ? 'bg-yellow-400/10' :
+                          index === 1 ? 'bg-gray-400/5' :
+                          index === 2 ? 'bg-orange-400/5' :
+                          'hover:bg-white/5'
+                        }`}
+                      >
+                        <td className="px-6 py-4">
+                          <div className="flex items-center justify-center">
+                            {index === 0 && <span className="text-2xl">🥇</span>}
+                            {index === 1 && <span className="text-2xl">🥈</span>}
+                            {index === 2 && <span className="text-2xl">🥉</span>}
+                            {index > 2 && <span className="text-gray-400 font-semibold">#{index + 1}</span>}
+                          </div>
+                        </td>
+                        <td className="px-6 py-4">
+                          <div className="flex items-center gap-3">
+                            <div className="w-8 h-8 rounded-full bg-gray-700 overflow-hidden flex-shrink-0 flex items-center justify-center">
+                              {creator.avatar ? (
+                                <img src={creator.avatar} alt={creator.name} className="w-full h-full object-cover" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }} />
+                              ) : (
+                                <span className="text-xs font-bold text-gray-300">{(creator.name || 'U').charAt(0).toUpperCase()}</span>
+                              )}
+                            </div>
+                            <div>
+                              <p className="text-white font-medium truncate">{creator.name || 'Unknown'}</p>
+                              <p className="text-gray-400 text-xs truncate">{creator.email || ''}</p>
+                            </div>
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 text-right text-gray-300">{creator.watch || 0}</td>
+                        <td className="px-6 py-4 text-right text-gray-300">{creator.likes || 0}</td>
+                        <td className="px-6 py-4 text-right text-gray-300">{creator.vote || 0}</td>
+                        <td className="px-6 py-4 text-right text-gray-300">{creator.views || 0}</td>
+                        <td className="px-6 py-4 text-right text-gray-300">{creator.play || 0}</td>
+                        <td className="px-6 py-4 text-right">
+                          <span className="font-bold text-yellow-400">{creator.totals || 0}</span>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        </div>
       </div>
-
+ 
       <div className="space-y-4"><PrizeSidebar /></div>
     </div>
   )
 }
-
+ 
 // ─────────────────────────────────────────────
 // TAB: TERMS
 // ─────────────────────────────────────────────
-
+ 
 function TermsContent() {
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mt-2">
@@ -360,28 +502,254 @@ function TermsContent() {
     </div>
   )
 }
-
+ 
 // ─────────────────────────────────────────────
 // TAB: PROJECTS
 // ─────────────────────────────────────────────
-
-// ─────────────────────────────────────────────
-// TAB: PROJECTS
-// ─────────────────────────────────────────────
-
+ 
+interface Category {
+  id: string
+  name: string
+}
+ 
+const MOCK_AWARDS: AwardSubmission[] = [
+  { id: '1', name: 'AI Sunset',          image_url: '/film/film1.png', likes: 234, views: 1205, play: 45 },
+  { id: '2', name: 'Digital Dreams',     image_url: '/film/film2.png', likes: 189, views: 987,  play: 32 },
+  { id: '3', name: 'Future Vision',      image_url: '/film/film3.png', likes: 312, views: 1543, play: 67 },
+  { id: '4', name: 'Neural Art',         image_url: '/film/film1.png', likes: 156, views: 876,  play: 28 },
+  { id: '5', name: 'Synthetic Beauty',   image_url: '/film/film2.png', likes: 267, views: 1398, play: 51 },
+  { id: '6', name: 'AI Canvas',          image_url: '/film/film3.png', likes: 298, views: 1456, play: 62 },
+  { id: '7', name: 'Machine Creativity', image_url: '/film/film1.png', likes: 213, views: 1122, play: 39 },
+]
+ 
+const MOCK_CATEGORIES: Category[] = [
+  { id: '1', name: 'Best AI Short Film' },
+  { id: '2', name: 'Best AI Advertising' },
+  { id: '3', name: 'Best AI Animation' },
+  { id: '4', name: 'Best AI Documentary' },
+]
+ 
 function ProjectsContent() {
-  const [filterBy, setFilterBy] = useState('Trending')
+  const [filterBy, setFilterBy] = useState('Latest')
+  const [selectedCategory, setSelectedCategory] = useState('')
   const [searchQuery, setSearchQuery] = useState('')
-
+  const [submissions, setSubmissions] = useState<AwardSubmission[]>(MOCK_AWARDS)
+  const [categories, setCategories] = useState<Category[]>(MOCK_CATEGORIES)
+  const [loading, setLoading] = useState(false)
+  const [categoriesLoading, setCategoriesLoading] = useState(false)
+  const [currentPage, setCurrentPage] = useState(1)
+  const [totalPages, setTotalPages] = useState(1)
+  const [awardDetail, setAwardDetail] = useState<any>(null)
+  const [awardDetailLoading, setAwardDetailLoading] = useState(false)
+  const [showAwardDetail, setShowAwardDetail] = useState(false)
+ 
+  // ─── Track view + play count when card is clicked ───
+  const handleCardClick = (id: string | number) => {
+    fetch(`https://api.usky.ai/award/view?id=${id}`).catch(() => {})
+    fetch(`https://api.usky.ai/award/play?id=${id}`).catch(() => {})
+  }
+ 
+  const getSortParam = (filter: string) => {
+    switch (filter) {
+      case 'Trending':   return 'latest'
+      case 'Most Liked': return 'likes'
+      case 'Most Viewed': return 'views'
+      default:           return 'latest'
+    }
+  }
+ 
+  // Fetch categories
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        setCategoriesLoading(true)
+        const response = await fetch('/api/awards/category')
+        const data = await response.json()
+        if (data.status === true && data.list && Array.isArray(data.list) && data.list.length > 0) {
+          setCategories(data.list as Category[])
+        } else {
+          setCategories(MOCK_CATEGORIES)
+        }
+      } catch (error) {
+        console.error('[v0] Failed to fetch categories:', error)
+        setCategories(MOCK_CATEGORIES)
+      } finally {
+        setCategoriesLoading(false)
+      }
+    }
+    fetchCategories()
+  }, [])
+ 
+  // Fetch award detail
+  useEffect(() => {
+    const fetchAwardDetail = async () => {
+      try {
+        setAwardDetailLoading(true)
+        const response = await fetch('/api/awards/awards-detail?id=440')
+        const data = await response.json()
+        if (data.list) {
+          setAwardDetail(data.list)
+          setShowAwardDetail(true)
+        }
+      } catch (error) {
+        console.error('[v0] Failed to fetch award detail:', error)
+      } finally {
+        setAwardDetailLoading(false)
+      }
+    }
+    fetchAwardDetail()
+  }, [])
+ 
+  // Fetch awards list
+  useEffect(() => {
+    const fetchAwards = async () => {
+      try {
+        setLoading(true)
+        const sort = getSortParam(filterBy)
+        const params = new URLSearchParams({
+          sort,
+          page: currentPage.toString(),
+          limit: '7',
+          view_type: 'potrait',
+        })
+        if (selectedCategory) params.append('id_category', selectedCategory)
+ 
+        const response = await fetch(`/api/awards/list?${params.toString()}`)
+        const data = await response.json()
+ 
+        if (data.status === true && data.list && Array.isArray(data.list) && data.list.length > 0) {
+          setSubmissions(data.list as AwardSubmission[])
+          if (data.meta) setTotalPages(data.meta.total_pages || 1)
+        } else {
+          setSubmissions(MOCK_AWARDS)
+          setTotalPages(1)
+        }
+      } catch (error) {
+        console.error('[v0] Failed to fetch awards:', error)
+        setSubmissions(MOCK_AWARDS)
+        setTotalPages(1)
+      } finally {
+        setLoading(false)
+      }
+    }
+    fetchAwards()
+  }, [filterBy, selectedCategory, currentPage])
+ 
   const filteredSubmissions = useMemo(() => {
+    if (!searchQuery) return submissions
     const q = searchQuery.toLowerCase()
-    return AWARD_SUBMISSIONS.filter(
-      (s) => s.title.toLowerCase().includes(q) || s.creator.toLowerCase().includes(q)
-    )
-  }, [searchQuery])
-
+    return submissions.filter((s) => s.name.toLowerCase().includes(q))
+  }, [submissions, searchQuery])
+ 
   return (
     <div className="space-y-8">
+ 
+      {/* Award Detail Section */}
+      {showAwardDetail && awardDetail && (
+        <div className="bg-[#0b1d35] border border-white/10 rounded-xl overflow-hidden">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 p-6 md:p-8">
+            <div className="md:col-span-1 flex items-center justify-center">
+              <div className="relative w-full aspect-[3/4] overflow-hidden rounded-lg bg-gray-800">
+                <Image
+                  src={awardDetail.image_landscape_url || awardDetail.image_url || '/film/film1.png'}
+                  alt={awardDetail.name}
+                  fill
+                  className="object-cover"
+                />
+              </div>
+            </div>
+            <div className="md:col-span-2 flex flex-col justify-between">
+              <div>
+                {awardDetail.dates && (
+                  <div className="flex items-center gap-2 mb-3">
+                    <span className="text-xs font-semibold text-gray-400 bg-[#1e3a5f] rounded-full px-3 py-1">
+                      {new Date(awardDetail.dates).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}
+                    </span>
+                  </div>
+                )}
+                <h2 className="text-2xl md:text-3xl font-bold text-white mb-4">{awardDetail.name}</h2>
+                <div className="text-gray-400 text-base leading-relaxed mb-6" dangerouslySetInnerHTML={{ __html: awardDetail.description || '' }} />
+              </div>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                <div className="bg-[#1e3a5f] rounded-lg p-3">
+                  <p className="text-gray-400 text-xs uppercase tracking-widest mb-1">Watches</p>
+                  <p className="text-white font-bold text-lg">{awardDetail.watch || 0}</p>
+                </div>
+                <div className="bg-[#1e3a5f] rounded-lg p-3">
+                  <p className="text-gray-400 text-xs uppercase tracking-widest mb-1">Likes</p>
+                  <p className="text-white font-bold text-lg">{awardDetail.likes || 0}</p>
+                </div>
+                <div className="bg-[#1e3a5f] rounded-lg p-3">
+                  <p className="text-gray-400 text-xs uppercase tracking-widest mb-1">Votes</p>
+                  <p className="text-white font-bold text-lg">{awardDetail.vote || 0}</p>
+                </div>
+                <div className="bg-[#1e3a5f] rounded-lg p-3">
+                  <p className="text-gray-400 text-xs uppercase tracking-widest mb-1">Views</p>
+                  <p className="text-white font-bold text-lg">{awardDetail.views || 0}</p>
+                </div>
+              </div>
+              {awardDetail.video_url && (
+                <div className="mt-6">
+                  <a
+                    href={awardDetail.video_url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-2 bg-yellow-400 hover:bg-yellow-300 text-black font-bold px-6 py-3 rounded-lg transition-colors"
+                  >
+                    <Play className="w-4 h-4" />
+                    Watch Video
+                  </a>
+                </div>
+              )}
+            </div>
+          </div>
+ 
+          {/* Related Awards */}
+          {awardDetail.relate && Array.isArray(awardDetail.relate) && awardDetail.relate.length > 0 && (
+            <div className="border-t border-white/10 p-6 md:p-8">
+              <h3 className="text-xl font-bold text-white mb-4">Related Awards</h3>
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 md:gap-4">
+                {awardDetail.relate.map((related: any) => (
+                  <div
+                    key={related.id}
+                    className="group relative overflow-hidden rounded-lg bg-[#1e293b] hover:shadow-lg transition-all duration-300 cursor-pointer"
+                    onClick={() => handleCardClick(related.id)}
+                  >
+                    <div className="relative w-full aspect-[3/4] overflow-hidden bg-gray-800">
+                      <Image
+                        src={related.image_landscape_url || related.image_url || '/film/film1.png'}
+                        alt={related.name}
+                        fill
+                        className="object-cover group-hover:scale-105 transition-transform duration-300"
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent" />
+                      <div className="absolute inset-0 flex flex-col justify-end p-2.5">
+                        <h4 className="text-xs md:text-sm font-bold text-white leading-tight mb-0.5 line-clamp-2">{related.name}</h4>
+                        <div className="flex items-center justify-between text-white/70">
+                          <div className="flex items-center gap-1">
+                            <Heart className="w-3 h-3 md:w-3.5 md:h-3.5" />
+                            <span className="text-[10px] md:text-xs font-medium">{related.likes || 0}</span>
+                          </div>
+                          <div className="flex items-center gap-1">
+                            <Eye className="w-3 h-3 md:w-3.5 md:h-3.5" />
+                            <span className="text-[10px] md:text-xs font-medium">{related.views || 0}</span>
+                          </div>
+                        </div>
+                      </div>
+                      <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
+                        <div className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center hover:bg-white/30 transition-colors">
+                          <Play className="w-4 h-4 md:w-5 md:h-5 text-white fill-white" />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+ 
       {/* Stats bar */}
       <div className="flex flex-col lg:flex-row items-stretch gap-4 w-full">
         <div className="relative flex items-center justify-between overflow-hidden bg-[#0b1d35] border border-white/10 rounded-xl px-6 py-5 lg:flex-[2] w-full shrink-0">
@@ -395,7 +763,6 @@ function ProjectsContent() {
           </div>
           <span className="text-white font-extrabold text-2xl md:text-3xl tracking-tight relative z-10">200 USKY</span>
         </div>
-
         <div className="flex items-center gap-3 bg-[#0b1d35] border border-white/10 rounded-xl px-5 py-5 lg:flex-1 w-full shrink-0">
           <FileText className="w-4 h-4 text-gray-400 shrink-0" />
           <div>
@@ -403,7 +770,6 @@ function ProjectsContent() {
             <p className="text-white font-extrabold text-xl leading-none">245</p>
           </div>
         </div>
-
         <div className="flex items-center gap-3 bg-[#0b1d35] border border-white/10 rounded-xl px-5 py-5 lg:flex-1 w-full shrink-0">
           <Clock className="w-4 h-4 text-gray-400 shrink-0" />
           <div>
@@ -411,17 +777,16 @@ function ProjectsContent() {
             <p className="text-white font-extrabold text-xl leading-none">4 Days</p>
           </div>
         </div>
-
         <button className="flex items-center justify-center gap-2 bg-yellow-400 hover:bg-yellow-300 active:bg-yellow-500 transition-colors rounded-xl px-6 py-5 lg:flex-1 w-full shrink-0">
           <Plus className="w-5 h-5 text-black" />
           <span className="text-black font-bold text-sm">Submit Now</span>
         </button>
       </div>
-
-      {/* Submissions grid */}
+ 
+      {/* Submissions Grid */}
       <div>
         <h2 className="text-base font-bold text-white mb-4">All Submission</h2>
-        
+ 
         {/* Search & Filter */}
         <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 mb-6 w-full">
           <div className="relative w-full md:w-[280px]">
@@ -434,15 +799,42 @@ function ProjectsContent() {
               className="w-full bg-transparent border border-white/15 rounded-lg pl-9 pr-4 py-2 text-white placeholder-gray-500 text-sm focus:outline-none focus:border-white/30 transition-colors"
             />
           </div>
-          <div className="flex items-center gap-2.5 shrink-0 w-full md:w-auto justify-between md:justify-end">
-            <span className="text-white text-sm font-bold uppercase tracking-wider">Filter By</span>
-            <div className="flex items-center gap-1.5 border border-white/15 rounded-lg px-3 py-2 bg-transparent">
+          <div className="flex flex-col md:flex-row items-start md:items-center gap-2.5 shrink-0 w-full md:w-auto">
+            {/* Category Filter */}
+            <div className="flex items-center gap-1.5 border border-white/15 rounded-lg px-3 py-2 bg-transparent w-full md:w-auto">
+              <svg className="w-3.5 h-3.5 text-gray-400 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                <rect x="3" y="3" width="7" height="7" /><rect x="14" y="3" width="7" height="7" /><rect x="14" y="14" width="7" height="7" /><rect x="3" y="14" width="7" height="7" />
+              </svg>
+              <div className="relative flex-1 md:flex-none min-w-[150px]">
+                <select
+                  value={selectedCategory}
+                  onChange={(e) => { setSelectedCategory(e.target.value); setCurrentPage(1) }}
+                  disabled={categoriesLoading}
+                  className="w-full bg-[#0b1d35] text-gray-400 text-sm appearance-none cursor-pointer focus:outline-none pr-5 py-0 truncate [&>option]:bg-[#0b1d35] [&>option]:text-white"
+                >
+                  <option value="">All Categories</option>
+                  {categories.map((cat) => (
+                    <option key={cat.id} value={cat.id}>{cat.name}</option>
+                  ))}
+                </select>
+                <svg className="w-3 h-3 absolute right-0 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none shrink-0" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.17l3.71-3.94a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" />
+                </svg>
+              </div>
+            </div>
+ 
+            {/* Sort Filter */}
+            <div className="flex items-center gap-1.5 border border-white/15 rounded-lg px-3 py-2 bg-transparent w-full md:w-auto">
               <svg className="w-3.5 h-3.5 text-gray-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
                 <line x1="4" y1="6" x2="20" y2="6" /><line x1="8" y1="12" x2="16" y2="12" /><line x1="11" y1="18" x2="13" y2="18" />
               </svg>
-              <div className="relative">
-                <select value={filterBy} onChange={(e) => setFilterBy(e.target.value)} className="bg-transparent text-white text-sm appearance-none cursor-pointer focus:outline-none pr-5">
-                  {FILTER_OPTIONS.map((opt) => <option key={opt} value={opt} className="bg-[#0b1d35] text-white">{opt}</option>)}
+              <div className="relative flex-1 md:flex-none">
+                <select
+                  value={filterBy}
+                  onChange={(e) => setFilterBy(e.target.value)}
+                  className="bg-transparent text-gray-400 text-sm appearance-none cursor-pointer focus:outline-none pr-5 w-full md:w-auto [&>option]:bg-[#0b1d35] [&>option]:text-white"
+                >
+                  {FILTER_OPTIONS.map((opt) => <option key={opt} value={opt}>{opt}</option>)}
                 </select>
                 <svg className="w-3 h-3 absolute right-0 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" viewBox="0 0 20 20" fill="currentColor">
                   <path fillRule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.17l3.71-3.94a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" />
@@ -451,73 +843,95 @@ function ProjectsContent() {
             </div>
           </div>
         </div>
-
-        {/* PERUBAHAN GRID: Diubah menjadi 6 kolom di desktop besar agar muat banyak */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 md:gap-4 w-full">
-          {filteredSubmissions.map((submission) => (
-            <div key={submission.id} className="group relative overflow-hidden rounded-lg bg-[#1e293b] hover:shadow-lg transition-all duration-300 cursor-pointer w-full">
-              <div className="relative w-full aspect-[3/4] overflow-hidden bg-gray-800">
-                <Image src={submission.image} alt={submission.title} fill className="object-cover group-hover:scale-105 transition-transform duration-300" />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent" />
-                
-                {/* PERUBAHAN CARD INTERNALS: Padding & Text size diperkecil menyesuaikan card */}
-                <div className="absolute inset-0 flex flex-col justify-end p-2.5">
-                  <h3 className="text-xs md:text-sm font-bold text-white leading-tight mb-0.5 line-clamp-2">{submission.title}</h3>
-                  <p className="text-white/75 text-[10px] md:text-xs mb-1.5 md:mb-2">by <span className="font-medium text-gray-200">{submission.creator.replace('by ', '')}</span></p>
-                  
-                  <div className="flex items-center justify-between text-white/70">
-                    <div className="flex items-center gap-1">
-                      <Heart className="w-3 h-3 md:w-3.5 md:h-3.5" />
-                      <span className="text-[10px] md:text-xs font-medium">{submission.likes}</span>
-                    </div>
-                    <div className="flex items-center gap-1">
-                      <Eye className="w-3 h-3 md:w-3.5 md:h-3.5" />
-                      <span className="text-[10px] md:text-xs font-medium">{submission.views}</span>
+ 
+        {/* Awards Grid */}
+        {loading ? (
+          <div className="flex items-center justify-center py-16">
+            <div className="text-gray-400">Loading awards...</div>
+          </div>
+        ) : filteredSubmissions.length === 0 ? (
+          <div className="flex items-center justify-center py-16">
+            <div className="text-gray-400">No awards found</div>
+          </div>
+        ) : (
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 md:gap-4 w-full">
+            {filteredSubmissions.map((submission) => (
+              <div
+                key={submission.id}
+                className="group relative overflow-hidden rounded-lg bg-[#1e293b] hover:shadow-lg transition-all duration-300 cursor-pointer w-full"
+                onClick={() => handleCardClick(submission.id)}
+              >
+                <div className="relative w-full aspect-[3/4] overflow-hidden bg-gray-800">
+                  <Image
+                    src={submission.image_url || '/film/film1.png'}
+                    alt={submission.name}
+                    fill
+                    className="object-cover group-hover:scale-105 transition-transform duration-300"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent" />
+                  <div className="absolute inset-0 flex flex-col justify-end p-2.5">
+                    <h3 className="text-xs md:text-sm font-bold text-white leading-tight mb-0.5 line-clamp-2">{submission.name}</h3>
+                    <div className="flex items-center justify-between text-white/70">
+                      <div className="flex items-center gap-1">
+                        <Heart className="w-3 h-3 md:w-3.5 md:h-3.5" />
+                        <span className="text-[10px] md:text-xs font-medium">{submission.likes || 0}</span>
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <Eye className="w-3 h-3 md:w-3.5 md:h-3.5" />
+                        <span className="text-[10px] md:text-xs font-medium">{submission.views || 0}</span>
+                      </div>
                     </div>
                   </div>
-                </div>
-
-                <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
-                  <div className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center hover:bg-white/30 transition-colors">
-                    <Play className="w-4 h-4 md:w-5 md:h-5 text-white fill-white" />
+                  <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
+                    <div className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center hover:bg-white/30 transition-colors">
+                      <Play className="w-4 h-4 md:w-5 md:h-5 text-white fill-white" />
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        )}
       </div>
-
-      <div className="flex justify-center pt-8">
-        <button className="flex items-center gap-2 px-8 py-2.5 bg-[#0a1628] border border-white/10 text-gray-300 rounded-lg text-sm font-semibold hover:border-yellow-500/50 hover:text-yellow-400 transition-colors">
-          <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <line x1="12" y1="2" x2="12" y2="22" /><line x1="2" y1="12" x2="22" y2="12" />
-            <line x1="4.93" y1="4.93" x2="19.07" y2="19.07" /><line x1="19.07" y1="4.93" x2="4.93" y2="19.07" />
-          </svg>
-          Load More
+ 
+      {/* Pagination */}
+      <div className="flex justify-center items-center gap-4 pt-8">
+        <button
+          onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+          disabled={currentPage === 1}
+          className="flex items-center gap-2 px-6 py-2.5 bg-[#0a1628] border border-white/10 text-gray-300 rounded-lg text-sm font-semibold hover:border-yellow-500/50 hover:text-yellow-400 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          Previous
+        </button>
+        <span className="text-gray-400 text-sm">Page {currentPage} of {totalPages}</span>
+        <button
+          onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+          disabled={currentPage === totalPages}
+          className="flex items-center gap-2 px-6 py-2.5 bg-[#0a1628] border border-white/10 text-gray-300 rounded-lg text-sm font-semibold hover:border-yellow-500/50 hover:text-yellow-400 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          Next
         </button>
       </div>
     </div>
   )
 }
+ 
 // ─────────────────────────────────────────────
 // PAGE
 // ─────────────────────────────────────────────
-
+ 
 export default function AwardsPage() {
   const [activeTab, setActiveTab] = useState('Projects')
-
+ 
   return (
     <div className="min-h-screen bg-[#050d1a] text-white font-sans">
       <Header />
-
+ 
       {/* ── HERO ── */}
       <div className="relative w-full overflow-hidden bg-[#050d1a]" style={{ minHeight: '280px' }}>
         <Image src="/images/awards/imageawards.png" alt="Awards hero" fill className="object-cover object-center opacity-50" priority />
         <div className="absolute inset-0 bg-gradient-to-r from-[#050d1a]/95 via-[#050d1a]/60 to-transparent" />
         <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-[#050d1a]" />
-
-        {/* ✅ Hapus max-w-7xl mx-auto — langsung px-6 md:px-8 agar rata kiri */}
         <div className="relative w-full px-6 md:px-8 pt-8 pb-10 md:pt-12 md:pb-14 flex flex-col justify-end" style={{ minHeight: '280px' }}>
           <div className="flex items-center gap-2.5 mb-3">
             <div className="flex -space-x-2.5">
@@ -542,9 +956,8 @@ export default function AwardsPage() {
           <p className="text-gray-400 text-sm md:text-base leading-relaxed">Your film could be the next viral AI masterpiece — seen, judged, and celebrated across Indonesia.</p>
         </div>
       </div>
-
+ 
       {/* ── TABS ── */}
-      {/* ✅ Hapus max-w-7xl mx-auto — langsung px-6 md:px-8 agar rata kiri */}
       <div className="bg-[#050d1a] py-4">
         <div className="px-6 md:px-8">
           <div className="inline-flex items-center border border-white/15 rounded-full bg-[#0b1d35]/60 p-1 gap-1">
@@ -565,16 +978,22 @@ export default function AwardsPage() {
           </div>
         </div>
       </div>
-
+ 
       {/* ── TAB CONTENT ── */}
-      {/* ✅ Hapus max-w-7xl mx-auto — langsung px-6 md:px-8 agar rata kiri */}
       <div className="px-6 md:px-8 pb-20 mt-6 space-y-6">
         {activeTab === 'Projects' && <ProjectsContent />}
         {activeTab === 'Theme'    && <ThemeContent />}
         {activeTab === 'Terms'    && <TermsContent />}
       </div>
-
+ 
       <Footer />
     </div>
   )
 }
+ 
+
+
+
+
+
+
