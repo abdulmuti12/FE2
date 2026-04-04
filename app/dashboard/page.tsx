@@ -367,6 +367,13 @@ export default function DashboardPage() {
               </div>
             ))}
           </div>
+        <div className="mt-8 flex justify-center">
+        <Link href="/dashboard/creator">
+    <Button className="border border-white/20 bg-transparent text-white hover:bg-white/10">
+      View All Creators
+    </Button>
+  </Link>
+        </div>
         </section>
       </div>
 
