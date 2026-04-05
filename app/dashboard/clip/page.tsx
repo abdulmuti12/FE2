@@ -78,7 +78,9 @@ const VideoItem = ({
   const containerRef = useRef<HTMLDivElement>(null)
 
   const [isPlaying, setIsPlaying] = useState(false)
+  // Default isMuted adalah FALSE agar suara langsung nyala
   const [isMuted, setIsMuted] = useState(false)
+  
   const [showComments, setShowComments] = useState(false)
   const [showShare, setShowShare] = useState(false)
   const [comments, setComments] = useState<Comment[]>([])
@@ -104,15 +106,22 @@ const VideoItem = ({
 
     if (isActive) {
       vids.forEach((vid) => {
+        // Memastikan video mencoba untuk play tanpa di-mute
+        vid.muted = false
         const playPromise = vid.play()
+        
         if (playPromise !== undefined) {
           playPromise
-            .then(() => setIsPlaying(true))
+            .then(() => {
+              setIsPlaying(true)
+              setIsMuted(false)
+            })
             .catch((error) => {
-              console.log('Autoplay blocked, muting.', error)
-              vid.muted = true
-              setIsMuted(true)
-              vid.play().then(() => setIsPlaying(true)).catch(() => setIsPlaying(false))
+              console.log('Autoplay with sound blocked by browser.', error)
+              // Jika browser menolak autoplay dengan suara, kita biarkan video pause (tidak memaksa mute)
+              // Pengguna hanya perlu tap sekali dan video akan main beserta suaranya
+              setIsPlaying(false)
+              setIsMuted(false) 
             })
         }
       })
@@ -667,7 +676,7 @@ const VideoItem = ({
 
         <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-transparent to-black/90 pointer-events-none" />
 
-        <div className="absolute right-2 bottom-20 flex flex-col items-center gap-5 z-20 pb-4">
+        <div className="absolute right-2 bottom-32 flex flex-col items-center gap-5 z-20 pb-4">
           <div className="relative mb-2">
             <div className="w-10 h-10 rounded-full border border-white p-0.5 overflow-hidden">
               <Image src={(clip as any).creatorAvatar} width={40} height={40} alt="Creator" className="rounded-full object-cover" />
@@ -687,7 +696,6 @@ const VideoItem = ({
             <span className="text-xs font-semibold text-white">{clip.comment}</span>
           </button>
 
-          {/* Tombol Watchlist untuk versi Mobile (Angka 0 Dihapus) */}
           <div 
             onClick={handleAddToWatchlist} 
             className={`flex flex-col items-center gap-1 drop-shadow-md cursor-pointer transition-opacity ${isAddingWatchlist ? 'opacity-50 pointer-events-none' : 'hover:opacity-80'}`}
@@ -695,7 +703,6 @@ const VideoItem = ({
             <div className="bg-white/10 p-1.5 rounded-full backdrop-blur-sm">
               <Bookmark className={`w-6 h-6 ${isWatchlisted ? 'text-red-500 fill-red-500' : 'text-white fill-white/20'} ${isAddingWatchlist ? 'animate-pulse' : ''}`} strokeWidth={1.5} />
             </div>
-            {/* SPAN ANGKA 0 DI SINI SUDAH DIHAPUS */}
           </div>
 
           <button onClick={() => setShowShare(true)} className="flex flex-col items-center gap-1 drop-shadow-md hover:opacity-80 transition-opacity">
@@ -710,14 +717,19 @@ const VideoItem = ({
           </div>
         </div>
 
-        <div className="absolute bottom-0 left-0 w-[80%] p-4 z-20 pb-6">
+        <div className="absolute bottom-24 left-0 w-[75%] px-4 z-20 pb-4">
           <div className="flex items-center gap-2 mb-2">
             <h3 className="text-white font-bold text-base shadow-black drop-shadow-md">@{(clip as any).creator.replace(' ', '')}</h3>
             <span className="bg-white/20 backdrop-blur-md px-2 py-0.5 rounded text-[10px] font-semibold text-white">Follow</span>
           </div>
-          <p className="text-white text-sm leading-snug mb-3 drop-shadow-md">
-            {clip.synopsis} <span className="font-bold ml-1">#fyp #viral</span>
-          </p>
+          
+          {/* DIUBAH: Menghilangkan 'line-clamp-2' dan menggantinya dengan max-height yang bisa discroll jika teksnya sangat panjang */}
+          <div className="max-h-[140px] overflow-y-auto mb-3 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:'none'] [scrollbar-width:'none']">
+            <p className="text-white text-sm leading-snug drop-shadow-md">
+              {clip.synopsis} <span className="font-bold ml-1 block mt-1">#fyp #viral</span>
+            </p>
+          </div>
+
           <div className="flex items-center gap-2">
             <Music className="w-3 h-3 text-white" />
             <div className="overflow-hidden w-40">
