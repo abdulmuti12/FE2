@@ -2,6 +2,7 @@
 
 import {
   AlertCircle,
+  ChevronLeft,
   ChevronRight,
   Info,
   Menu,
@@ -23,6 +24,7 @@ import { CategorySection } from '@/components/home/category-section'
 import { MostWatchingFilm } from '@/components/home/most-watching-film'
 import { LatestFilm } from '@/components/home/latest-film'
 import { UpcomingEventsSection } from '@/components/home/upcoming-events-section'
+
 import {
   FeaturedSkeleton,
   SeriesSkeleton,
@@ -188,6 +190,15 @@ export default function DashboardPage() {
   const [creatorApiData, setCreatorApiData] = useState<CreatorData[]>([])
   const [eventData, setEventData] = useState<EventData[]>([])
 
+  const seriesScrollRef = useRef<HTMLDivElement>(null)
+
+  const scrollSeries = (direction: 'left' | 'right') => {
+    if (seriesScrollRef.current) {
+      const scrollAmount = direction === 'left' ? -300 : 300
+      seriesScrollRef.current.scrollBy({ left: scrollAmount, behavior: 'smooth' })
+    }
+  }
+
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -316,29 +327,96 @@ export default function DashboardPage() {
         <LatestFilm items={displayFilms} />
         
         {/* Latest Series */}
-        <section className="px-4 py-10 md:px-12 border-t border-white/10">
-          <div className="flex justify-between items-center mb-6">
-            <h2 className="text-xl font-bold text-white">Latest Series</h2>
-            <Link href="/dashboard/series" className="bg-white/10 px-4 py-1.5 rounded-full text-xs text-white">View All</Link>
-          </div>
-          <div className="grid grid-cols-1 lg:grid-cols-[1.5fr_1fr] gap-6">
-            {loading ? <FeaturedSkeleton /> : seriesData[0] && (
-              <Link href={`/dashboard/series/detail?id_group=${seriesData[0].id}`} className="group relative aspect-video rounded-3xl overflow-hidden block">
-                <Image src={seriesData[0].image_landscape_url || seriesData[0].image_url || ''} alt={seriesData[0].name} fill className="object-cover transition-transform group-hover:scale-105" />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent" />
-                <div className="absolute bottom-6 left-6"><h3 className="text-2xl font-bold text-white">{seriesData[0].name}</h3></div>
-              </Link>
-            )}
-            <div className="flex flex-col gap-4">
-              {seriesData.slice(1, 4).map(s => (
-                <Link key={s.id} href={`/dashboard/series/detail?id_group=${s.id}`} className="group relative h-32 rounded-2xl overflow-hidden flex items-center bg-white/5 border border-white/5">
-                  <div className="relative h-full aspect-video"><Image src={s.image_url || ''} alt={s.name} fill className="object-cover" /></div>
-                  <div className="px-4"><p className="font-bold text-white text-sm line-clamp-1">{s.name}</p></div>
-                </Link>
-              ))}
+       <section className="px-4 py-10 md:px-12 border-t border-white/10">
+  <div className="flex justify-between items-center mb-6">
+    <h2 className="text-xl font-bold text-white">Latest Series</h2>
+    <Link href="/dashboard/series" className="bg-white/10 px-4 py-1.5 rounded-full text-xs text-white hover:bg-white/20 transition-colors">
+      View All
+    </Link>
+  </div>
+
+  {/* =========================================
+      TAMPILAN MOBILE (SLIDER HORIZONTAL)
+      ========================================= */}
+  <div className="relative group lg:hidden">
+    {/* Tombol Kiri Mobile */}
+    <button
+      onClick={() => scrollSeries('left')}
+      className="absolute -left-2 top-1/2 z-10 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full bg-[#003B79] text-white shadow-lg backdrop-blur-md"
+      aria-label="Scroll left"
+    >
+      <ChevronLeft className="h-4 w-4" />
+    </button>
+
+    {/* Kontainer Scroll Mobile */}
+    <div 
+      ref={seriesScrollRef}
+      className="flex gap-4 overflow-x-auto snap-x snap-mandatory pb-4 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]"
+    >
+      {loading ? (
+        <div className="w-[85vw] flex-shrink-0 snap-center">
+          <FeaturedSkeleton />
+        </div>
+      ) : (
+        seriesData.map((s) => (
+          <Link 
+            key={s.id} 
+            href={`/dashboard/series/detail?id_group=${s.id}`} 
+            className="w-[85vw] flex-shrink-0 snap-center group relative aspect-video rounded-2xl overflow-hidden block border border-white/5"
+          >
+            <Image 
+              src={s.image_landscape_url || s.image_url || '/placeholder.svg'} 
+              alt={s.name} 
+              fill 
+              className="object-cover transition-transform duration-300 group-hover:scale-105" 
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+            <div className="absolute bottom-4 left-4 right-4">
+              <h3 className="text-lg font-bold text-white line-clamp-2">{s.name}</h3>
             </div>
+          </Link>
+        ))
+      )}
+    </div>
+
+    {/* Tombol Kanan Mobile */}
+    <button
+      onClick={() => scrollSeries('right')}
+      className="absolute -right-2 top-1/2 z-10 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full bg-[#003B79] text-white shadow-lg backdrop-blur-md"
+      aria-label="Scroll right"
+    >
+      <ChevronRight className="h-4 w-4" />
+    </button>
+  </div>
+
+  {/* =========================================
+      TAMPILAN DESKTOP (GRID LAMA)
+      ========================================= */}
+  <div className="hidden lg:grid lg:grid-cols-[1.5fr_1fr] gap-6">
+    {loading ? <FeaturedSkeleton /> : seriesData[0] && (
+      <Link href={`/dashboard/series/detail?id_group=${seriesData[0].id}`} className="group relative aspect-video rounded-3xl overflow-hidden block">
+        <Image src={seriesData[0].image_landscape_url || seriesData[0].image_url || ''} alt={seriesData[0].name} fill className="object-cover transition-transform group-hover:scale-105" />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent" />
+        <div className="absolute bottom-6 left-6">
+          <h3 className="text-2xl font-bold text-white">{seriesData[0].name}</h3>
+        </div>
+      </Link>
+    )}
+    
+    <div className="flex flex-col gap-4">
+      {seriesData.slice(1, 4).map(s => (
+        <Link key={s.id} href={`/dashboard/series/detail?id_group=${s.id}`} className="group relative h-32 rounded-2xl overflow-hidden flex items-center bg-white/5 border border-white/5 hover:bg-white/10 transition-colors">
+          <div className="relative h-full aspect-video">
+            <Image src={s.image_landscape_url || s.image_url || ''} alt={s.name} fill className="object-cover" />
           </div>
-        </section>
+          <div className="px-4">
+            <p className="font-bold text-white text-sm line-clamp-2">{s.name}</p>
+          </div>
+        </Link>
+      ))}
+    </div>
+  </div>
+</section>
 
         <LatestClipSection items={displayClips} />
         <UpcomingEventsSection items={eventData} />
