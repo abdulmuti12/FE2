@@ -2,10 +2,12 @@
 
 import { Header } from '@/components/header'
 import { Footer } from '@/components/footer'
-import { ChevronRight, Calendar, Play } from 'lucide-react'
+// import { ChevronRight, Calendar, Play } from 'lucide-react'
 import { AllEvents } from '@/components/event/all-events'
 import { useRouter } from 'next/navigation'
-import { useState, useEffect } from 'react'
+// import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
+import { ChevronRight, ChevronLeft, Calendar, Play } from 'lucide-react'
 
 const upcomingEvents = []
 
@@ -70,6 +72,18 @@ export default function EventPage() {
   const [idCategory, setIdCategory] = useState('')
   const [idPartner, setIdPartner] = useState('')
   const [sortBy, setSortBy] = useState('latest')
+
+  // Referensi untuk membidik container scroll
+  const scrollContainerRef = useRef<HTMLDivElement>(null)
+
+  // Fungsi untuk menggeser card saat tombol diklik
+  const scroll = (direction: 'left' | 'right') => {
+    if (scrollContainerRef.current) {
+      // Menentukan seberapa jauh jarak gesernya (300px, bisa disesuaikan)
+      const scrollAmount = direction === 'left' ? -300 : 300
+      scrollContainerRef.current.scrollBy({ left: scrollAmount, behavior: 'smooth' })
+    }
+  }
 
   const LIMIT = 20
 
@@ -299,46 +313,76 @@ export default function EventPage() {
           </div>
         </section>
 
-        <section className="mb-12">
+<section className="mb-12">
           <h2 className="text-xl font-bold border-l-4 border-yellow-500 pl-4 mb-6">
             Recaps and Event Replays
           </h2>
 
-          <div className="flex gap-4">
-            {completedLoading ? (
-              <div className="text-gray-400">Loading recaps...</div>
-            ) : completedEventsList.length > 0 ? (
-              completedEventsList.map((event) => (
-                <div
-                  key={event.id}
-                  className="w-[220px] rounded-xl overflow-hidden border border-white/10 cursor-pointer relative"
-                  onClick={() => router.push(`/dashboard/event/detail?id=${event.id}`)}
-                >
-                  <div className="relative h-[280px]">
-                    <img src={event.image_url || event.image} className="w-full h-full object-cover" />
-
-                    <div className="absolute inset-0 flex items-center justify-center">
-                      <Play className="text-white w-10 h-10" />
-                    </div>
-                  </div>
-
-                  <div className="p-4">
-                    <h3 className="font-bold">{event.title}</h3>
-
-                    <div className="flex items-center text-xs text-gray-400 mt-2">
-                      <Calendar className="w-3 h-3 mr-1" />
-                      {event.from_dates}
-                    </div>
-                  </div>
-                </div>
-              ))
-            ) : (
-              <div className="text-gray-400">No completed events available</div>
+          {/* Wrapper relative agar tombol panah bisa melayang di atas card */}
+          <div className="relative group">
+            
+            {/* Tombol Kiri */}
+            {completedEventsList.length > 0 && (
+              <button
+                onClick={() => scroll('left')}
+                className="absolute left-2 top-1/2 z-10 -translate-y-1/2 flex h-10 w-10 items-center justify-center rounded-full bg-black/60 border border-white/20 text-white backdrop-blur-md shadow-lg transition-transform hover:scale-110 active:scale-95 md:-left-5"
+                aria-label="Scroll left"
+              >
+                <ChevronLeft className="h-6 w-6" />
+              </button>
             )}
+
+            {/* Container yang sudah ditambahkan ref={scrollContainerRef} */}
+            <div 
+              ref={scrollContainerRef}
+              className="flex gap-4 overflow-x-auto snap-x snap-mandatory pb-6 md:pb-0 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]"
+            >
+              {completedLoading ? (
+                <div className="text-gray-400">Loading recaps...</div>
+              ) : completedEventsList.length > 0 ? (
+                completedEventsList.map((event) => (
+                  <div
+                    key={event.id}
+                    className="w-[85vw] md:w-[220px] flex-shrink-0 snap-center md:snap-align-none rounded-xl overflow-hidden border border-white/10 cursor-pointer relative bg-[#0a1424]"
+                    onClick={() => router.push(`/dashboard/event/detail?id=${event.id}`)}
+                  >
+                    <div className="relative h-[420px] md:h-[280px]">
+                      <img src={event.image_url || event.image} className="w-full h-full object-cover" alt={event.title} />
+
+                      <div className="absolute inset-0 flex items-center justify-center bg-black/10 hover:bg-black/20 transition-colors">
+                        <Play className="text-white w-14 h-14 md:w-10 md:h-10 opacity-90 drop-shadow-lg" />
+                      </div>
+                    </div>
+
+                    <div className="p-4 md:p-4 p-5">
+                      <h3 className="font-bold text-lg md:text-base line-clamp-2 leading-snug">{event.title}</h3>
+
+                      <div className="flex items-center text-sm md:text-xs text-gray-400 mt-3 md:mt-2">
+                        <Calendar className="w-4 h-4 md:w-3 md:h-3 mr-2 md:mr-1" />
+                        {event.from_dates}
+                      </div>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div className="text-gray-400">No completed events available</div>
+              )}
+            </div>
+
+            {/* Tombol Kanan */}
+            {completedEventsList.length > 0 && (
+              <button
+                onClick={() => scroll('right')}
+                className="absolute right-2 top-1/2 z-10 -translate-y-1/2 flex h-10 w-10 items-center justify-center rounded-full bg-black/60 border border-white/20 text-white backdrop-blur-md shadow-lg transition-transform hover:scale-110 active:scale-95 md:-right-5"
+                aria-label="Scroll right"
+              >
+                <ChevronRight className="h-6 w-6" />
+              </button>
+            )}
+
           </div>
         </section>
 
-        {/* Ingat pastikan onClick di dalam AllEvents juga diubah menjadi push router dengan ID jika memungkinkan */}
         <AllEvents
           allEvents={allEvents}
           currentPage={currentPage}
