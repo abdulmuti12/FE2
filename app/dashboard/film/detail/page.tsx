@@ -13,7 +13,6 @@ import {
   ChevronRight,
 } from 'lucide-react'
 
-// Interface menyesuaikan JSON detailfilm.json
 interface RelatedFilm {
   id: string
   name: string
@@ -78,7 +77,6 @@ function DetailContent() {
   const [sortBy] = useState('Newest')
 
   // Fetch API
-  // Fetch API
   useEffect(() => {
     const fetchFilmDetail = async () => {
       if (!id_film) {
@@ -91,7 +89,7 @@ function DetailContent() {
         setIsLoading(true)
         const token = localStorage.getItem('user_token')
         
-        // UBAH BAGIAN INI: Gunakan API Route internal Next.js
+        // Gunakan API Route internal Next.js
         const response = await fetch(`/api/film/detail?id=${id_film}`, {
           method: 'GET',
           headers: {
@@ -118,7 +116,7 @@ function DetailContent() {
     fetchFilmDetail()
   }, [id_film])
 
-  // Helper untuk konversi URL HTTP ke HTTPS agar video bisa diputar di browser modern (mencegah Mixed Content)
+  // Helper untuk konversi URL HTTP ke HTTPS
   const secureUrl = (url: string) => {
     if (!url) return '';
     return url.replace('http://', 'https://');
@@ -151,13 +149,15 @@ function DetailContent() {
 
       {/* ===== TOP PLAYER AREA ===== */}
       <div className="bg-gradient-to-b from-[#0b1222] via-[#020817] to-[#020817] pb-8 md:pb-10">
-        <div className="max-w-[1400px] mx-auto px-3 sm:px-4 md:px-12 pt-4 md:pt-6">
-          {/* Player Card (Menggunakan tag <video> asli) */}
+        {/* DIUBAH: Menghapus max-w-[1400px] dan mx-auto, menggantinya dengan w-full */}
+        <div className="w-full px-4 md:px-8 lg:px-12 pt-4 md:pt-6">
+          
           <div className="relative w-full rounded-xl md:rounded-2xl overflow-hidden bg-black shadow-[0_20px_60px_rgba(0,0,0,0.6)]">
-            <div className="relative w-full aspect-video max-h-[648px] bg-black">
+            {/* DIUBAH: Menghapus max-h-[648px] dan menggantinya dengan md:max-h-[85vh] agar bisa membesar secara horizontal */}
+            <div className="relative w-full aspect-video md:max-h-[85vh] bg-black mx-auto">
               {filmData.video_url ? (
                 <video
-                  key={filmData.video_url} // Paksa React render ulang saat pindah film
+                  key={filmData.video_url}
                   controls
                   controlsList="nodownload"
                   className="w-full h-full object-contain"
@@ -213,17 +213,19 @@ function DetailContent() {
           </div>
 
           {/* Description */}
-          <p className="mt-3 md:mt-5 text-white/70 text-xs sm:text-sm leading-relaxed max-w-4xl">
+          {/* DIUBAH: max-w-4xl dihapus agar teks deskripsi tidak kerdil di layar besar */}
+          <p className="mt-3 md:mt-5 text-white/70 text-xs sm:text-sm leading-relaxed md:max-w-[70%]">
             {filmData.description || 'Tidak ada sinopsis tersedia untuk film ini.'}
           </p>
         </div>
       </div>
 
       {/* ===== MAIN CONTENT ===== */}
-      <div className="max-w-[1400px] mx-auto px-3 sm:px-4 md:px-12 pb-14 md:pb-16">
+      {/* DIUBAH: Menyesuaikan kontainer bawah agar lebarnya sama persis (full) dengan atasnya */}
+      <div className="w-full px-4 md:px-8 lg:px-12 pb-14 md:pb-16">
         
         {/* ===== EPISODES (Related Films) ===== */}
-    
+        {/* (Kode episode Anda ada di sini jika ada) */}
 
         {/* ===== REVIEW PANEL ===== */}
         <section className="mt-8 md:mt-10 rounded-2xl bg-white/5 border border-white/10 overflow-hidden">

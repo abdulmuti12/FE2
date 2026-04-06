@@ -271,12 +271,12 @@ export default function EventPage() {
 
       <Header />
 
-      <div className="relative w-full h-[450px] overflow-hidden">
+      {/* <div className="relative w-full h-[450px] overflow-hidden">
         <div
           className="absolute inset-0 bg-cover bg-center"
           style={{ backgroundImage: 'url(/images/imageheader.png)' }}
         />
-      </div>
+      </div> */}
 
       <div className="max-w-[1400px] mx-auto px-6 py-8">
 

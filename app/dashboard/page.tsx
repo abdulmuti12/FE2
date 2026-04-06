@@ -84,6 +84,7 @@ interface AwardData {
 interface SeriesData {
   id: string
   name: string
+    description: string
   asset_name?: string
   run_time_format?: string
   image_url?: string
@@ -123,6 +124,9 @@ function LatestClipSection({ items = [] }: { items?: any[] }) {
     const amount = scrollerRef.current.clientWidth * 0.8
     scrollerRef.current.scrollBy({ left: dir === 'right' ? amount : -amount, behavior: 'smooth' })
   }
+
+
+ 
 
   if (items.length === 0) return null
 
@@ -191,6 +195,13 @@ export default function DashboardPage() {
   const [eventData, setEventData] = useState<EventData[]>([])
 
   const seriesScrollRef = useRef<HTMLDivElement>(null)
+
+   const truncateText = (text: string | null | undefined, maxLength: number = 75) => {
+  if (!text) return ""
+  const plainText = text.replace(/<[^>]+>/g, '').replace(/\n/g, ' ').trim()
+  if (plainText.length <= maxLength) return plainText
+  return plainText.substring(0, maxLength).trim() + '...'
+}
 
   const scrollSeries = (direction: 'left' | 'right') => {
     if (seriesScrollRef.current) {
@@ -327,7 +338,7 @@ export default function DashboardPage() {
         <LatestFilm items={displayFilms} />
         
         {/* Latest Series */}
-       <section className="px-4 py-10 md:px-12 border-t border-white/10">
+      <section className="px-4 py-10 md:px-12 border-t border-white/10">
   <div className="flex justify-between items-center mb-6">
     <h2 className="text-xl font-bold text-white">Latest Series</h2>
     <Link href="/dashboard/series" className="bg-white/10 px-4 py-1.5 rounded-full text-xs text-white hover:bg-white/20 transition-colors">
@@ -370,9 +381,13 @@ export default function DashboardPage() {
               fill 
               className="object-cover transition-transform duration-300 group-hover:scale-105" 
             />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent" />
             <div className="absolute bottom-4 left-4 right-4">
-              <h3 className="text-lg font-bold text-white line-clamp-2">{s.name}</h3>
+              <h3 className="text-lg font-bold text-white line-clamp-1">{s.name}</h3>
+              {/* --- TAMBAHAN DESKRIPSI MOBILE --- */}
+              <p className="text-gray-300 text-xs mt-1 line-clamp-2">
+                {s.description ? truncateText(s.description, 100) : ''}
+              </p>
             </div>
           </Link>
         ))
@@ -396,9 +411,13 @@ export default function DashboardPage() {
     {loading ? <FeaturedSkeleton /> : seriesData[0] && (
       <Link href={`/dashboard/series/detail?id_group=${seriesData[0].id}`} className="group relative aspect-video rounded-3xl overflow-hidden block">
         <Image src={seriesData[0].image_landscape_url || seriesData[0].image_url || ''} alt={seriesData[0].name} fill className="object-cover transition-transform group-hover:scale-105" />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent" />
-        <div className="absolute bottom-6 left-6">
+        <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent" />
+        <div className="absolute bottom-6 left-6 right-6">
           <h3 className="text-2xl font-bold text-white">{seriesData[0].name}</h3>
+          {/* --- TAMBAHAN DESKRIPSI DESKTOP KIRI --- */}
+          <p className="text-gray-300 text-sm mt-2 line-clamp-2 max-w-xl">
+             {seriesData[0].description ? truncateText(seriesData[0].description, 120) : ''}
+          </p>
         </div>
       </Link>
     )}
@@ -409,8 +428,12 @@ export default function DashboardPage() {
           <div className="relative h-full aspect-video">
             <Image src={s.image_landscape_url || s.image_url || ''} alt={s.name} fill className="object-cover" />
           </div>
-          <div className="px-4">
-            <p className="font-bold text-white text-sm line-clamp-2">{s.name}</p>
+          <div className="px-4 py-2 flex flex-col justify-center">
+            <p className="font-bold text-white text-sm line-clamp-1 mb-1">{s.name}</p>
+            {/* Deskripsi List Kanan Desktop (Sudah ada, saya rapikan spacing-nya) */}
+            <p className="text-gray-300 text-xs leading-snug line-clamp-2">
+              {s.description ? truncateText(s.description, 100) : ''}
+            </p>
           </div>
         </Link>
       ))}
