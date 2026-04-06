@@ -149,11 +149,9 @@ function DetailContent() {
 
       {/* ===== TOP PLAYER AREA ===== */}
       <div className="bg-gradient-to-b from-[#0b1222] via-[#020817] to-[#020817] pb-8 md:pb-10">
-        {/* DIUBAH: Menghapus max-w-[1400px] dan mx-auto, menggantinya dengan w-full */}
         <div className="w-full px-4 md:px-8 lg:px-12 pt-4 md:pt-6">
           
           <div className="relative w-full rounded-xl md:rounded-2xl overflow-hidden bg-black shadow-[0_20px_60px_rgba(0,0,0,0.6)]">
-            {/* DIUBAH: Menghapus max-h-[648px] dan menggantinya dengan md:max-h-[85vh] agar bisa membesar secara horizontal */}
             <div className="relative w-full aspect-video md:max-h-[85vh] bg-black mx-auto">
               {filmData.video_url ? (
                 <video
@@ -213,15 +211,15 @@ function DetailContent() {
           </div>
 
           {/* Description */}
-          {/* DIUBAH: max-w-4xl dihapus agar teks deskripsi tidak kerdil di layar besar */}
-          <p className="mt-3 md:mt-5 text-white/70 text-xs sm:text-sm leading-relaxed md:max-w-[70%]">
-            {filmData.description || 'Tidak ada sinopsis tersedia untuk film ini.'}
-          </p>
+          {/* DIUBAH: Menggunakan dangerouslySetInnerHTML agar format HTML dari API terbaca dengan benar */}
+          <div 
+            className="mt-3 md:mt-5 text-white/70 text-xs sm:text-sm leading-relaxed md:max-w-[70%]"
+            dangerouslySetInnerHTML={{ __html: filmData.description || 'Tidak ada sinopsis tersedia untuk film ini.' }}
+          />
         </div>
       </div>
 
       {/* ===== MAIN CONTENT ===== */}
-      {/* DIUBAH: Menyesuaikan kontainer bawah agar lebarnya sama persis (full) dengan atasnya */}
       <div className="w-full px-4 md:px-8 lg:px-12 pb-14 md:pb-16">
         
         {/* ===== EPISODES (Related Films) ===== */}

@@ -179,7 +179,6 @@ function SeriesDetailContent() {
   }, [fetchComments])
 
   // 3. Submit Comment menggunakan activeVideoId
- // 3. Submit Comment menggunakan activeVideoId (ID Episode/Video)
   const handleSubmitComment = async () => {
     // Validasi: pastikan ada komentar dan pastikan activeVideoId sudah terisi
     if (!newComment.trim() || !activeVideoId) {
@@ -234,6 +233,20 @@ function SeriesDetailContent() {
     window.scrollTo({ top: 0, behavior: 'smooth' })
   }
 
+  // FITUR BARU: Auto play episode selanjutnya saat video saat ini selesai
+  const handleVideoEnded = () => {
+    if (!seriesData || !seriesData.groups) return;
+
+    // Cari index episode yang sedang diputar
+    const currentIndex = seriesData.groups.findIndex((ep) => ep.id === activeVideoId);
+
+    // Cek apakah episode saat ini ditemukan dan bukan episode terakhir
+    if (currentIndex !== -1 && currentIndex < seriesData.groups.length - 1) {
+      const nextEpisode = seriesData.groups[currentIndex + 1];
+      playEpisode(nextEpisode); // Mainkan episode selanjutnya otomatis
+    }
+  }
+
   // ... Render Logic (sama seperti sebelumnya) ...
   if (loading) {
     return (
@@ -271,6 +284,7 @@ function SeriesDetailContent() {
                 poster={activeVideoPoster || '/placeholder-poster.png'}
                 controls
                 autoPlay
+                onEnded={handleVideoEnded} // TAMBAHAN: Event listener untuk auto-play episode selanjutnya
               >
                 <source src={activeVideo} type="video/mp4" />
               </video>

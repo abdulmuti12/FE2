@@ -8,6 +8,7 @@ interface AwardItem {
   title?: string
   name?: string
   description?: string
+  description_text?: string
   image?: string
   image_url?: string
   genre?: string
@@ -67,7 +68,7 @@ export function LatestAwards({ title, viewAllLink = '#', items = [] }: LatestAwa
                   {/* BAGIAN YANG DIUBAH */}
                   <div 
                     className="mb-3 line-clamp-2 px-2 text-center text-xs text-gray-400"
-                    dangerouslySetInnerHTML={{ __html: award.description || award.synopsis || '' }}
+                    dangerouslySetInnerHTML={{ __html: award.description_text || award.synopsis || '' }}
                   />
 
                   {(award.genre || award.category || award.cats) && (

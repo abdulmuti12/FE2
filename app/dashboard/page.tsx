@@ -39,6 +39,7 @@ interface TrailerData {
   image?: string
   image_url?: string
   video?: string
+  id_films?: string
   video_url?: string
 }
 
@@ -67,6 +68,7 @@ interface LatestClipData {
   name: string
   short_desc?: string | null
   description?: string
+  description_text?: string
   image_url?: string
   cats?: string
   run_time_format?: string
@@ -135,13 +137,8 @@ function LatestClipSection({ items = [] }: { items?: any[] }) {
       {/* --- BAGIAN HEADER YANG DIUBAH --- */}
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-xl font-bold text-white">Latest Clip</h2>
-        {/* <Link 
-          href="/dashboard/clip" 
-          className="bg-white/10 hover:bg-white/20 transition-colors px-4 py-1.5 rounded-full text-xs text-white"
-        >
-          View All
-        </Link> */}
-                    <Link href="/dashboard/clip" className="bg-white/10 px-4 py-1.5 rounded-full text-xs text-white">View All</Link>
+    
+        <Link href="/dashboard/clip" className="bg-white/10 px-4 py-1.5 rounded-full text-xs text-white">View All</Link>
 
       </div>
       {/* --------------------------------- */}
@@ -159,7 +156,7 @@ function LatestClipSection({ items = [] }: { items?: any[] }) {
                 </div>
                 <div className="absolute inset-x-0 bottom-0 p-4 bg-gradient-to-t from-black via-black/60 to-transparent">
                   <p className="font-semibold text-sm text-white line-clamp-1">{clip.title}</p>
-                  <p className="text-[11px] text-white/70 line-clamp-2 mt-1">{clip.description}</p>
+                  <p className="text-[11px] text-white/70 line-clamp-2 mt-1">{clip.description_text}</p>
                 </div>
               </div>
             </div>
@@ -310,24 +307,32 @@ export default function DashboardPage() {
             </div>
           </div>
         ) : (
-          <Image src={heroImage} alt="Hero" fill className="object-cover" />
+          <Image src={heroImage || '/placeholder.svg'} alt="Hero" fill className="object-cover" />
         )}
 
         <div className="absolute inset-0 bg-gradient-to-t from-[#0a1628] via-black/10 to-transparent" />
         
         <div className="absolute inset-0 flex items-end">
           <div className="w-full px-4 pb-16 md:px-12 md:pb-28 z-20">
-            <h1 className="text-2xl md:text-5xl font-bold text-white mb-4">{currentTrailer?.name || 'Arena Zero'}</h1>
+            <h1 className="text-2xl md:text-5xl font-bold text-white mb-4">
+              {currentTrailer?.name || 'Arena Zero'}
+            </h1>
             <p className="max-w-xl text-sm md:text-lg text-gray-300 mb-6 line-clamp-2">
-              Watch groundbreaking films crafted by human creativity and artificial intelligence.
+              {currentTrailer?.synopsis || currentTrailer?.description || 'Watch groundbreaking films crafted by human creativity and artificial intelligence.'}
             </p>
             <div className="flex gap-4">
-              <Button 
-                onClick={() => router.push(`/dashboard/film/detail?id=${currentTrailer?.id}`)}
-                className="bg-white text-black hover:bg-gray-200 px-8 py-6 rounded-md font-bold flex items-center gap-2"
-              >
-                <Play className="h-5 w-5 fill-black" /> Watch Now
-              </Button>
+              {/* =========================================
+                  KONDISI TOMBOL WATCH NOW
+                  Hanya muncul jika id_films memiliki isi (tidak null)
+                  ========================================= */}
+              {currentTrailer?.id_films && (
+                <Button 
+                  onClick={() => router.push(`/dashboard/film/detail?id=${currentTrailer.id_films}`)}
+                  className="bg-white text-black hover:bg-gray-200 px-8 py-6 rounded-md font-bold flex items-center gap-2"
+                >
+                  <Play className="h-5 w-5 fill-black" /> Watch Now
+                </Button>
+              )}
             </div>
           </div>
         </div>
@@ -476,6 +481,19 @@ export default function DashboardPage() {
   </Link>
         </div>
         </section>
+
+         <section className="border-t border-border px-4 py-8 md:px-6 md:py-12 lg:px-12">
+        <div className="relative min-h-96 overflow-hidden rounded-xl md:min-h-[500px]">
+          <div className="absolute inset-0">
+            <Image src="/images/design-mode/a.png" alt="Banner Background" fill className="object-cover" />
+          </div>
+
+          <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/60 to-transparent" />
+
+          <FutureFilmmaking />
+        </div>
+      </section>
+
       </div>
 
       <Footer />
