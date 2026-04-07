@@ -134,18 +134,21 @@ function LatestClipSection({ items = [] }: { items?: any[] }) {
   if (items.length === 0) return null
 
   return (
-    <section className="border-t border-white/10 px-4 py-8 md:px-6 lg:px-12">
-      {/* --- BAGIAN HEADER YANG DIUBAH --- */}
-      <div className="flex justify-between items-center mb-6">
-        <h2 className="text-xl font-bold text-white">Latest Clip</h2>
-    
-        <Link href="/dashboard/clip" className="bg-white/10 px-4 py-1.5 rounded-full text-xs text-white">View All</Link>
-
+    <section className="border-t border-white/10 px-4 py-8 md:px-6 md:py-10 lg:px-12">
+      <div className="mb-8 flex items-center justify-between">
+        <h2 className="text-2xl font-bold text-white md:text-3xl">Latest Clip</h2>
+        <Link href="/dashboard/clip" className="inline-flex items-center gap-2 font-semibold text-white hover:text-white/80 transition-colors">
+          <span className="text-xs md:text-base">View All</span>
+          <span className="text-white/70">›</span>
+        </Link>
       </div>
-      {/* --------------------------------- */}
 
-      <div className="relative group">
-        <div ref={scrollerRef} className="flex gap-4 overflow-x-auto scrollbar-hide pb-4">
+      <div className="relative">
+        <div
+          ref={scrollerRef}
+          className="flex gap-4 overflow-x-auto scroll-smooth pb-4 md:gap-6"
+          style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+        >
           {items.map((clip) => (
             <div key={clip.id} className="w-[200px] md:w-[280px] flex-shrink-0">
               <div className="group relative aspect-[3/4] overflow-hidden rounded-2xl bg-black">
@@ -163,8 +166,8 @@ function LatestClipSection({ items = [] }: { items?: any[] }) {
             </div>
           ))}
         </div>
-        <button onClick={() => scroll('right')} className="absolute right-0 top-1/2 -translate-y-1/2 h-10 w-10 bg-white text-black rounded-full shadow-xl flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-          ›
+        <button onClick={() => scroll('right')} className="absolute right-0 top-1/2 flex h-8 w-8 translate-x-2 -translate-y-1/2 items-center justify-center rounded-lg bg-white/95 text-black shadow-md transition-colors hover:bg-white md:h-10 md:w-10 md:translate-x-4 lg:translate-x-6">
+          <span className="text-lg leading-none md:text-xl">›</span>
         </button>
       </div>
     </section>
@@ -193,6 +196,20 @@ export default function DashboardPage() {
   const [eventData, setEventData] = useState<EventData[]>([])
 
   const seriesScrollRef = useRef<HTMLDivElement>(null)
+
+  const [currentIndex, setCurrentIndex] = useState(0)
+  
+  // Tentukan berapa item yang tampil di layar (sesuaikan dengan desain)
+  const itemsPerView = 10
+  const maxIndex = Math.max(0, creatorApiData.length - itemsPerView)
+
+  const handleNext = () => {
+    if (currentIndex < maxIndex) setCurrentIndex((prev) => prev + 1)
+  }
+
+  const handlePrev = () => {
+    if (currentIndex > 0) setCurrentIndex((prev) => prev - 1)
+  }
 
    const truncateText = (text: string | null | undefined, maxLength: number = 75) => {
   if (!text) return ""
@@ -279,6 +296,17 @@ export default function DashboardPage() {
   const heroVideo = currentTrailer?.video_url || (currentTrailer?.video ? `https://api.usky.ai/uploads/${currentTrailer.video}` : '')
   const heroImage = currentTrailer?.image_url 
 
+  useEffect(() => {
+    if (!heroVideo || !videoRef.current) return
+
+    const playPromise = videoRef.current.play()
+    if (playPromise && typeof playPromise.then === 'function') {
+      playPromise.catch(() => {
+        // Ignore autoplay restrictions; video should continue when possible.
+      })
+    }
+  }, [heroVideo])
+
   return (
     <div className="min-h-screen bg-[#0a1628] text-foreground dark">
       <Header />
@@ -296,6 +324,7 @@ export default function DashboardPage() {
         playsInline
         preload="auto" // Tambahkan ini agar buffering video lebih agresif/cepat
         onEnded={handleVideoEnded}
+        loop={trailers.length <= 1}
         className="w-full h-full object-cover"
       >
         <source src={heroVideo} type="video/mp4" />
@@ -458,33 +487,77 @@ export default function DashboardPage() {
         )}
 
         <CategorySection 
+          title="Categories"
           items={categoryApiData.map(c => ({ id: c.id, name: c.name, count: c.total_movie || '0', image: c.images_url || '/placeholder.svg' }))} 
         />
 
         <MostWatchingFilm items={transformFilmData(mostWatchingFilms)} />
 
         {/* Creators */}
-        <section className="px-4 py-12 lg:px-12 border-t border-white/10">
-          <h2 className="text-2xl font-bold mb-8">Creators</h2>
-          <div className="flex gap-8 overflow-x-auto pb-4 scrollbar-hide">
-            {creatorApiData.map(creator => (
-              <div key={creator.id} className="flex flex-col items-center flex-shrink-0">
-                <div className="relative h-24 w-24 rounded-full overflow-hidden mb-3 border-2 border-white/10">
-                  <Image src={creator.avatar_url || '/images/pngs.png'} alt={creator.name} fill className="object-cover" />
-                </div>
-                <p className="font-semibold text-sm">{creator.name}</p>
-                <p className="text-xs text-gray-500">{creator.total_video} movies</p>
-              </div>
-            ))}
-          </div>
-        <div className="mt-8 flex justify-center">
-        <Link href="/dashboard/creator">
-    <Button className="border border-white/20 bg-transparent text-white hover:bg-white/10">
-      View All Creators
-    </Button>
-  </Link>
+     <section className="px-4 py-12 lg:px-12 border-t border-white/10">
+      
+      {/* ===== HEADER: Judul Kiri, Tombol Kanan ===== */}
+      <div className="flex items-center justify-between mb-8">
+        <h2 className="text-2xl font-bold text-white">Creators</h2>
+        
+        {/* Tombol Kanan Atas */}
+        <div className="flex overflow-hidden rounded-sm border border-white/10 bg-[#0a2342]">
+          <button
+            onClick={handlePrev}
+            disabled={currentIndex === 0}
+            className="flex h-10 w-10 items-center justify-center border-r border-white/10 text-white transition-colors hover:bg-white/10 disabled:opacity-30 disabled:cursor-not-allowed"
+            aria-label="Previous creators"
+          >
+            <ChevronLeft className="h-4 w-4" />
+          </button>
+          <button
+            onClick={handleNext}
+            disabled={currentIndex === maxIndex}
+            className="flex h-10 w-10 items-center justify-center text-white transition-colors hover:bg-white/10 disabled:opacity-30 disabled:cursor-not-allowed"
+            aria-label="Next creators"
+          >
+            <ChevronRight className="h-4 w-4" />
+          </button>
         </div>
-        </section>
+      </div>
+
+      {/* ===== CREATOR LIST (Slider Logic) ===== */}
+      <div className="relative overflow-hidden">
+        {/* PERUBAHAN 1: gap-8 diubah menjadi gap-4 agar jarak antar kreator lebih kecil (rapat) */}
+        <div 
+          className="flex transition-transform duration-500 ease-in-out gap-4"
+          style={{ transform: `translateX(-${currentIndex * (100 / itemsPerView)}%)` }}
+        >
+          {creatorApiData.map(creator => (
+            /* PERUBAHAN 2: 2rem diubah menjadi 1rem karena mengikuti ukuran gap-4 yang baru */
+            <div 
+              key={creator.id} 
+              className="flex flex-col items-center flex-shrink-0 w-32 md:w-40 lg:w-[calc(100%/10-0.9rem)]"
+            >
+              <div className="relative h-24 w-24 rounded-full overflow-hidden mb-3 border-2 border-white/10">
+                <Image 
+                  src={creator.avatar_url || '/images/pngs.png'} 
+                  alt={creator.name} 
+                  fill 
+                  className="object-cover" 
+                />
+              </div>
+              <p className="font-semibold text-sm text-center line-clamp-1">{creator.name}</p>
+              <p className="text-xs text-gray-500">{creator.total_video} movies</p>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* ===== VIEW ALL BUTTON ===== */}
+      <div className="mt-8 flex justify-center">
+        <Link href="/dashboard/creator" className="inline-block">
+          <button className="px-6 py-2 rounded-md border border-white/20 bg-transparent text-white hover:bg-white/10 transition-colors">
+            View All Creators
+          </button>
+        </Link>
+      </div>
+    </section>
 
          <section className="border-t border-border px-4 py-8 md:px-6 md:py-12 lg:px-12">
         <div className="relative min-h-96 overflow-hidden rounded-xl md:min-h-[500px]">

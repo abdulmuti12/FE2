@@ -65,7 +65,7 @@ export function CarouselSection({
         {/* CONTAINER SCROLL NATIVE */}
         <div 
           ref={scrollContainerRef}
-          className="flex gap-4 md:gap-6 overflow-x-auto snap-x snap-mandatory pb-4 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]"
+          className="flex gap-4 md:gap-6 overflow-x-auto overflow-y-hidden snap-x snap-mandatory pb-4 scrollbar-hide [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]"
         >
           {layout === 'creator' ? (
             // LAYOUT CREATOR
@@ -102,12 +102,14 @@ export function CarouselSection({
                   </Link>
 
                   <div className="p-4 md:p-5">
-                    <Link href={`/dashboard/film/detail?id=${film.id}`}>
-                      {/* Judul lebih besar dan tebal */}
-                      <p className="mb-2 line-clamp-1 text-[22px] font-bold tracking-wide text-white hover:text-blue-400 transition-colors">
-                        {film.title}
-                      </p>
-                    </Link>
+                    <div className="mb-2">
+                      <Link href={`/dashboard/film/detail?id=${film.id}`}>
+                        {/* Judul lebih besar dan tebal */}
+                        <p className="line-clamp-1 text-[22px] font-bold tracking-wide text-white hover:text-blue-400 transition-colors">
+                          {film.title}
+                        </p>
+                      </Link>
+                    </div>
 
                     {/* Tahun dan deskripsi disejajarkan dan lebih terbaca */}
                     {film.year && (
@@ -122,16 +124,26 @@ export function CarouselSection({
 
                     {/* Tombol kategori diubah ukurannya agar sama dengan referensi */}
                     <div className="flex flex-wrap gap-2.5">
-                      {film.categories?.filter((cat: string) => cat !== 'AI').slice(0, 2).map((cat: string, idx: number) => (
+                      {film.categories?.filter((cat: string) => cat !== 'AI').length ? (
+                        film.categories.filter((cat: string) => cat !== 'AI').slice(0, 2).map((cat: string, idx: number) => (
+                          <Button
+                            key={idx}
+                            size="sm"
+                            className="h-auto rounded-full bg-white px-5 py-1.5 text-[14px] font-semibold text-black hover:bg-gray-200"
+                            variant="default"
+                          >
+                            {cat}
+                          </Button>
+                        ))
+                      ) : film.cats ? (
                         <Button
-                          key={idx}
                           size="sm"
                           className="h-auto rounded-full bg-white px-5 py-1.5 text-[14px] font-semibold text-black hover:bg-gray-200"
                           variant="default"
                         >
-                          {cat}
+                          {film.cats}
                         </Button>
-                      )) || (
+                      ) : (
                         <>
                           <Button
                             size="sm"
@@ -168,11 +180,13 @@ export function CarouselSection({
                     </div>
                   </Link>
 
-                  <Link href={`/dashboard/film/detail?id=${film.id}`}>
-                    <p className="mb-1 line-clamp-1 text-base font-semibold text-foreground hover:text-blue-400 transition-colors cursor-pointer">
-                      {film.title}
-                    </p>
-                  </Link>
+                  <div className="mb-1">
+                    <Link href={`/dashboard/film/detail?id=${film.id}`}>
+                      <p className="line-clamp-1 text-base font-semibold text-foreground hover:text-blue-400 transition-colors cursor-pointer">
+                        {film.title}
+                      </p>
+                    </Link>
+                  </div>
 
                   {film.year && (
                     <p className="text-xs text-muted-foreground">{film.year}</p>
@@ -183,16 +197,26 @@ export function CarouselSection({
                   </p>
 
                   <div className="flex flex-wrap gap-2">
-                    {film.categories?.filter((cat: string) => cat !== 'AI').map((cat: string, idx: number) => (
+                    {film.categories?.filter((cat: string) => cat !== 'AI').length ? (
+                      film.categories.filter((cat: string) => cat !== 'AI').map((cat: string, idx: number) => (
+                        <Button
+                          key={idx}
+                          size="sm"
+                          className="rounded-full bg-gray-200 px-4 text-xs text-black hover:bg-gray-300"
+                          variant="default"
+                        >
+                          {cat}
+                        </Button>
+                      ))
+                    ) : film.cats ? (
                       <Button
-                        key={idx}
                         size="sm"
                         className="rounded-full bg-gray-200 px-4 text-xs text-black hover:bg-gray-300"
                         variant="default"
                       >
-                        {cat}
+                        {film.cats}
                       </Button>
-                    )) || (
+                    ) : (
                       <>
                         <Link href={`/dashboard/film/detail?id=${film.id}`}>
                           <Button
@@ -208,7 +232,7 @@ export function CarouselSection({
                           className="rounded-full bg-gray-200 px-4 text-xs text-black hover:bg-gray-300"
                           variant="default"
                         >
-                          {film.genre}
+                          Adventure
                         </Button>
                       </>
                     )}
