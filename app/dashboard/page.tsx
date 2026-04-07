@@ -178,7 +178,7 @@ export default function DashboardPage() {
   
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [isMuted, setIsMuted] = useState(true)
+  const [isMuted, setIsMuted] = useState(false)
 
   const [trailers, setTrailers] = useState<TrailerData[]>([])
   const [currentTrailerIndex, setCurrentTrailerIndex] = useState(0)
