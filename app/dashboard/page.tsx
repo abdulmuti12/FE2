@@ -36,6 +36,7 @@ interface TrailerData {
   id: string
   name?: string
   description?: string
+  description_text?: string
   image?: string
   image_url?: string
   video?: string
@@ -283,60 +284,63 @@ export default function DashboardPage() {
       <Header />
 
       {/* Hero Section with Autoplay & Audio Toggle */}
-      <section className="relative min-h-[60vh] lg:min-h-screen overflow-hidden">
-        {heroVideo ? (
-          <div className="absolute inset-0 w-full h-full">
-            <video
-              ref={videoRef}
-              key={heroVideo}
-              autoPlay
-              muted={isMuted}
-              playsInline
-              onEnded={handleVideoEnded}
-              className="w-full h-full object-cover"
-              poster={heroImage}
-            >
-              <source src={heroVideo} type="video/mp4" />
-            </video>
-            
-            {/* Audio Toggle Button (Bottom Right) */}
-            <div className="absolute bottom-20 right-6 md:bottom-32 lg:right-12 z-30">
-              <button onClick={toggleMute} className="h-10 w-10 flex items-center justify-center rounded-full bg-black/40 backdrop-blur-md border border-white/20 text-white transition-all">
-                {isMuted ? <VolumeX className="h-5 w-5" /> : <Volume2 className="h-5 w-5" />}
-              </button>
-            </div>
-          </div>
-        ) : (
-          <Image src={heroImage || '/placeholder.svg'} alt="Hero" fill className="object-cover" />
-        )}
+    <section className="relative min-h-[60vh] lg:min-h-screen overflow-hidden bg-black">
+  {heroVideo ? (
+    <div className="absolute inset-0 w-full h-full">
+      {/* Atribut poster telah dihapus agar langsung memutar video */}
+      <video
+        ref={videoRef}
+        key={heroVideo}
+        autoPlay
+        muted={isMuted}
+        playsInline
+        preload="auto" // Tambahkan ini agar buffering video lebih agresif/cepat
+        onEnded={handleVideoEnded}
+        className="w-full h-full object-cover"
+      >
+        <source src={heroVideo} type="video/mp4" />
+      </video>
+      
+      {/* Audio Toggle Button (Bottom Right) */}
+      <div className="absolute bottom-20 right-6 md:bottom-32 lg:right-12 z-30">
+        <button onClick={toggleMute} className="h-10 w-10 flex items-center justify-center rounded-full bg-black/40 backdrop-blur-md border border-white/20 text-white transition-all">
+          {isMuted ? <VolumeX className="h-5 w-5" /> : <Volume2 className="h-5 w-5" />}
+        </button>
+      </div>
+    </div>
+  ) : (
+    /* DIUBAH: Gambar dihapus dan diganti dengan div kosong berwarna hitam. 
+       Ini mencegah gambar muncul sekilas saat menunggu data API heroVideo. */
+    <div className="absolute inset-0 w-full h-full bg-black" />
+  )}
 
-        <div className="absolute inset-0 bg-gradient-to-t from-[#0a1628] via-black/10 to-transparent" />
-        
-        <div className="absolute inset-0 flex items-end">
-          <div className="w-full px-4 pb-16 md:px-12 md:pb-28 z-20">
-            <h1 className="text-2xl md:text-5xl font-bold text-white mb-4">
-              {currentTrailer?.name || 'Arena Zero'}
-            </h1>
-            <p className="max-w-xl text-sm md:text-lg text-gray-300 mb-6 line-clamp-2">
-              {currentTrailer?.synopsis || currentTrailer?.description || 'Watch groundbreaking films crafted by human creativity and artificial intelligence.'}
-            </p>
-            <div className="flex gap-4">
-              {/* =========================================
-                  KONDISI TOMBOL WATCH NOW
-                  Hanya muncul jika id_films memiliki isi (tidak null)
-                  ========================================= */}
-              {currentTrailer?.id_films && (
-                <Button 
-                  onClick={() => router.push(`/dashboard/film/detail?id=${currentTrailer.id_films}`)}
-                  className="bg-white text-black hover:bg-gray-200 px-8 py-6 rounded-md font-bold flex items-center gap-2"
-                >
-                  <Play className="h-5 w-5 fill-black" /> Watch Now
-                </Button>
-              )}
-            </div>
-          </div>
-        </div>
-      </section>
+  <div className="absolute inset-0 bg-gradient-to-t from-[#0a1628] via-black/10 to-transparent" />
+  
+  <div className="absolute inset-0 flex items-end">
+    <div className="w-full px-4 pb-16 md:px-12 md:pb-28 z-20">
+      <h1 className="text-2xl md:text-5xl font-bold text-white mb-4">
+        {currentTrailer?.name || 'Arena Zero'}
+      </h1>
+      <p className="max-w-xl text-sm md:text-lg text-gray-300 mb-6 line-clamp-2">
+        { currentTrailer?.description_text }
+      </p>
+      <div className="flex gap-4">
+        {/* =========================================
+            KONDISI TOMBOL WATCH NOW
+            Hanya muncul jika id_films memiliki isi (tidak null)
+            ========================================= */}
+        {currentTrailer?.id_films && (
+          <Button 
+            onClick={() => router.push(`/dashboard/film/detail?id=${currentTrailer.id_films}`)}
+            className="bg-white text-black hover:bg-gray-200 px-8 py-6 rounded-md font-bold flex items-center gap-2"
+          >
+            <Play className="h-5 w-5 fill-black" /> Watch Now
+          </Button>
+        )}
+      </div>
+    </div>
+  </div>
+</section>
 
       {/* Content Sections */}
       <div className="relative z-10 -mt-10">
