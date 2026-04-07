@@ -250,7 +250,7 @@ export default function FilmPage() {
         ) : selectedCategory === UI.CATEGORY_ALL ? (
           // All Category View - No grouping headers
           <div className="pb-4 md:pb-8">
-            <div className="grid grid-cols-2 gap-3 sm:gap-4 md:flex md:flex-wrap md:gap-6 md:items-end transition-all duration-500">
+            <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-5 gap-3 md:gap-4 transition-all duration-500">
               {films.map((film) => {
                 const isHovered = hoveredFilmId === film.id
 
@@ -263,28 +263,23 @@ export default function FilmPage() {
                   >
                     <Link href={`/dashboard/film/detail?id=${film.id}`} className="block">
                       <div
-                        className={`
-                          relative rounded-xl md:rounded-2xl overflow-hidden bg-[#0f172a]
-                          transition-all duration-300 ease-out w-full
-                          aspect-[2/3] md:aspect-auto md:h-[300px]
-                          ${isHovered ? 'md:w-[520px] md:z-30 md:shadow-2xl' : 'md:w-[260px]'}
-                        `}
+                        className="relative rounded-xl overflow-hidden bg-[#0f172a] transition-all duration-300 ease-out w-full aspect-[2/3]"
                       >
                         <Image
                           src={film.image_url}
                           alt={film.name}
                           fill
-                          className="object-cover transition-transform duration-500 group-hover:scale-105 md:group-hover:scale-100"
+                          className="object-cover transition-transform duration-500 group-hover:scale-110"
                           unoptimized
                         />
 
                         {/* Mobile Info - Always visible with gradient */}
                         <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent md:hidden" />
                         <div className="absolute left-3 right-3 bottom-3 md:hidden">
-                          <h3 className="text-white text-sm font-semibold line-clamp-1 mb-1">
+                          <h3 className="text-white text-xs font-semibold line-clamp-1 mb-1">
                             {film.name}
                           </h3>
-                          <p className="text-[10px] text-gray-400">
+                          <p className="text-[9px] text-gray-400">
                             {film.years} • {film.run_time_format}
                           </p>
                         </div>
@@ -293,22 +288,22 @@ export default function FilmPage() {
                         <div className="hidden md:block">
                           {isHovered && (
                             <>
-                              <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent" />
-                              <div className="absolute left-6 right-6 bottom-6">
-                                <h3 className="text-white text-xl font-semibold mb-3">
+                              <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent" />
+                              <div className="absolute inset-0 flex flex-col justify-end p-4">
+                                <h3 className="text-white text-sm font-semibold mb-2 line-clamp-2">
                                   {film.name}
                                 </h3>
-                                <div className="flex items-center gap-3 mb-3">
-                                  <div className="flex items-center gap-2 bg-white text-black px-5 py-2 rounded-full text-sm font-semibold hover:bg-gray-100 transition-colors">
-                                    <Play className="w-4 h-4 fill-black" />
-                                    Watch Now
+                                <div className="flex items-center gap-2 mb-2">
+                                  <div className="flex items-center gap-1 bg-white text-black px-3 py-1 rounded-full text-xs font-semibold hover:bg-gray-100 transition-colors">
+                                    <Play className="w-3 h-3 fill-black" />
+                                    Watch
                                   </div>
-                                  <div className="w-10 h-10 rounded-full border border-white/30 bg-white/10 flex items-center justify-center hover:bg-white/20 transition-colors">
-                                    <Info className="w-5 h-5 text-white" />
+                                  <div className="w-7 h-7 rounded-full border border-white/30 bg-white/10 flex items-center justify-center hover:bg-white/20 transition-colors text-xs">
+                                    <Info className="w-4 h-4 text-white" />
                                   </div>
                                 </div>
-                                <p className="text-sm text-white/70 line-clamp-2 max-w-[440px]">
-                                  {film.synopsis || `${film.name} • ${film.years} • ${film.run_time_format}`}
+                                <p className="text-xs text-white/70 line-clamp-1">
+                                  {film.years}
                                 </p>
                               </div>
                             </>
@@ -351,7 +346,7 @@ export default function FilmPage() {
                     </div>
 
                     <div className="pb-4 md:pb-8">
-                      <div className="grid grid-cols-2 gap-3 sm:gap-4 md:flex md:flex-wrap md:gap-6 md:items-end transition-all duration-500">
+                      <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-5 gap-3 md:gap-4 transition-all duration-500">
                         {filmsToShow.map((film) => {
                           const isHovered = hoveredFilmId === film.id
 
@@ -364,28 +359,23 @@ export default function FilmPage() {
                             >
                               <Link href={`/dashboard/film/detail?id=${film.id}`} className="block">
                                 <div
-                                  className={`
-                                    relative rounded-xl md:rounded-2xl overflow-hidden bg-[#0f172a]
-                                    transition-all duration-300 ease-out w-full
-                                    aspect-[2/3] md:aspect-auto md:h-[300px]
-                                    ${isHovered ? 'md:w-[520px] md:z-30 md:shadow-2xl' : 'md:w-[260px]'}
-                                  `}
+                                  className="relative rounded-xl overflow-hidden bg-[#0f172a] transition-all duration-300 ease-out w-full aspect-[2/3]"
                                 >
                                   <Image
                                     src={film.image_url}
                                     alt={film.name}
                                     fill
-                                    className="object-cover transition-transform duration-500 group-hover:scale-105 md:group-hover:scale-100"
+                                    className="object-cover transition-transform duration-500 group-hover:scale-110"
                                     unoptimized
                                   />
 
                                   {/* Mobile Info - Always visible with gradient */}
                                   <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent md:hidden" />
                                   <div className="absolute left-3 right-3 bottom-3 md:hidden">
-                                    <h3 className="text-white text-sm font-semibold line-clamp-1 mb-1">
+                                    <h3 className="text-white text-xs font-semibold line-clamp-1 mb-1">
                                       {film.name}
                                     </h3>
-                                    <p className="text-[10px] text-gray-400">
+                                    <p className="text-[9px] text-gray-400">
                                       {film.years} • {film.run_time_format}
                                     </p>
                                   </div>
@@ -394,22 +384,22 @@ export default function FilmPage() {
                                   <div className="hidden md:block">
                                     {isHovered && (
                                       <>
-                                        <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent" />
-                                        <div className="absolute left-6 right-6 bottom-6">
-                                          <h3 className="text-white text-xl font-semibold mb-3">
+                                        <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent" />
+                                        <div className="absolute inset-0 flex flex-col justify-end p-4">
+                                          <h3 className="text-white text-sm font-semibold mb-2 line-clamp-2">
                                             {film.name}
                                           </h3>
-                                          <div className="flex items-center gap-3 mb-3">
-                                            <div className="flex items-center gap-2 bg-white text-black px-5 py-2 rounded-full text-sm font-semibold hover:bg-gray-100 transition-colors">
-                                              <Play className="w-4 h-4 fill-black" />
-                                              Watch Now
+                                          <div className="flex items-center gap-2 mb-2">
+                                            <div className="flex items-center gap-1 bg-white text-black px-3 py-1 rounded-full text-xs font-semibold hover:bg-gray-100 transition-colors">
+                                              <Play className="w-3 h-3 fill-black" />
+                                              Watch
                                             </div>
-                                            <div className="w-10 h-10 rounded-full border border-white/30 bg-white/10 flex items-center justify-center hover:bg-white/20 transition-colors">
-                                              <Info className="w-5 h-5 text-white" />
+                                            <div className="w-7 h-7 rounded-full border border-white/30 bg-white/10 flex items-center justify-center hover:bg-white/20 transition-colors text-xs">
+                                              <Info className="w-4 h-4 text-white" />
                                             </div>
                                           </div>
-                                          <p className="text-sm text-white/70 line-clamp-2 max-w-[440px]">
-                                            {film.synopsis || `${film.name} • ${film.years} • ${film.run_time_format}`}
+                                          <p className="text-xs text-white/70 line-clamp-1">
+                                            {film.years}
                                           </p>
                                         </div>
                                       </>
