@@ -219,8 +219,8 @@ function SeriesDetailContent() {
         throw new Error(json.message || "Failed to submit comment");
       }
     } catch (error: any) {
-      console.error("[v0] Post Comment Error:", error);
-      alert(error.message || "An error occurred while submitting your comment.");
+      // console.error("[v0] Post Comment Error:", error);
+      // alert(error.message || "An error occurred while submitting your comment.");
     } finally {
       setIsSubmittingComment(false);
     }
@@ -284,7 +284,7 @@ function SeriesDetailContent() {
                 poster={activeVideoPoster || '/placeholder-poster.png'}
                 controls
                 autoPlay
-                onEnded={handleVideoEnded} // TAMBAHAN: Event listener untuk auto-play episode selanjutnya
+                onEnded={handleVideoEnded} 
               >
                 <source src={activeVideo} type="video/mp4" />
               </video>
@@ -296,7 +296,10 @@ function SeriesDetailContent() {
           </div>
 
           <div className="w-full lg:w-1/3 xl:w-[30%] bg-[#0a1628]/80 backdrop-blur-xl border border-white/5 rounded-2xl p-6 md:p-8 flex flex-col">
-            <h1 className="text-2xl md:text-3xl font-bold mb-3">{seriesData.name}</h1>
+            {/* DIUBAH: Mengambil nama dari activeEpisode yang di klik, atau nama default series jika kosong */}
+            <h1 className="text-2xl md:text-3xl font-bold mb-3">
+              {seriesData.groups?.find(ep => ep.id === activeVideoId)?.name || seriesData.name}
+            </h1>
             <div className="flex items-center gap-3 mb-4 text-xs md:text-sm">
               <span className="bg-white/10 px-2 py-0.5 rounded text-gray-300">{seriesData.cats}</span>
               <div className="flex text-[#D4A84B]">

@@ -319,7 +319,7 @@ export default function DashboardPage() {
   <div className="absolute inset-0 flex items-end">
     <div className="w-full px-4 pb-16 md:px-12 md:pb-28 z-20">
       <h1 className="text-2xl md:text-5xl font-bold text-white mb-4">
-        {currentTrailer?.name || 'Arena Zero'}
+        {currentTrailer?.name}
       </h1>
       <p className="max-w-xl text-sm md:text-lg text-gray-300 mb-6 line-clamp-2">
         { currentTrailer?.description_text }
