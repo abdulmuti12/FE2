@@ -7,6 +7,10 @@ import { ChevronRight, Play, Info } from 'lucide-react'
 import Image from 'next/image'
 import Link from 'next/link'
 
+// ============================================================================
+// Types
+// ============================================================================
+
 interface Film {
   id: string
   name: string
@@ -16,6 +20,7 @@ interface Film {
   run_time_format: string
   synopsis: string
   genre: string
+  cats?: string
 }
 
 interface Category {
@@ -23,34 +28,115 @@ interface Category {
   name: string
 }
 
+// ============================================================================
+// Constants - API
+// ============================================================================
+
+const API_ENDPOINTS = {
+  FILMS_LIST: '/api/film/list',
+  FILMS_CATEGORY: '/api/film/category',
+} as const
+
+const API_PARAMS = {
+  FILMS_LIMIT: 10,
+  FILMS_SORT: 'latest',
+  FILMS_VIEW_TYPE: 'portrait',
+} as const
+
+// ============================================================================
+// Constants - UI
+// ============================================================================
+
+const UI = {
+  CATEGORY_ALL: 'All',
+  FILMS_PER_SECTION: 5,
+  STORAGE_KEY: 'user_token',
+} as const
+
+// ============================================================================
+// Helper Functions - API
+// ============================================================================
+
+const getAuthHeaders = (token: string) => ({
+  Authorization: `Bearer ${token}`,
+  'Content-Type': 'application/json',
+})
+
+const buildFilmsUrl = (
+  categoryId: string,
+  page: number
+): string => {
+  const params = new URLSearchParams({
+    sort: API_PARAMS.FILMS_SORT,
+    id_category: categoryId,
+    page: page.toString(),
+    limit: API_PARAMS.FILMS_LIMIT.toString(),
+    view_type: API_PARAMS.FILMS_VIEW_TYPE,
+  })
+  return `${API_ENDPOINTS.FILMS_LIST}?${params}`
+}
+
+// ============================================================================
+// Helper Functions - Data Processing
+// ============================================================================
+
+const buildDisplayCategories = (categories: Category[]): string[] => {
+  return [UI.CATEGORY_ALL, ...categories.map(c => c.name)]
+}
+
+const groupFilmsByCategory = (
+  films: Film[],
+  categories: string[]
+): Record<string, Film[]> => {
+  const acc: Record<string, Film[]> = {}
+
+  if (!films || films.length === 0) {
+    return acc
+  }
+
+  categories.forEach(category => {
+    if (category === UI.CATEGORY_ALL) {
+      acc[category] = films
+    } else {
+      acc[category] = films.filter((f) => f.cats === category)
+    }
+  })
+
+  return acc
+}
+
+// ============================================================================
+// Component
+// ============================================================================
+
 export default function FilmPage() {
+  // State
   const [films, setFilms] = useState<Film[]>([])
   const [categories, setCategories] = useState<Category[]>([])
-  const [selectedCategory, setSelectedCategory] = useState('All')
+  const [selectedCategory, setSelectedCategory] = useState<string>(UI.CATEGORY_ALL)
   const [hoveredFilmId, setHoveredFilmId] = useState<string | null>(null)
   const [expandedCategories, setExpandedCategories] = useState<Record<string, boolean>>({})
   const [loading, setLoading] = useState(true)
   const [page, setPage] = useState(1)
 
-  // Fetch films from API
+  // Effects - Fetch Films
   useEffect(() => {
     const fetchFilms = async () => {
       try {
-        const token = localStorage.getItem('user_token')
-        
+        const token = localStorage.getItem(UI.STORAGE_KEY)
+
         if (!token) {
           setFilms([])
           setLoading(false)
           return
         }
 
-        const categoryId = selectedCategory === 'All' ? '' : selectedCategory
-        const response = await fetch(`/api/film/list?sort=latest&id_category=${categoryId}&page=${page}&limit=10&view_type=portrait`, {
+        const categoryId = selectedCategory === UI.CATEGORY_ALL ? '' : selectedCategory
+        const url = buildFilmsUrl(categoryId, page)
+
+        const response = await fetch(url, {
           method: 'GET',
-          headers: {
-            Authorization: `Bearer ${token}`,
-            'Content-Type': 'application/json',
-          },
+          headers: getAuthHeaders(token),
         })
 
         const data = await response.json()
@@ -71,23 +157,20 @@ export default function FilmPage() {
     fetchFilms()
   }, [selectedCategory, page])
 
-  // Fetch categories from API
+  // Effects - Fetch Categories
   useEffect(() => {
     const fetchCategories = async () => {
       try {
-        const token = localStorage.getItem('user_token')
-        
+        const token = localStorage.getItem(UI.STORAGE_KEY)
+
         if (!token) {
           setCategories([])
           return
         }
 
-        const response = await fetch('/api/film/category', {
+        const response = await fetch(API_ENDPOINTS.FILMS_CATEGORY, {
           method: 'GET',
-          headers: {
-            Authorization: `Bearer ${token}`,
-            'Content-Type': 'application/json',
-          },
+          headers: getAuthHeaders(token),
         })
 
         const data = await response.json()
@@ -106,32 +189,24 @@ export default function FilmPage() {
     fetchCategories()
   }, [])
 
-  // Build categories array with 'All' option
-  const displayCategories = ['All', ...categories.map(c => c.name)]
+  // Computed Values
+  const displayCategories = buildDisplayCategories(categories)
 
   const groupedByCategory = useMemo(() => {
-    const acc: Record<string, Film[]> = {}
-    
-    if (!films || films.length === 0) {
-      return acc
-    }
-
-    displayCategories.forEach(category => {
-      if (category === 'All') {
-        acc[category] = films
-      } else {
-        acc[category] = films.filter((f) => f.cats === category)
-      }
-    })
-    
-    return acc
+    return groupFilmsByCategory(films, displayCategories)
   }, [films, displayCategories])
 
   const categoriesWithContent = displayCategories.filter(
     (cat) => groupedByCategory[cat]?.length > 0
   )
 
-  const toggleExpand = (category: string) => {
+  // Handlers
+  const handleCategorySelect = (category: string) => {
+    setSelectedCategory(category)
+    setPage(1)
+  }
+
+  const handleToggleExpand = (category: string) => {
     setExpandedCategories((prev) => ({
       ...prev,
       [category]: !prev[category],
@@ -143,7 +218,7 @@ export default function FilmPage() {
       <Header />
 
       <div className="px-4 md:px-12 pb-20 pt-8">
-        {/* Category Filter - DIUBAH AGAR BISA SCROLL DI MOBILE */}
+        {/* Category Filter - Scrollable on mobile */}
         <div className="mb-8 md:mb-12">
           <p className="text-sm text-gray-400 mb-3 md:mb-4">Category</p>
           {loading && films.length === 0 ? (
@@ -153,10 +228,7 @@ export default function FilmPage() {
               {displayCategories.map((category) => (
                 <button
                   key={category}
-                  onClick={() => {
-                    setSelectedCategory(category)
-                    setPage(1)
-                  }}
+                  onClick={() => handleCategorySelect(category)}
                   className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
                     selectedCategory === category
                       ? 'bg-blue-600 text-white'
@@ -175,41 +247,110 @@ export default function FilmPage() {
           <div className="text-gray-400 text-center py-12">Loading films...</div>
         ) : films.length === 0 ? (
           <div className="text-gray-400 text-center py-12">No films available</div>
+        ) : selectedCategory === UI.CATEGORY_ALL ? (
+          // All Category View - No grouping headers
+          <div className="pb-4 md:pb-8">
+            <div className="grid grid-cols-2 gap-3 sm:gap-4 md:flex md:flex-wrap md:gap-6 md:items-end transition-all duration-500">
+              {films.map((film) => {
+                const isHovered = hoveredFilmId === film.id
+
+                return (
+                  <div
+                    key={film.id}
+                    className="relative transition-all duration-300 ease-out cursor-pointer group"
+                    onMouseEnter={() => setHoveredFilmId(film.id)}
+                    onMouseLeave={() => setHoveredFilmId(null)}
+                  >
+                    <Link href={`/dashboard/film/detail?id=${film.id}`} className="block">
+                      <div
+                        className={`
+                          relative rounded-xl md:rounded-2xl overflow-hidden bg-[#0f172a]
+                          transition-all duration-300 ease-out w-full
+                          aspect-[2/3] md:aspect-auto md:h-[300px]
+                          ${isHovered ? 'md:w-[520px] md:z-30 md:shadow-2xl' : 'md:w-[260px]'}
+                        `}
+                      >
+                        <Image
+                          src={film.image_url}
+                          alt={film.name}
+                          fill
+                          className="object-cover transition-transform duration-500 group-hover:scale-105 md:group-hover:scale-100"
+                          unoptimized
+                        />
+
+                        {/* Mobile Info - Always visible with gradient */}
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent md:hidden" />
+                        <div className="absolute left-3 right-3 bottom-3 md:hidden">
+                          <h3 className="text-white text-sm font-semibold line-clamp-1 mb-1">
+                            {film.name}
+                          </h3>
+                          <p className="text-[10px] text-gray-400">
+                            {film.years} • {film.run_time_format}
+                          </p>
+                        </div>
+
+                        {/* Desktop Hover Effect */}
+                        <div className="hidden md:block">
+                          {isHovered && (
+                            <>
+                              <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent" />
+                              <div className="absolute left-6 right-6 bottom-6">
+                                <h3 className="text-white text-xl font-semibold mb-3">
+                                  {film.name}
+                                </h3>
+                                <div className="flex items-center gap-3 mb-3">
+                                  <div className="flex items-center gap-2 bg-white text-black px-5 py-2 rounded-full text-sm font-semibold hover:bg-gray-100 transition-colors">
+                                    <Play className="w-4 h-4 fill-black" />
+                                    Watch Now
+                                  </div>
+                                  <div className="w-10 h-10 rounded-full border border-white/30 bg-white/10 flex items-center justify-center hover:bg-white/20 transition-colors">
+                                    <Info className="w-5 h-5 text-white" />
+                                  </div>
+                                </div>
+                                <p className="text-sm text-white/70 line-clamp-2 max-w-[440px]">
+                                  {film.synopsis || `${film.name} • ${film.years} • ${film.run_time_format}`}
+                                </p>
+                              </div>
+                            </>
+                          )}
+                        </div>
+                      </div>
+                    </Link>
+                  </div>
+                )
+              })}
+            </div>
+          </div>
         ) : (
+          // Category Specific View - With grouping headers
           <div className="space-y-10 md:space-y-12">
             {categoriesWithContent
-              .filter((category) =>
-                selectedCategory === 'All' ? true : category === selectedCategory
-              )
+              .filter((category) => category === selectedCategory)
               .map((category) => {
                 const isExpanded = expandedCategories[category] || false
                 const filmsToShow = isExpanded
                   ? groupedByCategory[category]
-                  : groupedByCategory[category].slice(0, 5)
+                  : groupedByCategory[category].slice(0, UI.FILMS_PER_SECTION)
 
                 return (
                   <div key={category}>
                     <div className="flex items-center justify-between mb-4 md:mb-6">
                       <h2 className="text-base md:text-lg font-bold text-white">{category}</h2>
-                      
-                      {groupedByCategory[category].length > 5 && (
-                        <button 
-                          onClick={() => toggleExpand(category)}
+
+                      {groupedByCategory[category].length > UI.FILMS_PER_SECTION && (
+                        <button
+                          onClick={() => handleToggleExpand(category)}
                           className="text-xs md:text-sm text-blue-400 flex items-center gap-1 hover:text-blue-300 transition-colors"
                         >
                           {isExpanded ? 'Show Less' : 'View All'}
-                          <ChevronRight 
-                            className={`w-3 h-3 md:w-4 md:h-4 transition-transform duration-300 ${isExpanded ? 'rotate-90' : ''}`} 
+                          <ChevronRight
+                            className={`w-3 h-3 md:w-4 md:h-4 transition-transform duration-300 ${isExpanded ? 'rotate-90' : ''}`}
                           />
                         </button>
                       )}
                     </div>
 
                     <div className="pb-4 md:pb-8">
-                      {/* DIUBAH: Grid Layout yang responsif.
-                          Di Mobile: 2 Kolom rata.
-                          Di Desktop: Flex wrap dengan hover effect.
-                      */}
                       <div className="grid grid-cols-2 gap-3 sm:gap-4 md:flex md:flex-wrap md:gap-6 md:items-end transition-all duration-500">
                         {filmsToShow.map((film) => {
                           const isHovered = hoveredFilmId === film.id
@@ -238,7 +379,7 @@ export default function FilmPage() {
                                     unoptimized
                                   />
 
-                                  {/* INFO MOBILE (Selalu tampil di bawah, gradient halus) */}
+                                  {/* Mobile Info - Always visible with gradient */}
                                   <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent md:hidden" />
                                   <div className="absolute left-3 right-3 bottom-3 md:hidden">
                                     <h3 className="text-white text-sm font-semibold line-clamp-1 mb-1">
@@ -249,7 +390,7 @@ export default function FilmPage() {
                                     </p>
                                   </div>
 
-                                  {/* EFEK HOVER KHUSUS DESKTOP */}
+                                  {/* Desktop Hover Effect */}
                                   <div className="hidden md:block">
                                     {isHovered && (
                                       <>

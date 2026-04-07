@@ -50,7 +50,7 @@ const truncateText = (text: string | null | undefined, maxLength: number = 75) =
 }
 
 export default function SeriesPage() {
-  const router = useRouter() // 2. Inisialisasi router
+  const router = useRouter() 
 
   const [genres, setGenres] = useState<Category[]>([])
   const [selectedGenre, setSelectedGenre] = useState('All Genre')
