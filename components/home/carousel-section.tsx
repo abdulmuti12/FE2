@@ -2,7 +2,6 @@
 
 import { useRef } from 'react'
 import Image from 'next/image'
-import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import Link from 'next/link'
 
@@ -39,38 +38,28 @@ export function CarouselSection({
 
   return (
     <section className="border-t border-border px-4 py-6 md:px-6 md:py-8 lg:px-12">
-      <div className="mb-4 flex items-center justify-between md:mb-6">
-        <h2 className="text-sm font-bold text-foreground md:text-2xl">{title}</h2>
+      <div className="mb-8 flex items-center justify-between">
+        <h2 className="text-2xl font-bold text-white md:text-3xl">{title}</h2>
         <Link 
           href={viewAllLink} 
-          className="bg-white/10 px-4 py-1.5 rounded-full text-xs text-white hover:bg-white/20 transition-colors"
+          className="inline-flex items-center gap-2 font-semibold text-white hover:text-white/80 transition-colors"
         >
-          View All
+          <span className="text-xs md:text-base">View All</span>
+          <span className="text-white/70">›</span>
         </Link>
       </div>
 
       <div className="relative group">
         
-        {/* Tombol Kiri */}
-        {hasItems && (
-          <button
-            onClick={() => scroll('left')}
-            className="absolute -left-2 top-1/2 z-10 flex h-8 w-8 md:h-10 md:w-10 -translate-y-1/2 items-center justify-center rounded-full bg-[#003B79] md:bg-white/20 text-white backdrop-blur-md transition-colors hover:bg-white/40 shadow-lg md:-left-4"
-            aria-label="Scroll left"
-          >
-            <ChevronLeft className="h-4 w-4 md:h-6 md:w-6" />
-          </button>
-        )}
-
         {/* CONTAINER SCROLL NATIVE */}
         <div 
           ref={scrollContainerRef}
-          className="flex gap-4 md:gap-6 overflow-x-auto overflow-y-hidden snap-x snap-mandatory pb-4 scrollbar-hide [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]"
+          className="flex gap-4 md:gap-6 overflow-x-auto scroll-smooth pb-4 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]"
         >
           {layout === 'creator' ? (
             // LAYOUT CREATOR
             creatorData.map((item, idx) => (
-              <div key={idx} className="w-[40vw] md:w-[150px] lg:w-[180px] flex-shrink-0 snap-center md:snap-start text-center cursor-pointer">
+              <div key={idx} className="w-[40vw] md:w-[150px] lg:w-[180px] flex-shrink-0 text-center cursor-pointer">
                 <div className="mb-2 flex aspect-square w-full items-center justify-center rounded-full bg-gradient-to-br from-[#7c4c9f] to-[#4a2a6a] md:mb-3">
                   <span className="text-xl text-white md:text-4xl">👤</span>
                 </div>
@@ -83,7 +72,7 @@ export function CarouselSection({
           ) : (
             // LAYOUT DEFAULT (FILM)
             items.map((film) => (
-              <div key={film.id} className="w-[90vw] flex-shrink-0 snap-center md:w-[240px] lg:w-[280px] md:snap-start">
+              <div key={film.id} className="w-[90vw] flex-shrink-0 md:w-[240px] lg:w-[280px]">
                 
                 {/* =========================================
                     TAMPILAN KHUSUS MOBILE (SESUAI REFERENSI GAMBAR)
@@ -248,10 +237,10 @@ export function CarouselSection({
         {hasItems && (
           <button
             onClick={() => scroll('right')}
-            className="absolute -right-2 top-1/2 z-10 flex h-8 w-8 md:h-10 md:w-10 -translate-y-1/2 items-center justify-center rounded-full bg-[#003B79] md:bg-white/20 text-white backdrop-blur-md transition-colors hover:bg-white/40 shadow-lg md:-right-4"
+            className="absolute right-0 top-1/2 flex h-8 w-8 translate-x-2 -translate-y-1/2 items-center justify-center rounded-lg bg-white/95 text-black shadow-md transition-colors hover:bg-white md:h-10 md:w-10 md:translate-x-4 lg:translate-x-6"
             aria-label="Scroll right"
           >
-            <ChevronRight className="h-4 w-4 md:h-6 md:w-6" />
+            <span className="text-lg leading-none md:text-xl">›</span>
           </button>
         )}
 
