@@ -42,12 +42,17 @@ interface FilmData {
   relate: RelatedFilm[]
 }
 
-interface Comment {
-  id: number
-  author: string
+interface CommentItem {
+  id: string
+  id_customer: string
+  id_series: string
+  comment: string
+  dates: string
+  name: string
   avatar: string
-  text: string
-  date: string
+  time_ago: string
+  heart: string
+  avatar_url: string
 }
 
 // ============================================================================
@@ -57,6 +62,7 @@ interface Comment {
 const API = {
   ENDPOINTS: {
     FILM_DETAIL: '/api/film/detail',
+    FILM_COMMENT: '/api/film/comment',
   },
   STORAGE_KEY: 'user_token',
 } as const
@@ -65,9 +71,7 @@ const API = {
 // Constants - Data
 // ============================================================================
 
-const MOCK_COMMENTS: Comment[] = [
-  
-]
+// Removed MOCK_COMMENTS - will use real API data
 
 // ============================================================================
 // Helper Functions
@@ -97,6 +101,11 @@ function DetailContent() {
   const [error, setError] = useState<string | null>(null)
   const [rating, setRating] = useState(0)
   const [reviewText, setReviewText] = useState('')
+
+  // Comment State
+  const [comments, setComments] = useState<CommentItem[]>([])
+  const [loadingComments, setLoadingComments] = useState(true)
+  const [isSubmittingComment, setIsSubmittingComment] = useState(false)
 
   // Effects - Fetch Film Detail
   useEffect(() => {
@@ -136,6 +145,77 @@ function DetailContent() {
 
     fetchFilmDetail()
   }, [filmId])
+
+  // Effects - Fetch Comments
+  const fetchComments = async () => {
+    if (!filmId) return
+    try {
+      setLoadingComments(true)
+      const token = localStorage.getItem(API.STORAGE_KEY) || ''
+      const response = await fetch(`${API.ENDPOINTS.FILM_COMMENT}?id=${filmId}`, {
+        method: 'GET',
+        headers: getAuthHeaders(token),
+      })
+      const json = await response.json()
+      if (json.status === true && json.list) {
+        setComments(json.list)
+      } else {
+        setComments([])
+      }
+    } catch (error) {
+      console.error('Error fetching comments:', error)
+      setComments([])
+    } finally {
+      setLoadingComments(false)
+    }
+  }
+
+  useEffect(() => {
+    if (filmId) {
+      fetchComments()
+    }
+  }, [filmId])
+
+  // Comment Submission Handler
+  const handleSubmitComment = async () => {
+    if (!reviewText.trim() || !filmId) {
+      alert('Komentar tidak boleh kosong')
+      return
+    }
+
+    try {
+      setIsSubmittingComment(true)
+      const token = localStorage.getItem(API.STORAGE_KEY)
+      if (!token) {
+        alert('Silakan login terlebih dahulu untuk memberikan komentar')
+        return
+      }
+
+      const response = await fetch(API.ENDPOINTS.FILM_COMMENT, {
+        method: 'POST',
+        headers: getAuthHeaders(token),
+        body: JSON.stringify({
+          id: filmId,
+          comment: reviewText.trim()
+        })
+      })
+
+      const json = await response.json()
+
+      if (response.ok && json.status === true) {
+        setReviewText('') // Kosongkan input
+        setRating(0) // Reset rating
+        await fetchComments() // Refresh daftar komentar
+      } else {
+        alert(json.message || 'Gagal mengirim komentar')
+      }
+    } catch (error) {
+      console.error('Error submitting comment:', error)
+      alert('Terjadi kesalahan saat mengirim komentar')
+    } finally {
+      setIsSubmittingComment(false)
+    }
+  }
 
   // State Loading
   if (isLoading) {
@@ -229,7 +309,7 @@ function DetailContent() {
 
           {/* Description */}
           <div 
-            className="mt-3 md:mt-5 text-white/70 text-xs sm:text-sm leading-relaxed md:max-w-[70%]"
+            className="mt-3 md:mt-5 text-white/70 text-xs sm:text-sm leading-relaxed md:max-w-[70%] overflow-hidden [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]"
             dangerouslySetInnerHTML={{ __html: filmData.description || 'Tidak ada sinopsis tersedia untuk film ini.' }}
           />
         </div>
@@ -259,29 +339,41 @@ function DetailContent() {
 
           {/* Comments List */}
           <div className="px-4 sm:px-6 py-5 sm:py-6 space-y-5 sm:space-y-6">
-            {MOCK_COMMENTS.map((comment) => (
-              <div key={comment.id} className="flex gap-3 sm:gap-4">
-                <div className="h-9 w-9 sm:h-10 sm:w-10 rounded-full overflow-hidden bg-white/10 border border-white/10 flex-shrink-0">
-                  <Image
-                    src={comment.avatar}
-                    alt={comment.author}
-                    width={40}
-                    height={40}
-                    className="h-full w-full object-cover"
-                  />
-                </div>
-
-                <div className="flex-1">
-                  <div className="flex items-center justify-between gap-3">
-                    <p className="text-xs sm:text-sm font-semibold">{comment.author}</p>
-                    <p className="text-[10px] sm:text-xs text-white/40">{comment.date}</p>
-                  </div>
-                  <p className="mt-2 text-xs sm:text-sm text-white/70 leading-relaxed">
-                    {comment.text}
-                  </p>
-                </div>
+            {loadingComments ? (
+              <div className="flex items-center justify-center py-8">
+                <div className="w-6 h-6 border-2 border-white/20 border-t-white/60 rounded-full animate-spin"></div>
+                <span className="ml-3 text-white/60">Memuat komentar...</span>
               </div>
-            ))}
+            ) : comments.length === 0 ? (
+              <div className="text-center py-8">
+                <p className="text-white/60">Belum ada komentar untuk film ini.</p>
+                <p className="text-white/40 text-sm mt-1">Jadilah yang pertama memberikan komentar!</p>
+              </div>
+            ) : (
+              comments.map((comment) => (
+                <div key={comment.id} className="flex gap-3 sm:gap-4">
+                  <div className="h-9 w-9 sm:h-10 sm:w-10 rounded-full overflow-hidden bg-white/10 border border-white/10 flex-shrink-0">
+                    <Image
+                      src={convertToSecureUrl(comment.avatar_url)}
+                      alt={comment.name}
+                      width={40}
+                      height={40}
+                      className="h-full w-full object-cover"
+                    />
+                  </div>
+
+                  <div className="flex-1">
+                    <div className="flex items-center justify-between gap-3">
+                      <p className="text-xs sm:text-sm font-semibold">{comment.name}</p>
+                      <p className="text-[10px] sm:text-xs text-white/40">{comment.time_ago}</p>
+                    </div>
+                    <p className="mt-2 text-xs sm:text-sm text-white/70 leading-relaxed">
+                      {comment.comment}
+                    </p>
+                  </div>
+                </div>
+              ))
+            )}
           </div>
 
           <div className="h-px bg-white/10" />
@@ -314,10 +406,18 @@ function DetailContent() {
 
             <div className="flex justify-end mt-4">
               <button 
-                onClick={() => alert("Fitur submit belum diimplementasikan.")}
-                className="h-9 sm:h-10 px-5 sm:px-6 rounded-full bg-white text-black font-semibold text-xs sm:text-sm hover:bg-white/90 transition-colors"
+                onClick={handleSubmitComment}
+                disabled={isSubmittingComment || !reviewText.trim()}
+                className="h-9 sm:h-10 px-5 sm:px-6 rounded-full bg-white text-black font-semibold text-xs sm:text-sm hover:bg-white/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
               >
-                Submit Review
+                {isSubmittingComment ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-black/20 border-t-black rounded-full animate-spin"></div>
+                    Mengirim...
+                  </>
+                ) : (
+                  'Submit Review'
+                )}
               </button>
             </div>
           </div>
