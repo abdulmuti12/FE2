@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, Suspense, useCallback } from 'react'
 import { useSearchParams } from 'next/navigation'
+import Head from 'next/head'
 import Image from 'next/image'
 import Link from 'next/link' 
 import { Header } from '@/components/header'
@@ -396,6 +397,20 @@ function SeriesDetailContent() {
 
   return (
     <div className="min-h-screen bg-[#050B14] text-white font-sans">
+     <Head>
+        <meta 
+          property="og:url" 
+          content={`https://uskyurl.com/dashboard/series/detail?id_group=${seriesId || ''}`} 
+        />
+        {seriesData && (
+          <>
+            <meta property="og:title" content={seriesData.name} />
+            <meta property="og:description" content={truncateText(seriesData.description, 150)} />
+            <meta property="og:image" content={seriesData.image_landscape_url || seriesData.image_url} />
+            <meta property="og:type" content="video.episode" />
+          </>
+        )}
+      </Head>
       <Header />
 
       <div className="max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-10 xl:px-14 py-6 md:py-10">
