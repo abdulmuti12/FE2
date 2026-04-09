@@ -67,6 +67,7 @@ const API = {
   ENDPOINTS: {
     FILM_DETAIL: '/api/film/detail',
     FILM_COMMENT: '/api/film/comment',
+    FILM_RATING: '/api/film/rating',
   },
   STORAGE_KEY: 'user_token',
 } as const
@@ -91,6 +92,13 @@ const getAuthHeaders = (token: string) => ({
   'Content-Type': 'application/json',
 })
 
+const normalizeRating = (value: string | number | null | undefined): number => {
+  const parsed = Number(value)
+
+  if (!Number.isFinite(parsed) || parsed <= 0) return 0
+  return Math.min(5, Math.floor(parsed))
+}
+
 // ============================================================================
 // Component
 // ============================================================================
@@ -108,6 +116,7 @@ function DetailContent() {
   const [showShare, setShowShare] = useState(false)
   const [rating, setRating] = useState(0)
   const [reviewText, setReviewText] = useState('')
+  const [isSubmittingRating, setIsSubmittingRating] = useState(false)
 
   // Comment State
   const [comments, setComments] = useState<CommentItem[]>([])
@@ -141,6 +150,7 @@ function DetailContent() {
           setFilmData(result.data)
           setIsFavorite(result.data.my_favorit === '1')
           setIsInWatchlist(result.data.watch_me === '1')
+          setRating(normalizeRating(result.data.rates))
         } else {
           setError(result.message || 'Gagal mengambil data film')
         }
@@ -213,7 +223,6 @@ function DetailContent() {
 
       if (response.ok && json.status === true) {
         setReviewText('') // Kosongkan input
-        setRating(0) // Reset rating
         await fetchComments() // Refresh daftar komentar
       } else {
         alert(json.message || 'Gagal mengirim komentar')
@@ -289,7 +298,7 @@ function DetailContent() {
     try {
       const token = localStorage.getItem(API.STORAGE_KEY)
       if (!token || !filmId) {
-        alert('Silakan login terlebih dahulu untuk menambahkan watchlist')
+        // alert('Silakan login terlebih dahulu untuk menambahkan watchlist')
         return
       }
 
@@ -311,6 +320,45 @@ function DetailContent() {
     } catch (error) {
       console.error('Error updating watchlist:', error)
       alert('Gagal memperbarui watchlist')
+    }
+  }
+
+  const handleRateFilm = async (stars: number) => {
+    if (!filmId) {
+      alert('ID Film tidak ditemukan di URL')
+      return
+    }
+
+    try {
+      const token = localStorage.getItem(API.STORAGE_KEY)
+      if (!token) {
+        alert('Silakan login terlebih dahulu untuk memberikan rating')
+        return
+      }
+
+      setIsSubmittingRating(true)
+
+      const response = await fetch(API.ENDPOINTS.FILM_RATING, {
+        method: 'POST',
+        headers: getAuthHeaders(token),
+        body: JSON.stringify({
+          id: filmId,
+          stars,
+        }),
+      })
+
+      const data = await response.json()
+
+      if (response.ok && data.status === true) {
+        setRating(stars)
+      } else {
+        alert(data.message || 'Gagal mengirim rating')
+      }
+    } catch (error) {
+      console.error('Error submitting rating:', error)
+      alert('Terjadi kesalahan saat mengirim rating')
+    } finally {
+      setIsSubmittingRating(false)
     }
   }
 
@@ -504,10 +552,11 @@ function DetailContent() {
               {[1, 2, 3, 4, 5].map((star) => (
                 <button
                   key={star}
-                  onClick={() => setRating(star)}
+                  onClick={() => handleRateFilm(star)}
+                  disabled={isSubmittingRating}
                   className={`text-xl sm:text-2xl transition-colors ${
                     star <= rating ? 'text-yellow-400' : 'text-white/25'
-                  }`}
+                  } ${isSubmittingRating ? 'opacity-60 cursor-not-allowed' : ''}`}
                   aria-label={`Rate ${star} stars`}
                 >
                   ★
