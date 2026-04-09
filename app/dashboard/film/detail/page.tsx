@@ -6,6 +6,7 @@ import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
 import { Header } from '@/components/header'
 import { Footer } from '@/components/footer'
+import { ClipShare } from '@/components/clip/clip-share'
 import {
   Heart,
   Plus,
@@ -37,6 +38,9 @@ interface FilmData {
   years: string
   cats: string
   rates: string | null
+  favorit?: string
+  my_favorit?: string
+  watch_me?: string
   image_url: string
   video_url: string
   relate: RelatedFilm[]
@@ -99,6 +103,9 @@ function DetailContent() {
   const [filmData, setFilmData] = useState<FilmData | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [isFavorite, setIsFavorite] = useState(false)
+  const [isInWatchlist, setIsInWatchlist] = useState(false)
+  const [showShare, setShowShare] = useState(false)
   const [rating, setRating] = useState(0)
   const [reviewText, setReviewText] = useState('')
 
@@ -132,6 +139,8 @@ function DetailContent() {
 
         if (result.status === true && result.data) {
           setFilmData(result.data)
+          setIsFavorite(result.data.my_favorit === '1')
+          setIsInWatchlist(result.data.watch_me === '1')
         } else {
           setError(result.message || 'Gagal mengambil data film')
         }
@@ -217,6 +226,94 @@ function DetailContent() {
     }
   }
 
+  const handlePlatformShare = async (platform: string) => {
+    const url = window.location.href
+    const title = filmData?.name || 'Film'
+    const text = `Check out this film: ${title}`
+
+    switch (platform) {
+      case 'copy':
+        await navigator.clipboard.writeText(url)
+        alert('Link copied to clipboard!')
+        break
+      case 'whatsapp':
+        window.open(`https://wa.me/?text=${encodeURIComponent(text + ' ' + url)}`, '_blank')
+        break
+      case 'facebook':
+        window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`, '_blank')
+        break
+      case 'x':
+        window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}`, '_blank')
+        break
+      case 'telegram':
+        window.open(`https://t.me/share/url?url=${encodeURIComponent(url)}&text=${encodeURIComponent(text)}`, '_blank')
+        break
+      case 'linkedin':
+        window.open(`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(url)}`, '_blank')
+        break
+    }
+
+    setShowShare(false)
+  }
+
+  const handleLoveFilm = async () => {
+    try {
+      const token = localStorage.getItem(API.STORAGE_KEY)
+      if (!token || !filmId) {
+        alert('Silakan login terlebih dahulu untuk menambahkan favorit')
+        return
+      }
+
+      const response = await fetch('/api/film/love', {
+        method: 'POST',
+        headers: getAuthHeaders(token),
+        body: JSON.stringify({
+          id: filmId,
+        }),
+      })
+
+      const data = await response.json()
+
+      if (data.status === true) {
+        setIsFavorite((prev) => !prev)
+      } else {
+        alert(data.message || 'Gagal memperbarui status favorit')
+      }
+    } catch (error) {
+      console.error('Error favoriting film:', error)
+      alert('Gagal memperbarui status favorit')
+    }
+  }
+
+  const handleAddToWatchlist = async () => {
+    try {
+      const token = localStorage.getItem(API.STORAGE_KEY)
+      if (!token || !filmId) {
+        alert('Silakan login terlebih dahulu untuk menambahkan watchlist')
+        return
+      }
+
+      const response = await fetch('/api/film/watchlist', {
+        method: 'POST',
+        headers: getAuthHeaders(token),
+        body: JSON.stringify({
+          id: filmId,
+        }),
+      })
+
+      const data = await response.json()
+
+      if (data.status === true) {
+        setIsInWatchlist((prev) => !prev)
+      } else {
+        alert(data.message || 'Gagal memperbarui watchlist')
+      }
+    } catch (error) {
+      console.error('Error updating watchlist:', error)
+      alert('Gagal memperbarui watchlist')
+    }
+  }
+
   // State Loading
   if (isLoading) {
     return (
@@ -295,13 +392,35 @@ function DetailContent() {
 
             {/* Action Buttons */}
             <div className="flex items-center gap-2 md:gap-3">
-              <button className="h-9 w-9 md:h-10 md:w-10 rounded-full border border-white/15 bg-white/5 hover:bg-white/10 transition-colors flex items-center justify-center" title="Favorite">
-                <Heart className="w-4 h-4 md:w-5 md:h-5" />
+              <button
+                onClick={handleLoveFilm}
+                className={`h-9 w-9 md:h-10 md:w-10 rounded-full border transition-colors flex items-center justify-center ${
+                  isFavorite
+                    ? 'border-red-500/50 text-red-500 bg-red-500/10 hover:bg-red-500/15'
+                    : 'border-white/15 text-white bg-white/5 hover:bg-white/10'
+                }`}
+                title="Favorite"
+                aria-label="Add to favorites"
+              >
+                <Heart className={`w-4 h-4 md:w-5 md:h-5 ${isFavorite ? 'fill-current' : ''}`} />
               </button>
-              <button className="h-9 w-9 md:h-10 md:w-10 rounded-full border border-white/15 bg-white/5 hover:bg-white/10 transition-colors flex items-center justify-center" title="Add to Watchlist">
-                <Plus className="w-4 h-4 md:w-5 md:h-5" />
+              <button
+                onClick={handleAddToWatchlist}
+                className={`h-9 w-9 md:h-10 md:w-10 rounded-full border transition-colors flex items-center justify-center ${
+                  isInWatchlist
+                    ? 'border-red-500/50 text-red-500 bg-red-500/10 hover:bg-red-500/15'
+                    : 'border-white/15 text-white bg-white/5 hover:bg-white/10'
+                }`}
+                title="Add to Watchlist"
+                aria-label="Add to watchlist"
+              >
+                <Plus className={`w-4 h-4 md:w-5 md:h-5 ${isInWatchlist ? 'fill-current' : ''}`} />
               </button>
-              <button className="h-9 w-9 md:h-10 md:w-10 rounded-full border border-white/15 bg-white/5 hover:bg-white/10 transition-colors flex items-center justify-center" title="Share">
+              <button
+                onClick={() => setShowShare(true)}
+                className="h-9 w-9 md:h-10 md:w-10 rounded-full border border-white/15 bg-white/5 hover:bg-white/10 transition-colors flex items-center justify-center"
+                title="Share"
+              >
                 <Share2 className="w-4 h-4 md:w-5 md:h-5" />
               </button>
             </div>
@@ -435,6 +554,14 @@ function DetailContent() {
       </div>
 
       <Footer />
+
+      <ClipShare
+        showShare={showShare}
+        clipId={filmId || ''}
+        clipName={filmData?.name || 'Film'}
+        onClose={() => setShowShare(false)}
+        onPlatformShare={handlePlatformShare}
+      />
     </>
   )
 }
