@@ -4,8 +4,7 @@ import { Header } from '@/components/header'
 import { Footer } from '@/components/footer'
 import { MapPin, Clock, Play, Calendar as CalendarIcon } from 'lucide-react'
 import { useState, useEffect, Suspense } from 'react'
-import { useSearchParams } from 'next/navigation'
-import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 
 interface EventDetailData {
   id: string
@@ -34,9 +33,11 @@ interface EventCard {
   image: string
 }
 
+const EVENT_ID_STORAGE_KEY = 'selected_event_id'
+
 function EventDetailContent() {
-  const searchParams = useSearchParams()
-  const id = searchParams.get('id')
+  const router = useRouter()
+  const [eventId, setEventId] = useState<string | null>(null)
 
   const [copied, setCopied] = useState(false)
   const [eventDetail, setEventDetail] = useState<EventDetailData | null>(null)
@@ -46,9 +47,21 @@ function EventDetailContent() {
   
   const [isClaiming, setIsClaiming] = useState(false)
 
+  useEffect(() => {
+    const storedId = sessionStorage.getItem(EVENT_ID_STORAGE_KEY)
+    setEventId(storedId || null)
+  }, [])
+
+  const openEventDetail = (id: string | number) => {
+    const nextId = String(id)
+    sessionStorage.setItem(EVENT_ID_STORAGE_KEY, nextId)
+    setEventId(nextId)
+    router.push('/dashboard/event/detail')
+  }
+
   // Fungsi untuk memanggil ulang data detail (berguna setelah berhasil claim)
   const fetchEventDetail = async () => {
-    if (!id) {
+    if (!eventId) {
       setLoading(false)
       return
     }
@@ -56,15 +69,13 @@ function EventDetailContent() {
     const token = localStorage.getItem('user_token')
 
     try {
-      const formData = new FormData()
-      formData.append('id', id)
-
-      const response = await fetch('https://api.usky.ai/event/detail', {
+      const response = await fetch('/api/event/event-detail', {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${token}`
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
         },
-        body: formData,
+        body: JSON.stringify({ id: eventId }),
       })
 
       const result = await response.json()
@@ -88,7 +99,7 @@ function EventDetailContent() {
     const token = localStorage.getItem('user_token')
 
     try {
-      const response = await fetch('https://api.usky.ai/event/ongoing', {
+      const response = await fetch('/api/event/ongoing', {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${token}`
@@ -147,10 +158,12 @@ function EventDetailContent() {
   }
 
   useEffect(() => {
+    if (!eventId) return
+    setLoading(true)
     fetchEventDetail();
     fetchOngoingEvents();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [id])
+  }, [eventId])
 
   const handleCopyLink = () => {
     navigator.clipboard.writeText(window.location.href)
@@ -382,7 +395,11 @@ const handleClaimTicket = async () => {
           <h2 className="text-2xl font-bold text-white mb-8">Related Event</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {relatedEvents.map((event) => (
-              <Link href={`/dashboard/event/detail?id=${event.id}`} key={event.id} className="group block">
+              <button
+                key={event.id}
+                onClick={() => openEventDetail(event.id)}
+                className="group block text-left"
+              >
                 <div className="relative aspect-[3/4] rounded-xl overflow-hidden mb-4">
                   <img
                     src={event.image || "/placeholder.svg"}
@@ -397,7 +414,7 @@ const handleClaimTicket = async () => {
                 <h3 className="text-white font-bold mb-2">{event.title}</h3>
                 <p className="text-gray-400 text-sm mb-3">{event.subtitle}</p>
                 <p className="text-gray-500 text-xs">{event.date}</p>
-              </Link>
+              </button>
             ))}
           </div>
         </section>
@@ -407,7 +424,11 @@ const handleClaimTicket = async () => {
           <h2 className="text-2xl font-bold text-white mb-8">On Going Events</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {ongoingEvents.map((event) => (
-              <Link href={`/dashboard/event/detail?id=${event.id}`} key={event.id} className="group block">
+              <button
+                key={event.id}
+                onClick={() => openEventDetail(event.id)}
+                className="group block text-left"
+              >
                 <div className="relative aspect-[3/4] rounded-xl overflow-hidden mb-4">
                   <img
                     src={event.image || "/placeholder.svg"}
@@ -422,7 +443,7 @@ const handleClaimTicket = async () => {
                 <h3 className="text-white font-bold mb-2">{event.title}</h3>
                 <p className="text-gray-400 text-sm mb-3">{event.subtitle}</p>
                 <p className="text-gray-500 text-xs">{event.date}</p>
-              </Link>
+              </button>
             ))}
           </div>
         </section>

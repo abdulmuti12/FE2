@@ -54,6 +54,8 @@ interface CompletedEvent {
   }
 }
 
+const EVENT_ID_STORAGE_KEY = 'selected_event_id'
+
 export default function EventPage() {
   const router = useRouter()
 
@@ -86,6 +88,11 @@ export default function EventPage() {
   }
 
   const LIMIT = 20
+
+  const openEventDetail = (eventId: string) => {
+    sessionStorage.setItem(EVENT_ID_STORAGE_KEY, eventId)
+    router.push('/dashboard/event/detail')
+  }
 
   useEffect(() => {
     const token = localStorage.getItem('user_token')
@@ -293,7 +300,7 @@ export default function EventPage() {
                 <div
                   key={event.id}
                   className="w-[220px] rounded-xl overflow-hidden border border-white/10 cursor-pointer"
-                  onClick={() => router.push(`/dashboard/event/detail?id=${event.id}`)}
+                  onClick={() => openEventDetail(event.id)}
                 >
                   <img src={event.image_url || event.image} className="w-full h-[280px] object-cover" />
 
@@ -344,7 +351,7 @@ export default function EventPage() {
                   <div
                     key={event.id}
                     className="w-[85vw] md:w-[220px] flex-shrink-0 snap-center md:snap-align-none rounded-xl overflow-hidden border border-white/10 cursor-pointer relative bg-[#0a1424]"
-                    onClick={() => router.push(`/dashboard/event/detail?id=${event.id}`)}
+                    onClick={() => openEventDetail(event.id)}
                   >
                     <div className="relative h-[420px] md:h-[280px]">
                       <img src={event.image_url || event.image} className="w-full h-full object-cover" alt={event.title} />
@@ -405,4 +412,3 @@ export default function EventPage() {
     </div>
   )
 }
-

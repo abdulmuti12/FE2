@@ -36,6 +36,8 @@ interface AllEventsProps {
   paginationHtml?: string
 }
 
+const EVENT_ID_STORAGE_KEY = 'selected_event_id'
+
 export function AllEvents({
   allEvents,
   currentPage,
@@ -93,6 +95,11 @@ export function AllEvents({
     if (event.image_url) return event.image_url
     if (event.image) return `https://api.usky.ai/uploads/${event.image}`
     return '/images/event/example.png'
+  }
+
+  const openEventDetail = (eventId: string) => {
+    sessionStorage.setItem(EVENT_ID_STORAGE_KEY, eventId)
+    router.push('/dashboard/event/detail')
   }
 
   return (
@@ -205,7 +212,7 @@ export function AllEvents({
           allEvents.map((event) => (
             <div 
               key={event.id}
-              onClick={() => router.push(`/dashboard/event/detail?id=${event.id}`)}
+              onClick={() => openEventDetail(event.id)}
               className="group cursor-pointer flex flex-col hover:opacity-80 transition-opacity"
             >
               {/* Poster Card */}
