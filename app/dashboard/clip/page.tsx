@@ -1,7 +1,7 @@
 'use client'
 
 import Image from 'next/image'
-import { useState, useRef, useEffect, useCallback } from 'react'
+import { Suspense, useState, useRef, useEffect, useCallback } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import {
   Heart,
@@ -777,7 +777,7 @@ const VideoItem = ({
 }
 
 // --- KOMPONEN UTAMA ---
-export default function ClipsPage() {
+function ClipsContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const initialClipId = searchParams.get('id') || ''
@@ -1031,5 +1031,19 @@ export default function ClipsPage() {
         </div>
       </main>
     </>
+  )
+}
+
+export default function ClipsPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen bg-black flex items-center justify-center">
+          <div className="w-10 h-10 border-4 border-white/20 border-t-white rounded-full animate-spin" />
+        </div>
+      }
+    >
+      <ClipsContent />
+    </Suspense>
   )
 }
