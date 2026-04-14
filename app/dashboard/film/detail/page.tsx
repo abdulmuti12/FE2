@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useEffect, Suspense } from 'react'
+import React, { useState, useEffect, useRef, Suspense } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
@@ -117,6 +117,10 @@ function DetailContent() {
   const [rating, setRating] = useState(0)
   const [reviewText, setReviewText] = useState('')
   const [isSubmittingRating, setIsSubmittingRating] = useState(false)
+  const [showRatingThanks, setShowRatingThanks] = useState(false)
+  const [ratingToastMessage, setRatingToastMessage] = useState('Thank You for your rating')
+  const [ratingToastType, setRatingToastType] = useState<'success' | 'error'>('success')
+  const ratingToastTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   // Comment State
   const [comments, setComments] = useState<CommentItem[]>([])
@@ -194,6 +198,14 @@ function DetailContent() {
       fetchComments()
     }
   }, [filmId])
+
+  useEffect(() => {
+    return () => {
+      if (ratingToastTimerRef.current) {
+        clearTimeout(ratingToastTimerRef.current)
+      }
+    }
+  }, [])
 
   // Comment Submission Handler
   const handleSubmitComment = async () => {
@@ -324,15 +336,29 @@ function DetailContent() {
   }
 
   const handleRateFilm = async (stars: number) => {
+    const showRatingToast = (message: string, type: 'success' | 'error' = 'success') => {
+      setRatingToastMessage(message)
+      setRatingToastType(type)
+      setShowRatingThanks(true)
+
+      if (ratingToastTimerRef.current) {
+        clearTimeout(ratingToastTimerRef.current)
+      }
+
+      ratingToastTimerRef.current = setTimeout(() => {
+        setShowRatingThanks(false)
+      }, 2500)
+    }
+
     if (!filmId) {
-      alert('ID Film tidak ditemukan di URL')
+      showRatingToast('ID Film tidak ditemukan di URL', 'error')
       return
     }
 
     try {
       const token = localStorage.getItem(API.STORAGE_KEY)
       if (!token) {
-        alert('Silakan login terlebih dahulu untuk memberikan rating')
+        showRatingToast('Silakan login terlebih dahulu untuk memberikan rating', 'error')
         return
       }
 
@@ -351,12 +377,13 @@ function DetailContent() {
 
       if (response.ok && data.status === true) {
         setRating(stars)
+        showRatingToast('Thank You for your rating', 'success')
       } else {
-        alert(data.message || 'Gagal mengirim rating')
+        showRatingToast(data.message || 'Gagal mengirim rating', 'error')
       }
     } catch (error) {
       console.error('Error submitting rating:', error)
-      alert('Terjadi kesalahan saat mengirim rating')
+      showRatingToast('Terjadi kesalahan saat mengirim rating', 'error')
     } finally {
       setIsSubmittingRating(false)
     }
@@ -562,6 +589,22 @@ function DetailContent() {
                   ★
                 </button>
               ))}
+            </div>
+
+            <div
+              className={`mb-6 rounded-xl border backdrop-blur-md px-4 py-3 text-sm shadow-[0_10px_30px_rgba(0,0,0,0.25)] transition-all duration-300 ${
+                ratingToastType === 'success'
+                  ? 'border-emerald-300/30 bg-emerald-500/15 text-emerald-100'
+                  : 'border-rose-300/30 bg-rose-500/15 text-rose-100'
+              } ${
+                showRatingThanks
+                  ? 'opacity-100 translate-y-0 scale-100 animate-pulse'
+                  : 'opacity-0 -translate-y-2 scale-95 pointer-events-none h-0 p-0 border-0 mb-0'
+              }`}
+              role="status"
+              aria-live="polite"
+            >
+              {ratingToastMessage}
             </div>
 
             <label className="text-xs sm:text-sm font-semibold mb-3 block">Your Review</label>
