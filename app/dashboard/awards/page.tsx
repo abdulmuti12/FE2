@@ -26,10 +26,50 @@ const PRIZE_BREAKDOWN = [
 ]
 
 const FAQS = [
-  { q: 'Who can join the competition?',               a: "Anyone — whether you're a student, professional, digital artist, or simply an AI enthusiast — everyone is welcome to submit their AI-powered short films." },
-  { q: 'Does my film have to be fully made with AI?', a: "AI must play a meaningful role in your production process, but you don't have to use AI for every single element. Human creativity combined with AI tools is encouraged." },
-  { q: 'Can I use copyrighted materials in my film?', a: 'No. All submitted films must use original or properly licensed content. Using copyrighted music, footage, or images without permission will result in disqualification.' },
-  { q: 'How long should the film be?',                a: 'Minimum 30 seconds, maximum 15 minutes depending on category. Please check the specific category guidelines for exact duration requirements.' },
+  {
+    q: 'What is the Usky AI Film Award?',
+    a: 'The Usky AI Film Award is Indonesia\'s largest AI-powered film competition, celebrating creativity and innovation through the use of artificial intelligence in filmmaking.',
+  },
+  {
+    q: 'What are the categories?',
+    a: 'Long Film, Short Film, Documentary, Advertising, Social Media Content, Music Video, and AI Influencer Creator.',
+  },
+  {
+    q: 'What is the total prize?',
+    a: 'A total prize of IDR 1 Billion, including trophies, certificates, and exclusive media exposure on Usky.ai.',
+  },
+  {
+    q: 'When is the submission period?',
+    a: 'Long AI Film, Short AI Film, AI Content for Social Media, Video Clip, Documentary AI Film and Video Advertising AI: 20 Oct, 2025 - 30 May, 2026.',
+  },
+  {
+    q: 'How can I join?',
+    a: ' Click “Join the Competition” on the website and upload your work through the Submit page following the given guidelines.',
+  },
+  {
+    q: 'Who can participate?',
+    a: 'Open to individuals, communities, students, professionals, and brands using AI in their creative process.',
+  },
+  {
+    q: 'Can I mix AI and non-AI elements?',
+    a: 'Yes, as long as the main creative elements use 70% AI technology.',
+  },
+  {
+    q: 'How are the winners selected?',
+    a: 'Entries are judged by industry professionals based on innovation, creativity, technical quality, and originality.',
+  },
+  {
+    q: 'Is there a public voting round?',
+    a: 'Yes! The People’s Choice Award will be determined by public votes through the Usky.ai website.',
+  },
+  {
+    q: 'Is there any registration fee?',
+    a: 'No — participation is completely free!',
+  },
+  {
+    q: 'How can I become a sponsor or partner?',
+    a: 'Contact our team via the Contact page or email us at Click Here.',
+  },
 ]
 
 const TIMELINE = [
@@ -178,46 +218,16 @@ const DIRECTION_CATEGORIES = [
     id: 7,
     title: 'Editing &\nPost-Production',
     icon: (
-  <svg
-    viewBox="0 0 24 24"
-    className="w-6 h-6"
-    fill="none"
-  >
-    <defs>
-      <linearGradient id="grad" x1="0" y1="0" x2="1" y2="1">
-        <stop offset="0%" stopColor="#fef9c3" />
-        <stop offset="100%" stopColor="#facc15" />
-      </linearGradient>
-    </defs>
-
-    {/* File shape (tebal & rounded) */}
-    <path
-      d="M8 3h6l4 4v11a3 3 0 0 1-3 3H9a3 3 0 0 1-3-3V7a4 4 0 0 1 2-4z"
-      stroke="url(#grad)"
-      strokeWidth="3"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    />
-
-    {/* Fold */}
-    <path
-      d="M14 3v4a2 2 0 0 0 2 2h4"
-      stroke="url(#grad)"
-      strokeWidth="3"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    />
-
-    {/* Pencil (lebih bulky & smooth) */}
-    <path
-      d="M7 16l2 4 4-1.5 5-5-3.5-3.5-5 5L7 16z"
-      stroke="url(#grad)"
-      strokeWidth="3"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    />
-  </svg>
-),
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-6 h-6">
+      {/* Document/File shape */}
+      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+      {/* Folded corner */}
+      <polyline points="14 2 14 8 20 8" />
+      {/* Pencil icon */}
+      <path d="M16 13l-6 6-3-3 6-6" />
+      <path d="M14.5 9.5l1.5 1.5" />
+    </svg>
+  ),
     description: 'Start with a strong foundation—your story. These AI tools assist in generating creative ideas, writing compelling dialogues, and structuring a screenplay. From brainstorming to the final draft, let AI guide your narrative process.',
     tools: ['Descript', 'Runway', 'Adobe Firefly', 'Topaz AI','D-ID','Kaedim'],
   },
