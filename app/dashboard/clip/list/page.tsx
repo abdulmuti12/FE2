@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import Image from 'next/image'
 import { Play } from 'lucide-react'
+import { useRouter } from 'next/navigation'
 import { Header } from '@/components/header'
 
 interface ClipCategory {
@@ -24,6 +25,7 @@ const STORAGE_KEY = 'user_token'
 const MAX_DISPLAY_ITEMS = 15
 
 export default function ClipListPage() {
+  const router = useRouter()
   const [categories, setCategories] = useState<ClipCategory[]>([])
   const [activeCategoryId, setActiveCategoryId] = useState<string>('')
   const [activeCategoryName, setActiveCategoryName] = useState<string>('All Clips')
@@ -248,6 +250,13 @@ export default function ClipListPage() {
                         className="relative transition-all duration-300 ease-out cursor-pointer group"
                         onMouseEnter={() => setHoveredClipId(clip.id)}
                         onMouseLeave={() => setHoveredClipId(null)}
+                        onClick={() => {
+                          const params = new URLSearchParams({ id: clip.id })
+                          if (activeCategoryId) {
+                            params.set('category', activeCategoryId)
+                          }
+                          router.push(`/dashboard/clip?${params.toString()}`)
+                        }}
                       >
                         <div className="relative rounded-xl overflow-hidden bg-[#0f172a] w-full aspect-[2/3]">
                           <Image

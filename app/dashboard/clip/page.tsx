@@ -2,7 +2,7 @@
 
 import Image from 'next/image'
 import { useState, useRef, useEffect, useCallback } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import {
   Heart,
   Plus,
@@ -483,7 +483,12 @@ const VideoItem = ({
   }
 
   return (
-    <div ref={containerRef} className="w-full h-[100dvh] lg:h-full snap-start flex items-center justify-center lg:items-start lg:pt-10 lg:px-8 relative">
+    <div
+      ref={containerRef}
+      id={`clip-${clip.id}`}
+      data-clip-id={clip.id}
+      className="w-full h-[100dvh] lg:h-full snap-start flex items-center justify-center lg:items-start lg:pt-10 lg:px-8 relative"
+    >
       
       {/* Navigasi kecil desktop */}
       <div className="hidden lg:flex absolute right-8 top-1/2 -translate-y-1/2 flex-col gap-96 pointer-events-none opacity-20 z-50">
@@ -774,8 +779,11 @@ const VideoItem = ({
 // --- KOMPONEN UTAMA ---
 export default function ClipsPage() {
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const initialClipId = searchParams.get('id') || ''
+  const initialCategoryId = searchParams.get('category') || ''
   
-  const [activeCategoryId, setActiveCategoryId] = useState<string>('') 
+  const [activeCategoryId, setActiveCategoryId] = useState<string>(initialCategoryId) 
   const [activeCategoryName, setActiveCategoryName] = useState('All Clips')
   const [categories, setCategories] = useState<any[]>([]) 
   const [apiClips, setApiClips] = useState<Movie[]>([])
@@ -783,6 +791,7 @@ export default function ClipsPage() {
   const [activeVideoId, setActiveVideoId] = useState<string | null>(null)
   const [currentPage, setCurrentPage] = useState(1)
   const [hasMore, setHasMore] = useState(true)
+  const [pendingClipId, setPendingClipId] = useState<string | null>(initialClipId || null)
 
   const fetchingRef = useRef(false) 
 
@@ -800,7 +809,15 @@ export default function ClipsPage() {
             name: 'All Clips',
             images_url: '/images/icon/clippp.png' 
           }
-          setCategories([allClipsCategory, ...data.category])
+          const nextCategories = [allClipsCategory, ...data.category]
+          setCategories(nextCategories)
+
+          if (initialCategoryId) {
+            const matched = nextCategories.find((category: any) => category.id === initialCategoryId)
+            if (matched) {
+              setActiveCategoryName(matched.name)
+            }
+          }
         }
       } catch (error) {
         console.error('[v0] Error fetching categories:', error)
@@ -887,6 +904,7 @@ export default function ClipsPage() {
 
     setActiveCategoryId(categoryId)
     setActiveCategoryName(categoryName)
+    setPendingClipId(null)
     setApiClips([])
     setCurrentPage(1)
     setHasMore(true)
@@ -898,6 +916,28 @@ export default function ClipsPage() {
       setCurrentPage((prev) => prev + 1)
     }
   }, [hasMore])
+
+  useEffect(() => {
+    if (!pendingClipId) return
+
+    const found = apiClips.some((clip) => clip.id === pendingClipId)
+    if (found) {
+      setActiveVideoId(pendingClipId)
+
+      const targetClipId = pendingClipId
+      setTimeout(() => {
+        const targetEl = document.getElementById(`clip-${targetClipId}`)
+        targetEl?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+      }, 120)
+
+      setPendingClipId(null)
+      return
+    }
+
+    if (!clipsLoading && !fetchingRef.current && hasMore) {
+      setCurrentPage((prev) => prev + 1)
+    }
+  }, [pendingClipId, apiClips, hasMore, clipsLoading])
 
   return (
     <>

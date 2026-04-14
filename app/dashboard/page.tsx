@@ -137,7 +137,7 @@ function LatestClipSection({ items = [] }: { items?: any[] }) {
     <section className="border-t border-white/10 px-4 py-8 md:px-6 md:py-10 lg:px-12">
       <div className="mb-8 flex items-center justify-between">
         <h2 className="text-2xl font-bold text-white md:text-3xl">Latest Clip</h2>
-        <Link href="/dashboard/clip" className="inline-flex items-center gap-2 font-semibold text-white hover:text-white/80 transition-colors">
+        <Link href="/dashboard/clip/list" className="inline-flex items-center gap-2 font-semibold text-white hover:text-white/80 transition-colors">
           <span className="text-xs md:text-base">View All</span>
           <span className="text-white/70">›</span>
         </Link>
