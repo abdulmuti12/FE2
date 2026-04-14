@@ -1,11 +1,11 @@
 'use client'
- 
+
 import { Header } from '@/components/header'
 import { Footer } from '@/components/footer'
 import { Heart, Eye, Search, Plus, Clock, FileText, Trophy, Play } from 'lucide-react'
 import { useState, useMemo, useEffect } from 'react'
 import Image from 'next/image'
- 
+
 interface AwardSubmission {
   id: string | number
   name: string
@@ -14,40 +14,31 @@ interface AwardSubmission {
   views?: number | string
   play?: number | string
 }
- 
+
 const FILTER_OPTIONS = ['Trending', 'Latest', 'Most Liked', 'Most Viewed']
-const TABS = ['Projects', 'Theme', 'Terms']
- 
+const TABS = ['Films', 'Leaderboard', 'Details', 'Direction', 'Scoring', 'Rules', 'FAQ']
+
 const PRIZE_BREAKDOWN = [
   { label: '1st',                amount: 'IDR 300,000,000' },
   { label: '2nd',                amount: 'IDR 200,000,000' },
   { label: '3rd',                amount: 'IDR 100,000,000' },
   { label: 'Honorable Mentions', amount: 'IDR 10,000,000'  },
 ]
- 
+
 const FAQS = [
   { q: 'Who can join the competition?',               a: "Anyone — whether you're a student, professional, digital artist, or simply an AI enthusiast — everyone is welcome to submit their AI-powered short films." },
   { q: 'Does my film have to be fully made with AI?', a: "AI must play a meaningful role in your production process, but you don't have to use AI for every single element. Human creativity combined with AI tools is encouraged." },
   { q: 'Can I use copyrighted materials in my film?', a: 'No. All submitted films must use original or properly licensed content. Using copyrighted music, footage, or images without permission will result in disqualification.' },
   { q: 'How long should the film be?',                a: 'Minimum 30 seconds, maximum 15 minutes depending on category. Please check the specific category guidelines for exact duration requirements.' },
 ]
- 
-const SPECIAL_CATEGORIES = [
-  { name: 'Best AI Short Film',  icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4 text-gray-400"><rect x="2" y="6" width="20" height="12" rx="2"/><polygon points="10 9 15 12 10 15 10 9"/></svg> },
-  { name: 'Best AI Advertising', icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4 text-gray-400"><path d="M11 20H7a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h4"/><path d="M11 4v16"/><path d="M11 8h6l3-2v12l-3-2h-6"/><path d="M3 14v4a2 2 0 0 0 2 2h2"/></svg> },
-  { name: 'Best AI Animation',   icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4 text-gray-400"><rect x="2" y="2" width="20" height="20" rx="2.18"/><line x1="7" y1="2" x2="7" y2="22"/><line x1="17" y1="2" x2="17" y2="22"/><line x1="2" y1="12" x2="22" y2="12"/><line x1="2" y1="7" x2="7" y2="7"/><line x1="2" y1="17" x2="7" y2="17"/><line x1="17" y1="17" x2="22" y2="17"/><line x1="17" y1="7" x2="22" y2="7"/><polygon points="10 10 14 12 10 14 10 10"/></svg> },
-  { name: 'Best AI Documentary', icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4 text-gray-400"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><polygon points="10 12 15 15 10 18 10 12"/></svg> },
-  { name: 'Best AI Long Film',   icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4 text-gray-400"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg> },
-  { name: 'Best AI Music Video', icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4 text-gray-400"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M10 8l6 4-6 4V8z"/></svg> },
-]
- 
+
 const TIMELINE = [
   { label: 'Submission',      date: '1–30 July 2025' },
   { label: 'Public Voting',   date: '15 July – 15 August 2025' },
   { label: 'Jury Evaluating', date: '16 August 2025' },
   { label: 'Finalist Reveal', date: '16 August 2025' },
 ]
- 
+
 const JUDGING_CRITERIA = [
   { icon: '🎬', text: 'Storytelling & Narrative Strength' },
   { icon: '🤖', text: 'Creative Use of AI' },
@@ -55,14 +46,14 @@ const JUDGING_CRITERIA = [
   { icon: '💡', text: 'Originality & Innovation' },
   { icon: '🎯', text: 'Overall Impact & Execution' },
 ]
- 
+
 const SUBMIT_STEPS = [
   { num: '1', title: 'Log in as a Creator', desc: "Access the platform at usky.ai and log in using your Creator account. If you're not registered yet, sign up first to get started." },
   { num: '2', title: 'Go to "Video List"',  desc: 'After logging in, open the Video List section from your dashboard.' },
   { num: '3', title: 'Click "Add Film"',    desc: 'Begin your submission by selecting Add Film to create a new entry.' },
   { num: '4', title: 'Complete Submission', desc: 'Fill in the submission form, genre, and other required info to fully submit your AI Short Film for peer viewing quality.' },
 ]
- 
+
 const TERMS_SECTIONS = [
   { title: 'Eligibility',              items: ['Open to individuals aged 15 years and above.', 'Participants may enter as individuals or teams (max 5 members).', 'Open to Indonesian citizens and residents only for the 2025 edition.'] },
   { title: 'Film Requirements',        items: ['The duration depends on the category of the AI film you are submitting.', 'Language: Any, but English or Bahasa Indonesia subtitles are mandatory.', 'The film must incorporate AI tools in at least one area: script, visual, animation, voice, or editing.', 'Genre must be selected from the provided list.'] },
@@ -71,11 +62,343 @@ const TERMS_SECTIONS = [
   { title: 'Judging & Audience Votes', items: ['60% Jury Score: Based on creativity, use of AI, storytelling, visual execution, and impact.', '40% Audience Score: Based on Plays, Likes, Shares, Views, and Watchlists on USKY.AI platform.', 'All decisions by the judges and organizers are final and binding.'] },
   { title: 'Rights & Usage',           items: ['Participants retain ownership of their films.', 'By submitting, participants grant USKY.AI the non-exclusive right to showcase, promote, and distribute the film for non-commercial promotional purposes with proper credit.', 'Plagiarism, copyright infringement, offensive content, or violation of any rule will result in immediate disqualification.'] },
 ]
- 
+
+// ─────────────────────────────────────────────
+// DIRECTION CATEGORIES DATA
+// ─────────────────────────────────────────────
+
+const DIRECTION_CATEGORIES = [
+  {
+  id: 1,
+  title: 'Script &\nStory Writing',
+  icon: (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-6 h-6">
+      <path d="M12 19l7-7 3 3-7 7-3-3z" />
+      <path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z" />
+      <path d="M2 2l7.586 7.586" />
+      <circle cx="11" cy="11" r="2" />
+    </svg>
+  ),
+    description: 'Start with a strong foundation—your story. These AI tools assist in generating creative ideas, writing compelling dialogues, and structuring a screenplay. From brainstorming to the final draft, let AI guide your narrative process.',
+    tools: ['ChatGPT', 'Claude', 'Gemini', 'Sudowrite', 'NovelAI','DALL-E'],
+  },
+ {
+    id: 2,
+    title: 'Visuals\n& Animation',
+    icon: (
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-6 h-6">
+        {/* Bingkai yang terpotong di sudut kanan bawah */}
+        <path d="M13 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v8" />
+        {/* Matahari */}
+        <circle cx="8" cy="8" r="2" />
+        {/* Gunung */}
+        <path d="M3 17l4.5-4.5 4.5 4.5" />
+        {/* Tombol Play */}
+        <path d="M15 14v8l7-4z" />
+      </svg>
+    ),
+    description: 'Start with a strong foundation—your story. These AI tools assist in generating creative ideas, writing compelling dialogues, and structuring a screenplay. From brainstorming to the final draft, let AI guide your narrative process.',
+    tools: ['Midjourney', 'DALL-E', 'Stable Diffusion', 'RunwayML','NovelAI','Kaedim'],
+  },
+  {
+    id: 3,
+    title: '3D & Virtual\nProduction',
+    icon: (
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-6 h-6">
+        {/* Cincin vertikal dengan celah di kanan bawah */}
+        <path d="M12 3a6 9 0 1 0 4.5 15.5" />
+        {/* Cincin horizontal dari belakang ke depan */}
+        <path d="M19 10a8 4 0 0 0-14 2 8 4 0 0 0 14 2" />
+        {/* Tanda panah di ujung cincin horizontal */}
+        <polyline points="16 11 19 14 15 17" />
+      </svg>
+    ),
+    description: 'Start with a strong foundation—your story. These AI tools assist in generating creative ideas, writing compelling dialogues, and structuring a screenplay. From brainstorming to the final draft, let AI guide your narrative process.',
+    tools: ['Blender AI', 'NVIDIA Canvas', 'Kaedim', 'Luma AI','claude','Gemini'],
+  },
+{
+  id: 4,
+  title: 'Voice\n& Narration',
+  icon: (
+    <svg viewBox="0 0 24 24" fill="none" className="w-6 h-6">
+      <path
+        d="M3 13a4 4 0 1 1 8 0 4 4 0 0 1-8 0z"
+        stroke="currentColor"
+        strokeWidth="2"
+        fill="none"
+      />
+      <path
+        d="M13 13a4 4 0 1 1 8 0 4 4 0 0 1-8 0z"
+        stroke="currentColor"
+        strokeWidth="2"
+        fill="none"
+      />
+      <line x1="7" y1="17" x2="17" y2="17" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+    </svg>
+  ),
+    description: 'Start with a strong foundation—your story. These AI tools assist in generating creative ideas, writing compelling dialogues, and structuring a screenplay. From brainstorming to the final draft, let AI guide your narrative process.',
+    tools: ['ElevenLabs', 'Murf AI', 'Play.ht', 'Resemble AI', 'Descript Overdub','ChatGPT'],
+  },
+  {
+  id: 5,
+  title: 'AI Acting &\nFace Animation',
+  icon: (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-6 h-6">
+      {/* Corner brackets */}
+      {/* Top-left */}
+      <path d="M3 9V5a0 0 0 0 1 0 0h4" />
+      {/* Top-right */}
+      <path d="M21 9V5a0 0 0 0 0 0 0h-4" />
+      {/* Bottom-left */}
+      <path d="M3 15v4a0 0 0 0 0 0 0h4" />
+      {/* Bottom-right */}
+      <path d="M21 15v4a0 0 0 0 1 0 0h-4" />
+      {/* Eyes */}
+      <circle cx="9" cy="9" r="0.5" fill="currentColor" stroke="none" />
+      <circle cx="15" cy="9" r="0.5" fill="currentColor" stroke="none" />
+      {/* Smile */}
+      <path d="M8 14s1.5 2.5 4 2.5 4-2.5 4-2.5" />
+    </svg>
+  ),
+    description: 'Start with a strong foundation—your story. These AI tools assist in generating creative ideas, writing compelling dialogues, and structuring a screenplay. From brainstorming to the final draft, let AI guide your narrative process.',
+    tools: ['D-ID', 'HeyGen', 'Synthesia', 'Wav2Lip', 'DeepFaceLab','Kaedim'],
+  },
+  {
+    id: 6,
+    title: 'Music\n& Sound Design',
+    icon: (
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-6 h-6">
+        <path d="M9 18V5l12-2v13" /><circle cx="6" cy="18" r="3" /><circle cx="18" cy="16" r="3" />
+      </svg>
+    ),
+    description: 'Start with a strong foundation—your story. These AI tools assist in generating creative ideas, writing compelling dialogues, and structuring a screenplay. From brainstorming to the final draft, let AI guide your narrative process.',
+    tools: ['Suno AI', 'Udio', 'AIVA', 'Soundraw', 'Boomy','ChatGPT','Gemini'],
+  },
+  {
+    id: 7,
+    title: 'Editing &\nPost-Production',
+    icon: (
+  <svg
+    viewBox="0 0 24 24"
+    className="w-6 h-6"
+    fill="none"
+  >
+    <defs>
+      <linearGradient id="grad" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0%" stopColor="#fef9c3" />
+        <stop offset="100%" stopColor="#facc15" />
+      </linearGradient>
+    </defs>
+
+    {/* File shape (tebal & rounded) */}
+    <path
+      d="M8 3h6l4 4v11a3 3 0 0 1-3 3H9a3 3 0 0 1-3-3V7a4 4 0 0 1 2-4z"
+      stroke="url(#grad)"
+      strokeWidth="3"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+
+    {/* Fold */}
+    <path
+      d="M14 3v4a2 2 0 0 0 2 2h4"
+      stroke="url(#grad)"
+      strokeWidth="3"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+
+    {/* Pencil (lebih bulky & smooth) */}
+    <path
+      d="M7 16l2 4 4-1.5 5-5-3.5-3.5-5 5L7 16z"
+      stroke="url(#grad)"
+      strokeWidth="3"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+  </svg>
+),
+    description: 'Start with a strong foundation—your story. These AI tools assist in generating creative ideas, writing compelling dialogues, and structuring a screenplay. From brainstorming to the final draft, let AI guide your narrative process.',
+    tools: ['Descript', 'Runway', 'Adobe Firefly', 'Topaz AI','D-ID','Kaedim'],
+  },
+  {
+    id: 8,
+    title: 'All-in-One\nAI Video Platforms',
+    icon: (
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-6 h-6">
+      {/* Document body */}
+      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+      {/* Fold corner */}
+      <polyline points="14 2 14 8 20 8" />
+      {/* Video camera body */}
+      <rect x="5" y="10" width="9" height="7" rx="1" />
+      {/* Video camera triangle/lens */}
+      <polyline points="14 12 19 10 19 17 14 15" />
+    </svg>
+    ),
+    description: 'Start with a strong foundation—your story. These AI tools assist in generating creative ideas, writing compelling dialogues, and structuring a screenplay. From brainstorming to the final draft, let AI guide your narrative process.',
+    tools: ['Pika Labs', 'Gen-2', 'Kaiber', 'Stable Video','Midjourney','seek.ai'],
+  },
+]
+
+// ─────────────────────────────────────────────
+// JUDGES DATA
+// ─────────────────────────────────────────────
+
+const JUDGES = [
+  {
+    id: 1,
+    company: 'Perusahaan',
+    name: 'Irakli Beridze',
+    role: 'Head of Centre for Artificial Intelligence and Robotics, United Nations Interregional Crime and Justice Research Institute (UNICRI)',
+    image: '/images/awards/judges1.png',
+  },
+  {
+    id: 2,
+    company: 'Perusahaan',
+    name: 'Irakli Beridze',
+    role: 'Head of Centre for Artificial Intelligence and Robotics, United Nations Interregional Crime and Justice Research Institute (UNICRI)',
+    image: '/images/awards/judges2.png',
+  },
+  {
+    id: 3,
+    company: 'Perusahaan',
+    name: 'Irakli Beridze',
+    role: 'Head of Centre for Artificial Intelligence and Robotics, United Nations Interregional Crime and Justice Research Institute (UNICRI)',
+    image: '/images/awards/judges2.png',
+  },
+  {
+    id: 4,
+    company: 'Perusahaan',
+    name: 'Irakli Beridze',
+    role: 'Head of Centre for Artificial Intelligence and Robotics, United Nations Interregional Crime and Justice Research Institute (UNICRI)',
+    image: '/images/awards/judges3.png',
+  },
+]
+
+// ─────────────────────────────────────────────
+// SPONSOR LOGOS (SVG inline)
+// ─────────────────────────────────────────────
+
+const SPONSOR_LOGOS = [
+  {
+    name: 'IMAX',
+    svg: (
+      <svg viewBox="0 0 100 32" fill="currentColor" className="h-8 w-auto">
+        <text x="0" y="26" fontSize="32" fontWeight="900" fontFamily="Arial Black, sans-serif" letterSpacing="-1">IMAX</text>
+      </svg>
+    ),
+  },
+  {
+    name: 'VIVA TECHNOLOGY',
+    svg: (
+      <svg viewBox="0 0 110 38" fill="currentColor" className="h-9 w-auto">
+        <text x="0" y="17" fontSize="15" fontWeight="800" fontFamily="Arial, sans-serif" letterSpacing="2">VIVA</text>
+        <text x="0" y="35" fontSize="12" fontWeight="600" fontFamily="Arial, sans-serif" letterSpacing="1.5">TECHNOLOGY</text>
+      </svg>
+    ),
+  },
+  {
+    name: 'NVIDIA',
+    svg: (
+      <svg viewBox="0 0 105 32" fill="currentColor" className="h-8 w-auto">
+        {/* simplified nvidia chevron */}
+        <path d="M0 6 L0 20 L6 20 L6 13 L11 20 L17 20 L17 6 L11 6 L11 13 L6 6 Z" opacity="0.9"/>
+        <text x="21" y="21" fontSize="15" fontWeight="800" fontFamily="Arial, sans-serif" letterSpacing="0.5">NVIDIA.</text>
+      </svg>
+    ),
+  },
+  {
+    name: 'TRIBECA FESTIVAL',
+    svg: (
+      <svg viewBox="0 0 85 40" fill="currentColor" className="h-9 w-auto">
+        <rect x="0" y="0" width="3" height="40" />
+        <text x="9" y="17" fontSize="12" fontWeight="700" fontFamily="Arial, sans-serif" letterSpacing="0.5">TR|BECA</text>
+        <text x="9" y="34" fontSize="12" fontWeight="700" fontFamily="Arial, sans-serif" letterSpacing="0.5">FEST|VAL</text>
+      </svg>
+    ),
+  },
+  {
+    name: 'CapCut',
+    svg: (
+      <svg viewBox="0 0 80 30" fill="currentColor" className="h-7 w-auto">
+        <polygon points="0,3 0,27 7,15" />
+        <polygon points="10,3 10,27 17,15" opacity="0.6"/>
+        <text x="21" y="21" fontSize="15" fontWeight="700" fontFamily="Arial, sans-serif">CapCut</text>
+      </svg>
+    ),
+  },
+]
+// ─────────────────────────────────────────────
+// MARQUEE ROW COMPONENT
+// ─────────────────────────────────────────────
+
+function MarqueeRow({ reverse = false }: { reverse?: boolean }) {
+  const logos = [...SPONSOR_LOGOS, ...SPONSOR_LOGOS, ...SPONSOR_LOGOS]
+  return (
+    <div className="overflow-hidden w-full">
+      <div
+        className={`flex items-center w-max ${
+          reverse ? 'animate-marquee-reverse' : 'animate-marquee'
+        }`}
+        style={{ gap: '5rem' }}
+      >
+        {logos.map((logo, i) => (
+          <div
+            key={i}
+            className="shrink-0 text-[#4a6080] hover:text-[#7a90a8] transition-colors opacity-80 hover:opacity-100 flex items-center"
+          >
+            {logo.svg}
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+// ─────────────────────────────────────────────
+// SHARED STATS BAR
+// ─────────────────────────────────────────────
+
+function StatsBar() {
+  return (
+    <div className="flex flex-col lg:flex-row items-stretch gap-4 w-full">
+      <div className="relative flex items-center justify-between overflow-hidden bg-[#0b1d35] border border-white/10 rounded-xl px-6 py-5 lg:flex-[2] w-full shrink-0">
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          <div className="absolute -right-8 top-0 h-full w-32 bg-white/[0.03] skew-x-[-20deg]" />
+          <div className="absolute -right-2 top-0 h-full w-16 bg-white/[0.03] skew-x-[-20deg]" />
+        </div>
+        <div className="flex items-center gap-3 relative z-10">
+          <Trophy className="w-5 h-5 text-yellow-400 shrink-0" />
+          <span className="text-gray-400 text-sm font-semibold">Prize Pool</span>
+        </div>
+        <span className="text-white font-extrabold text-2xl md:text-3xl tracking-tight relative z-10">IDR 1,000,000,000</span>
+      </div>
+      <div className="flex items-center gap-3 bg-[#0b1d35] border border-white/10 rounded-xl px-5 py-5 lg:flex-1 w-full shrink-0">
+        <FileText className="w-4 h-4 text-gray-400 shrink-0" />
+        <div>
+          <p className="text-xs text-gray-400 leading-none mb-1.5">Submission</p>
+          <p className="text-white font-extrabold text-xl leading-none">245</p>
+        </div>
+      </div>
+      <div className="flex items-center gap-3 bg-[#0b1d35] border border-white/10 rounded-xl px-5 py-5 lg:flex-1 w-full shrink-0">
+        <Clock className="w-4 h-4 text-gray-400 shrink-0" />
+        <div>
+          <p className="text-xs text-gray-400 leading-none mb-1.5">Ends in</p>
+          <p className="text-white font-extrabold text-xl leading-none">30 Days</p>
+        </div>
+      </div>
+      <button className="flex items-center justify-center gap-2 bg-yellow-400 hover:bg-yellow-300 active:bg-yellow-500 transition-colors rounded-xl px-6 py-5 lg:flex-1 w-full shrink-0">
+        <Plus className="w-5 h-5 text-black" />
+        <span className="text-black font-bold text-sm">Submit Now</span>
+      </button>
+    </div>
+  )
+}
+
 // ─────────────────────────────────────────────
 // SHARED COMPONENTS
 // ─────────────────────────────────────────────
- 
+
 function PrizeSidebar() {
   return (
     <div className="sticky top-4 space-y-3 max-w-[380px] ml-auto">
@@ -129,7 +452,7 @@ function PrizeSidebar() {
     </div>
   )
 }
- 
+
 function FaqAccordion({ faqs }: { faqs: { q: string; a: string }[] }) {
   const [open, setOpen] = useState<number | null>(null)
   return (
@@ -148,11 +471,11 @@ function FaqAccordion({ faqs }: { faqs: { q: string; a: string }[] }) {
     </div>
   )
 }
- 
+
 // ─────────────────────────────────────────────
 // TYPES FOR LEADERBOARD
 // ─────────────────────────────────────────────
- 
+
 interface Creator {
   id: string | number
   name: string
@@ -165,7 +488,7 @@ interface Creator {
   play?: string | number
   totals?: string | number
 }
- 
+
 interface AwardCategory {
   id: string | number
   name: string
@@ -173,345 +496,542 @@ interface AwardCategory {
   duration_to?: string | number
   creator?: Creator[]
 }
- 
+
 // ─────────────────────────────────────────────
-// TAB: THEME
+// TAB: DETAILS (Timeline + Judges + Partners)
 // ─────────────────────────────────────────────
- 
-function ThemeContent() {
-  const [leaderboardData, setLeaderboardData] = useState<AwardCategory[]>([])
-  const [leaderboardLoading, setLeaderboardLoading] = useState(true)
-  const [selectedCategory, setSelectedCategory] = useState<string | number>('1')
- 
-  useEffect(() => {
-    const fetchLeaderboard = async () => {
-      try {
-        setLeaderboardLoading(true)
-        const response = await fetch('/api/awards/leaderboard')
-        const data = await response.json()
-        if (data.count && Array.isArray(data.count)) {
-          setLeaderboardData(data.count)
-          if (data.count.length > 0) {
-            setSelectedCategory(data.count[0].id)
-          }
-        }
-      } catch (error) {
-        console.error('[v0] Failed to fetch leaderboard:', error)
-        setLeaderboardData([])
-      } finally {
-        setLeaderboardLoading(false)
-      }
-    }
-    fetchLeaderboard()
-  }, [])
- 
-  const currentCategory = leaderboardData.find(cat => cat.id === selectedCategory)
-  const creators = currentCategory?.creator || []
- 
+
+function DetailsContent() {
   return (
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mt-2">
-      <div className="md:col-span-2 space-y-8">
-        <div>
-          <h3 className="text-white font-bold text-2xl mb-0.5">Theme</h3>
-          <p className="text-yellow-400 text-base font-semibold mb-2">Create Without Limits</p>
-          <p className="text-gray-400 text-base leading-relaxed">USKY AI Film Awards invites creators across Indonesia to produce original films powered by Artificial Intelligence.</p>
-        </div>
-        <div>
-          <p className="text-gray-300 text-base font-semibold mb-2">· You can create:</p>
-          <ul className="text-gray-400 text-base space-y-1.5 ml-3">
-            {['Short Film', 'Video Advertising', 'Animation Film', 'Long Film', 'Documentary AI Film', 'Video Clip'].map((item) => (
-              <li key={item}>– {item}</li>
-            ))}
-          </ul>
-        </div>
-        <div className="space-y-2">
-          <p className="text-gray-400 text-base leading-relaxed">Any genre is welcome — action, drama, sci-fi, romance, thriller, experimental — as long as AI plays a meaningful role in your production process.</p>
-          <p className="text-gray-400 text-base">🎥 Minimum duration: 30 seconds</p>
-          <p className="text-gray-400 text-base">🎞 Maximum duration: 15 minutes (depending on category)</p>
-          <p className="text-gray-400 text-base">🤖 AI tools allowed: text-to-video, image generation, AI voice, AI editing, AI compositing, and more.</p>
-        </div>
-        <p className="text-gray-300 text-base font-semibold italic">This is your moment to redefine filmmaking in the AI era.</p>
- 
-        {/* Prize Pool Podium */}
-        <div className="w-full">
-          <p className="text-white text-2xl font-bold mb-5 uppercase tracking-tight">💰 Prize Pool — IDR 1,000,000,000 Total</p>
-          <div className="flex items-end justify-center gap-3 md:gap-6 mb-10 mt-16 w-full max-w-6xl mx-auto px-4">
-            {/* 2nd */}
-            <div className="flex flex-col items-center w-full max-w-[280px]">
-              <div className="w-20 h-20 md:w-24 md:h-24 rounded-2xl overflow-hidden mb-3 border border-white/10 shadow-lg bg-slate-800">
-                <Image src="/images/imagel.png" alt="2nd place" width={96} height={96} className="object-cover w-full h-full" />
-              </div>
-              <p className="text-white text-lg md:text-xl font-bold mb-6">Brian Ngo</p>
-              <div className="relative w-full flex flex-col items-center">
-                <div className="w-full h-[45px] relative z-0" style={{ background: 'linear-gradient(180deg, #1e3a5f 0%, #112540 100%)', clipPath: 'polygon(12% 0%, 88% 0%, 100% 100%, 0% 100%)' }}>
-                  <div className="absolute top-0 left-[12%] right-[12%] h-[1px] bg-white/20" />
-                </div>
-                <div className="w-full h-[200px] bg-gradient-to-b from-[#0f2038] to-[#020d1f]/0 border-t border-white/10 flex flex-col items-center pt-10 px-4 shadow-2xl relative -mt-[1px]">
-                  <div className="absolute -top-6 w-12 h-12 bg-[#cbd5e1] rounded-xl flex items-center justify-center shadow-[0_8px_25px_rgba(0,0,0,0.5)] z-10"><Trophy className="w-6 h-6 text-slate-700" /></div>
-                  <p className="text-gray-400 text-xs md:text-sm mb-4 uppercase tracking-widest">Earn 2,000 USKY</p>
-                  <p className="text-white font-bold text-xl md:text-2xl mb-3">IDR 200,000,000</p>
-                  <div className="flex items-center gap-1.5 opacity-80"><span className="text-sm">🥈</span><p className="text-gray-300 text-sm">2nd Place</p></div>
-                </div>
-              </div>
-            </div>
-            {/* 1st */}
-            <div className="flex flex-col items-center w-full max-w-[320px]">
-              <div className="w-24 h-24 md:w-28 md:h-28 rounded-2xl overflow-hidden mb-4 border-2 border-yellow-500/30 shadow-[0_0_30px_rgba(234,179,8,0.2)] bg-slate-800">
-                <Image src="/images/imagew.png" alt="1st place" width={112} height={112} className="object-cover w-full h-full" />
-              </div>
-              <p className="text-white text-xl md:text-2xl font-bold mb-8">Jolie Joie</p>
-              <div className="relative w-full flex flex-col items-center">
-                <div className="w-full h-[55px] relative z-0" style={{ background: 'linear-gradient(180deg, #254b85 0%, #162f55 100%)', clipPath: 'polygon(12% 0%, 88% 0%, 100% 100%, 0% 100%)' }}>
-                  <div className="absolute top-0 left-[12%] right-[12%] h-[1px] bg-white/30" />
-                </div>
-                <div className="w-full h-[300px] bg-gradient-to-b from-[#162f55] to-[#020d1f]/0 border-t border-white/20 flex flex-col items-center pt-12 px-4 shadow-2xl relative -mt-[1px]">
-                  <div className="absolute -top-7 w-14 h-14 bg-[#ecc159] rounded-xl flex items-center justify-center shadow-[0_10px_30px_rgba(236,193,89,0.4)] z-10"><Trophy className="w-7 h-7 text-yellow-900" /></div>
-                  <p className="text-gray-400 text-xs md:text-sm mb-5 uppercase tracking-widest">Earn 2,000 USKY</p>
-                  <p className="text-white font-black text-2xl md:text-3xl mb-4">IDR 300,000,000</p>
-                  <div className="flex items-center gap-1.5"><span className="text-base">🥇</span><p className="text-[#ecc159] text-sm font-bold uppercase tracking-wide">1st Place</p></div>
-                </div>
-              </div>
-            </div>
-            {/* 3rd */}
-            <div className="flex flex-col items-center w-full max-w-[280px]">
-              <div className="w-20 h-20 md:w-24 md:h-24 rounded-2xl overflow-hidden mb-3 border border-white/10 shadow-lg bg-slate-800">
-                <Image src="/images/imagej.png" alt="3rd place" width={96} height={96} className="object-cover w-full h-full" />
-              </div>
-              <p className="text-white text-lg md:text-xl font-bold mb-6">David Do</p>
-              <div className="relative w-full flex flex-col items-center">
-                <div className="w-full h-[45px] relative z-0" style={{ background: 'linear-gradient(180deg, #1e3a5f 0%, #112540 100%)', clipPath: 'polygon(12% 0%, 88% 0%, 100% 100%, 0% 100%)' }}>
-                  <div className="absolute top-0 left-[12%] right-[12%] h-[1px] bg-white/20" />
-                </div>
-                <div className="w-full h-[140px] bg-gradient-to-b from-[#0f2038] to-[#020d1f]/0 border-t border-white/10 flex flex-col items-center pt-10 px-4 shadow-2xl relative -mt-[1px]">
-                  <div className="absolute -top-6 w-12 h-12 bg-[#b8784d] rounded-xl flex items-center justify-center shadow-[0_8px_25px_rgba(0,0,0,0.5)] z-10"><Trophy className="w-6 h-6 text-orange-100" /></div>
-                  <p className="text-gray-400 text-xs md:text-sm mb-4 uppercase tracking-widest">Earn 2,000 USKY</p>
-                  <p className="text-white font-bold text-xl md:text-2xl mb-3">IDR 100,000,000</p>
-                  <div className="flex items-center gap-1.5 opacity-80"><span className="text-sm">🥉</span><p className="text-orange-400 text-sm">3rd Place</p></div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
- 
-        {/* Special Categories */}
-        <div className="max-w-3xl">
-          <p className="text-white text-xl font-bold mb-4">⭐ Special Category Winners</p>
-          <div className="grid grid-cols-3 gap-3">
-            {SPECIAL_CATEGORIES.map((cat) => (
-              <div key={cat.name} className="bg-transparent border border-white/10 rounded-xl px-5 py-4 flex flex-col justify-between h-[100px]">
-                <div className="flex items-center gap-2">{cat.icon}<p className="text-gray-400 text-sm">{cat.name}</p></div>
-                <p className="text-white text-lg font-bold">TBC</p>
-              </div>
-            ))}
-          </div>
-        </div>
- 
-        {/* Honorable Mentions */}
-        <div>
-          <p className="text-white text-xl font-bold mb-4">🎖 Honorable Mentions</p>
-          <p className="text-gray-400 text-sm mb-3">Up to 10 selected films receive IDR 10,000,000 each.</p>
-          <div className="flex gap-4 flex-wrap">
-            {[1, 2, 3, 4].map((i) => (
-              <div key={i} className="bg-[#0b1d35] border border-white/10 rounded-xl px-9 py-4 text-center min-w-[140px]">
-                <p className="text-gray-500 text-xs mb-1">TBC</p>
-                <p className="text-white text-sm font-bold">IDR 10,000,000</p>
-              </div>
-            ))}
-          </div>
-        </div>
- 
-        {/* Timeline */}
-        <div>
-          <p className="text-white text-xl font-bold mb-6">Timeline</p>
-          <div className="relative">
-            <div className="absolute top-2 left-2 right-116 h-[2px]" style={{ background: 'none', borderTop: '2px dashed rgba(234, 179, 8, 0.5)' }} />
-            <div className="flex gap-[140px] relative">
-              {TIMELINE.map((item, i) => (
-                <div key={i} className="flex flex-col items-start">
+    <div className="space-y-12 mt-2">
+      <StatsBar />
+
+      {/* ── Important Dates ── */}
+      <div>
+        <h3 className="text-white font-bold text-2xl mb-1">Important Dates</h3>
+        <p className="text-gray-400 text-sm mb-10">Mark your calendar and stay on track with every key deadline</p>
+        <div className="relative">
+          {/* Dashed line */}
+          <div className="absolute top-[7px] left-0 right-0 border-t-2 border-dashed border-yellow-400/50" />
+          <div className="flex justify-between relative">
+            {TIMELINE.map((item, i) => {
+              const isLast = i === TIMELINE.length - 1
+              return (
+                <div
+                  key={i}
+                  className={`flex flex-col w-1/4 ${isLast ? 'items-end' : 'items-start'}`}
+                >
                   <div className="w-4 h-4 rounded-full bg-yellow-400 z-10 mb-4 shrink-0" />
-                  <p className="text-white text-sm font-bold">{item.label}</p>
-                  <p className="text-gray-400 text-xs mt-0.5">{item.date}</p>
+                  <p className={`text-white text-sm font-bold ${isLast ? 'text-right' : ''}`}>
+                    {item.label}
+                  </p>
+                  <p className={`text-gray-400 text-xs mt-0.5 ${isLast ? 'text-right' : ''}`}>
+                    {item.date}
+                  </p>
                 </div>
-              ))}
-            </div>
-          </div>
-        </div>
- 
-        {/* Judging Criteria */}
-        <div>
-          <p className="text-white text-xl font-bold mb-2">Judging Criteria</p>
-          <p className="text-gray-400 text-base mb-4">Our expert panel evaluates entries based on:</p>
-          <ul className="text-gray-400 text-base space-y-2">
-            {JUDGING_CRITERIA.map((item) => (
-              <li key={item.text} className="flex items-center gap-2"><span>{item.icon}</span>{item.text}</li>
-            ))}
-          </ul>
-        </div>
- 
-        {/* Submit Steps */}
-        <div className="max-w-5xl">
-          <p className="text-white text-xl font-bold mb-2">Submit Your Film</p>
-          <p className="text-gray-400 text-base mb-4">Step-by-step guide to submit your AI-powered short film to the platform.</p>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {SUBMIT_STEPS.map((step) => (
-              <div key={step.num} className="bg-[#0b1d35] border border-white/10 rounded-xl p-6">
-                <p className="text-gray-400 text-base font-semibold mb-4">{step.num}</p>
-                <p className="text-white text-base font-bold mb-2">{step.title}</p>
-                <p className="text-gray-400 text-sm leading-relaxed">{step.desc}</p>
-              </div>
-            ))}
-          </div>
-        </div>
- 
-        {/* FAQ */}
-        <div className="max-w-2xl">
-          <p className="text-white text-xl font-bold mb-4">Frequently Asked Questions</p>
-          <FaqAccordion faqs={FAQS} />
-        </div>
- 
-        {/* Leaderboard Section */}
-        <div className="mt-12 pt-8 border-t border-white/10">
-          <h3 className="text-white font-bold text-2xl mb-6">🏆 Leaderboard</h3>
- 
-          {/* Category Selector */}
-          <div className="flex gap-3 overflow-x-auto pb-4 mb-6">
-            {leaderboardData.map((category) => (
-              <button
-                key={category.id}
-                onClick={() => setSelectedCategory(category.id)}
-                className={`px-4 py-2.5 rounded-lg text-sm font-semibold whitespace-nowrap transition-all ${
-                  selectedCategory === category.id
-                    ? 'bg-yellow-400 text-black'
-                    : 'bg-[#0b1d35] text-gray-300 border border-white/10 hover:border-white/30'
-                }`}
-              >
-                {category.name}
-              </button>
-            ))}
-          </div>
- 
-          {/* Leaderboard Table */}
-          <div className="bg-[#0b1d35] border border-white/10 rounded-xl overflow-hidden">
-            {leaderboardLoading ? (
-              <div className="flex items-center justify-center py-16">
-                <div className="text-gray-400">Loading leaderboard...</div>
-              </div>
-            ) : creators.length === 0 ? (
-              <div className="flex items-center justify-center py-16">
-                <div className="text-gray-400">No leaderboard data available</div>
-              </div>
-            ) : (
-              <div className="overflow-x-auto">
-                <table className="w-full text-left text-sm">
-                  <thead>
-                    <tr className="border-b border-white/10 bg-[#0f2847]">
-                      <th className="px-6 py-4 font-semibold text-gray-300">Rank</th>
-                      <th className="px-6 py-4 font-semibold text-gray-300">Creator</th>
-                      <th className="px-6 py-4 font-semibold text-gray-300 text-right">Watches</th>
-                      <th className="px-6 py-4 font-semibold text-gray-300 text-right">Likes</th>
-                      <th className="px-6 py-4 font-semibold text-gray-300 text-right">Votes</th>
-                      <th className="px-6 py-4 font-semibold text-gray-300 text-right">Views</th>
-                      <th className="px-6 py-4 font-semibold text-gray-300 text-right">Plays</th>
-                      <th className="px-6 py-4 font-semibold text-yellow-400 text-right">Total Points</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {creators.map((creator, index) => (
-                      <tr
-                        key={creator.id}
-                        className={`border-b border-white/5 transition-colors ${
-                          index === 0 ? 'bg-yellow-400/10' :
-                          index === 1 ? 'bg-gray-400/5' :
-                          index === 2 ? 'bg-orange-400/5' :
-                          'hover:bg-white/5'
-                        }`}
-                      >
-                        <td className="px-6 py-4">
-                          <div className="flex items-center justify-center">
-                            {index === 0 && <span className="text-2xl">🥇</span>}
-                            {index === 1 && <span className="text-2xl">🥈</span>}
-                            {index === 2 && <span className="text-2xl">🥉</span>}
-                            {index > 2 && <span className="text-gray-400 font-semibold">#{index + 1}</span>}
-                          </div>
-                        </td>
-                        <td className="px-6 py-4">
-                          <div className="flex items-center gap-3">
-                            <div className="w-8 h-8 rounded-full bg-gray-700 overflow-hidden flex-shrink-0 flex items-center justify-center">
-                              {creator.avatar ? (
-                                <img src={creator.avatar} alt={creator.name} className="w-full h-full object-cover" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }} />
-                              ) : (
-                                <span className="text-xs font-bold text-gray-300">{(creator.name || 'U').charAt(0).toUpperCase()}</span>
-                              )}
-                            </div>
-                            <div>
-                              <p className="text-white font-medium truncate">{creator.name || 'Unknown'}</p>
-                              <p className="text-gray-400 text-xs truncate">{creator.email || ''}</p>
-                            </div>
-                          </div>
-                        </td>
-                        <td className="px-6 py-4 text-right text-gray-300">{creator.watch || 0}</td>
-                        <td className="px-6 py-4 text-right text-gray-300">{creator.likes || 0}</td>
-                        <td className="px-6 py-4 text-right text-gray-300">{creator.vote || 0}</td>
-                        <td className="px-6 py-4 text-right text-gray-300">{creator.views || 0}</td>
-                        <td className="px-6 py-4 text-right text-gray-300">{creator.play || 0}</td>
-                        <td className="px-6 py-4 text-right">
-                          <span className="font-bold text-yellow-400">{creator.totals || 0}</span>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
+              )
+            })}
           </div>
         </div>
       </div>
- 
-      <div className="space-y-4"><PrizeSidebar /></div>
+
+      {/* ── Meet the Judges ── */}
+      <div>
+        <h3 className="text-white font-bold text-2xl mb-1">Meet the Judges</h3>
+        <p className="text-gray-400 text-sm mb-6">Experts from film, art, and AI ready to evaluate your cinematic creation.</p>
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+          {JUDGES.map((judge) => (
+            <div key={judge.id} className="bg-[#0b1d35] border border-white/10 rounded-lg overflow-hidden">
+              <div className="relative w-full aspect-[4/3] bg-gray-800">
+                <Image
+                  src={judge.image}
+                  alt={judge.name}
+                  fill
+                  className="object-cover object-top"
+                  onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }}
+                />
+              </div>
+              <div className="p-4">
+                <p className="text-gray-400 text-xs mb-1">{judge.company}</p>
+                <p className="text-white font-bold text-sm mb-2">{judge.name}</p>
+                <p className="text-gray-400 text-xs leading-relaxed">{judge.role}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* ── Partners in the Spotlight ── */}
+      <div>
+        <h3 className="text-white font-bold text-2xl mb-1">Partners in the Spotlight</h3>
+        <p className="text-gray-400 text-sm mb-8">Together with our sponsors, we empower creators to shine.</p>
+        <div className="space-y-6 overflow-hidden">
+          <MarqueeRow />
+          <MarqueeRow reverse />
+        </div>
+      </div>
     </div>
   )
 }
- 
 // ─────────────────────────────────────────────
-// TAB: TERMS
+// MOCK LEADERBOARD DATA
 // ─────────────────────────────────────────────
- 
-function TermsContent() {
+
+const MOCK_LEADERBOARD_CATEGORIES = [
+  { id: '1', name: 'Long AI Film' },
+  { id: '2', name: 'Short AI Film' },
+  { id: '3', name: 'Documentary AI Film' },
+  { id: '4', name: 'Video Clip' },
+  { id: '5', name: 'Video Advertising AI' },
+  { id: '6', name: 'AI Content For Social Media' },
+]
+
+const MOCK_LEADERBOARD_CREATORS = [
+  { id: '1',  name: 'Cody Fisher',     vote: 429, play: 426, likes: 994, watch: 540, views: 185, totals: 883 },
+  { id: '2',  name: 'Jenny Wilson',    vote: 429, play: 426, likes: 994, watch: 540, views: 185, totals: 883 },
+  { id: '3',  name: 'Leslie Alexander',vote: 429, play: 426, likes: 994, watch: 540, views: 185, totals: 883 },
+  { id: '4',  name: 'Robert Fox',      vote: 429, play: 426, likes: 994, watch: 540, views: 185, totals: 883 },
+  { id: '5',  name: 'Ronald Richards', vote: 429, play: 426, likes: 994, watch: 540, views: 185, totals: 883 },
+  { id: '6',  name: 'Kathryn Murphy',  vote: 429, play: 426, likes: 994, watch: 540, views: 185, totals: 883 },
+  { id: '7',  name: 'Cody Fisher',     vote: 429, play: 426, likes: 994, watch: 540, views: 185, totals: 883 },
+  { id: '8',  name: 'Jenny Wilson',    vote: 429, play: 426, likes: 994, watch: 540, views: 185, totals: 883 },
+  { id: '9',  name: 'Leslie Alexander',vote: 429, play: 426, likes: 994, watch: 540, views: 185, totals: 883 },
+  { id: '10', name: 'Robert Fox',      vote: 429, play: 426, likes: 994, watch: 540, views: 185, totals: 883 },
+  { id: '11', name: 'Ronald Richards', vote: 429, play: 426, likes: 994, watch: 540, views: 185, totals: 883 },
+  { id: '12', name: 'Kathryn Murphy',  vote: 429, play: 426, likes: 994, watch: 540, views: 185, totals: 883 },
+  { id: '13', name: 'Robert Fox',      vote: 429, play: 426, likes: 994, watch: 540, views: 185, totals: 883 },
+  { id: '14', name: 'Ronald Richards', vote: 429, play: 426, likes: 994, watch: 540, views: 185, totals: 883 },
+  { id: '15', name: 'Kathryn Murphy',  vote: 429, play: 426, likes: 994, watch: 540, views: 185, totals: 883 },
+]
+
+// ─────────────────────────────────────────────
+// TAB: LEADERBOARD
+// ─────────────────────────────────────────────
+
+function LeaderboardContent() {
+  const [selectedCategory, setSelectedCategory] = useState('1')
+
   return (
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mt-2">
-      <div className="md:col-span-2 space-y-6">
-        <div>
-          <h3 className="text-white font-bold text-2xl mb-1">Terms & Conditions</h3>
-          <p className="text-gray-400 text-sm font-semibold mb-3">Last Updated: January 2026</p>
-          <p className="text-gray-400 text-base leading-relaxed">By submitting an entry to Usky AI Film Awards 2026 ("Awards"), you agree to comply with the following Terms & Conditions.</p>
-        </div>
-        {TERMS_SECTIONS.map((section) => (
-          <div key={section.title}>
-            <h4 className="text-white font-bold text-lg mb-2">{section.title}</h4>
-            <ol className="text-gray-400 text-base space-y-1.5 list-none">
-              {section.items.map((item, j) => <li key={j}>{j + 1}. {item}</li>)}
-            </ol>
+    <div className="space-y-6 mt-2">
+      <StatsBar />
+
+      <div>
+        <h3 className="text-white font-bold text-2xl">Real Time Leaderboard</h3>
+        <p className="text-gray-400 text-sm mt-1">See which films are climbing the ranks based on viewer interaction.</p>
+      </div>
+
+      {/* Category Pills */}
+<div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
+  {MOCK_LEADERBOARD_CATEGORIES.map((cat) => (
+    <button
+      key={cat.id}
+      onClick={() => setSelectedCategory(cat.id)}
+     className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold whitespace-nowrap transition-all shrink-0 ${
+  selectedCategory === cat.id
+    ? 'bg-yellow-400 text-black'
+    : 'bg-transparent text-gray-300 border border-white/20 hover:border-white/40'
+}`}
+    >
+      {/* Ganti div dot → play circle icon */}
+      <svg
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        className="w-4 h-4 shrink-0"
+      >
+        <circle cx="12" cy="12" r="10" />
+        <polygon
+          points="10 8 16 12 10 16 10 8"
+          fill="currentColor"
+          stroke="none"
+        />
+      </svg>
+      {cat.name}
+    </button>
+  ))}
+</div>
+
+      {/* Table */}
+      <div className="overflow-x-auto">
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="border-b border-white/10">
+              <th className="text-left py-3 px-2 text-gray-400 font-semibold w-12">No.</th>
+              <th className="text-left py-3 px-2 text-gray-400 font-semibold">Creator</th>
+              <th className="text-left py-3 px-4 text-gray-400 font-semibold">Most Vote</th>
+              <th className="text-left py-3 px-4 text-gray-400 font-semibold">Most Play</th>
+              <th className="text-left py-3 px-4 text-gray-400 font-semibold">Most Like</th>
+              <th className="text-left py-3 px-4 text-gray-400 font-semibold">Most Watch</th>
+              <th className="text-left py-3 px-4 text-gray-400 font-semibold">Most View</th>
+              <th className="text-right py-3 px-2 text-gray-400 font-semibold">Total</th>
+            </tr>
+          </thead>
+          <tbody>
+            {MOCK_LEADERBOARD_CREATORS.map((creator, index) => (
+              <tr
+                key={creator.id}
+                className="border-b border-white/5 hover:bg-white/[0.02] transition-colors"
+              >
+                <td className="py-4 px-2 text-gray-400 text-sm">{index + 1}.</td>
+                <td className="py-4 px-2 text-white text-sm font-medium">{creator.name}</td>
+                <td className="py-4 px-4 text-gray-300 text-sm">{creator.vote}</td>
+                <td className="py-4 px-4 text-gray-300 text-sm">{creator.play}</td>
+                <td className="py-4 px-4 text-gray-300 text-sm">{creator.likes}</td>
+                <td className="py-4 px-4 text-gray-300 text-sm">{creator.watch}</td>
+                <td className="py-4 px-4 text-gray-300 text-sm">{creator.views}</td>
+                <td className="py-4 px-2 text-right text-yellow-400 font-bold text-sm">{creator.totals}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  )
+}
+
+// ─────────────────────────────────────────────
+// TAB: DIRECTION
+// ─────────────────────────────────────────────
+
+function DirectionContent() {
+  return (
+    <div className="space-y-8 mt-2">
+      <StatsBar />
+
+      {/* ── Section header ── */}
+      <div>
+        <h2 className="text-white font-bold text-2xl mb-2">Direct with the Power of AI</h2>
+        <p className="text-gray-400 text-sm">
+          Explore a new era of filmmaking where AI meets imagination
+        </p>
+      </div>
+
+      {/* ── 4x2 Category Cards Grid ── */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        {DIRECTION_CATEGORIES.map((cat) => (
+          <div
+            key={cat.id}
+            className="bg-[#0b1d35] border border-white/10 rounded-xl p-5 flex flex-col gap-4 hover:border-white/20 transition-colors"
+          >
+            {/* Icon + Title */}
+            <div className="flex items-start gap-3">
+              <div className="w-10 h-10 rounded-lg bg-yellow-400/10 border border-yellow-400/20 flex items-center justify-center shrink-0 text-yellow-400">
+                {cat.icon}
+              </div>
+              <h3 className="text-white font-bold text-sm leading-snug whitespace-pre-line">
+                {cat.title}
+              </h3>
+            </div>
+
+            {/* Description */}
+            <p className="text-gray-400 text-xs leading-relaxed flex-1">
+              {cat.description}
+            </p>
+
+            {/* Tools */}
+            <div>
+              <p className="text-gray-500 text-[10px] uppercase tracking-wider mb-2">Tools</p>
+              <div className="flex flex-wrap gap-1.5">
+                {cat.tools.map((tool) => (
+                  <span
+                    key={tool}
+                    className="border border-gray-300/40 bg-gray-300/30 text-transparent text-[10px] px-5 py-2 rounded-md"
+                  >
+                    {tool}
+                  </span>
+                ))}
+              </div>
+            </div>
           </div>
         ))}
-        <div>
-          <h4 className="text-white font-bold text-xl mb-4">Frequently Asked Questions</h4>
-          <div className="max-w-2xl"><FaqAccordion faqs={FAQS} /></div>
-        </div>
       </div>
-      <div className="space-y-4"><PrizeSidebar /></div>
     </div>
   )
 }
- 
+
 // ─────────────────────────────────────────────
-// TAB: PROJECTS
+// TAB: SCORING
 // ─────────────────────────────────────────────
- 
+
+function ScoringContent() {
+  const JURY_CRITERIA = [
+    { icon: '🤖', label: 'AI Integration',        desc: 'How creatively and effectively AI tools are used in the filmmaking process.',          weight: '25%' },
+    { icon: '💫', label: 'Originality & Creativity', desc: 'Uniqueness of concept, storytelling, and visual execution.',                        weight: '20%' },
+    { icon: '🎬', label: 'Storytelling',            desc: 'Coherence, emotional impact, and clarity of the narrative.',                          weight: '20%' },
+    { icon: '🎛️', label: 'Technical Quality',       desc: 'Quality of editing, sound design, visual production, and overall polish.',            weight: '15%' },
+    { icon: '🎨', label: 'Artistic Style',           desc: 'Composition, color use, pacing, and artistic direction.',                            weight: '10%' },
+    { icon: '💥', label: 'Overall Impact',           desc: 'The lasting impression and audience resonance.',                                      weight: '10%' },
+  ]
+
+  return (
+    <div className="space-y-6 mt-2">
+      <StatsBar />
+
+      {/* ── Header ── */}
+      <div>
+        <h3 className="text-white font-bold text-2xl mb-2">Scoring Breakdown</h3>
+        <p className="text-gray-400 text-sm leading-relaxed">
+          Every great film deserves recognition—from professionals and the public.<br />
+          At USKY AWARD 2025, we combine expert evaluation and audience engagement to choose the best.
+        </p>
+      </div>
+
+      {/* ── Jury Table ── */}
+      <div>
+        <p className="text-white text-base mb-4">
+          <span className="font-bold italic">Judges' Evaluation</span>
+          <span className="text-gray-400 font-normal"> (70% of Final Score)</span>
+        </p>
+
+        <div className="w-full">
+          {/* Table Header */}
+          <div className="grid grid-cols-12 px-4 py-2 text-gray-500 text-xs font-semibold uppercase tracking-wider border-b border-white/10">
+            <div className="col-span-3">Criteria</div>
+            <div className="col-span-7">Description</div>
+            <div className="col-span-2 text-right">Weight</div>
+          </div>
+
+          {/* Table Rows */}
+          {JURY_CRITERIA.map((item, i) => (
+            <div
+              key={i}
+              className={`grid grid-cols-12 px-4 py-4 items-center ${
+                i < JURY_CRITERIA.length - 1 ? 'border-b border-white/5' : ''
+              } hover:bg-white/[0.02] transition-colors`}
+            >
+              <div className="col-span-3 flex items-center gap-2">
+                <span className="text-base">{item.icon}</span>
+                <span className="text-white text-sm font-medium">{item.label}</span>
+              </div>
+              <div className="col-span-7 text-gray-400 text-sm">{item.desc}</div>
+              <div className="col-span-2 text-right text-white font-bold text-sm">{item.weight}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* ── Audience Metrics ── */}
+      <div className="border border-yellow-400/30 bg-yellow-400/5 rounded-xl px-6 py-5">
+        <p className="text-white font-bold text-base mb-1">
+          Audience Metrics <span className="font-normal text-gray-400">(30% of Final Score)</span>
+        </p>
+        <p className="text-gray-400 text-sm">
+          Let the public speak! Audience support on the USKY.AI platform counts too based on{' '}
+          <span className="text-yellow-400 font-semibold">Plays</span>,{' '}
+          <span className="text-yellow-400 font-semibold">Watchlists</span>,{' '}
+          <span className="text-yellow-400 font-semibold">Likes</span>,{' '}
+          <span className="text-yellow-400 font-semibold">Shares</span>, and{' '}
+          <span className="text-yellow-400 font-semibold">Views</span>.
+        </p>
+      </div>
+    </div>
+  )
+}
+// ─────────────────────────────────────────────
+// RULES SECTIONS DATA (updated)
+// ─────────────────────────────────────────────
+
+const RULES_CARDS = [
+  {
+    title: 'Eligibility',
+    icon: (
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5">
+        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+        <polyline points="9 12 11 14 15 10" />
+      </svg>
+    ),
+    items: [
+      'Open to individuals aged 15 years and above.',
+      'Participants may enter as individuals or teams (max 5 members).',
+      'Open to Indonesian citizens and residents only for the 2025 edition.',
+    ],
+  },
+  {
+    title: 'Film Requirements',
+    icon: (
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5">
+        <rect x="2" y="2" width="20" height="20" rx="2" />
+        <line x1="7" y1="2" x2="7" y2="22" />
+        <line x1="17" y1="2" x2="17" y2="22" />
+        <line x1="2" y1="7" x2="7" y2="7" />
+        <line x1="17" y1="7" x2="22" y2="7" />
+        <line x1="2" y1="12" x2="22" y2="12" />
+        <line x1="2" y1="17" x2="7" y2="17" />
+        <line x1="17" y1="17" x2="22" y2="17" />
+      </svg>
+    ),
+    items: [
+      'Maximum duration: 60 minutes (including credits).',
+      'Language: Any, but English or Bahasa Indonesia subtitles are mandatory.',
+      'The film must incorporate AI tools in at least one of these areas: script, visual, animation, voice, or editing.',
+      'Genre must be selected from the provided list.',
+    ],
+  },
+  {
+    title: 'Originality',
+    icon: (
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5">
+        <rect x="5" y="2" width="14" height="20" rx="2" />
+        <polyline points="9 12 11 14 15 10" />
+        <line x1="9" y1="7" x2="15" y2="7" />
+      </svg>
+    ),
+    items: [
+      'All films must be original and not previously published or submitted to other competitions.',
+      'AI-generated content must be originally created by the participant, not reused from pre-existing works.',
+    ],
+  },
+  {
+    title: 'Submission',
+    icon: (
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5">
+        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+        <polyline points="14 2 14 8 20 8" />
+        <line x1="12" y1="18" x2="12" y2="12" />
+        <polyline points="9 15 12 12 15 15" />
+      </svg>
+    ),
+    items: [
+      'Submissions must be uploaded via USKY.AI platform within the designated submission period.',
+      'Each participant/team can submit up to 2 films, but only one can win.',
+      'Late submissions will not be accepted.',
+    ],
+  },
+  {
+    title: 'Judging & Audience Votes',
+    icon: (
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5">
+        <circle cx="9" cy="7" r="4" />
+        <path d="M3 21v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2" />
+        <line x1="19" y1="8" x2="19" y2="14" />
+        <line x1="22" y1="11" x2="16" y2="11" />
+      </svg>
+    ),
+    items: [
+      '70% Jury Score: Based on creativity, use of AI, storytelling, visual execution, and impact.',
+      '30% Audience Score: Based on Plays, Likes, Shares, Views, and Watchlists on USKY.AI platform.',
+      'All decisions by the judges and organizers are final and binding.',
+    ],
+  },
+  {
+    title: 'Rights & Usage',
+    icon: (
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5">
+        <circle cx="12" cy="12" r="10" />
+        <polyline points="9 12 11 14 15 10" />
+      </svg>
+    ),
+    items: [
+      'Participants retain ownership of their films.',
+      'By submitting, participants grant USKY.AI the non-exclusive right to showcase, promote, and distribute the film for non-commercial promotional purposes with proper credit.',
+      'Plagiarism, copyright infringement, offensive content, or violation of any rule will result in immediate disqualification.',
+    ],
+  },
+]
+// ─────────────────────────────────────────────
+// TAB: RULES
+// ─────────────────────────────────────────────
+
+function RulesContent() {
+  return (
+    <div className="space-y-8 mt-2">
+      <StatsBar />
+
+      <div>
+        <h3 className="text-white font-bold text-2xl mb-1">The Rules of the Reel</h3>
+        <p className="text-gray-400 text-sm">From eligibility to judging make sure your masterpiece qualifies for the spotlight.</p>
+      </div>
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        {RULES_CARDS.map((card) => (
+          <div
+            key={card.title}
+            className="bg-[#0b1d35] border border-white/10 rounded-xl p-5 flex flex-col gap-4 hover:border-white/20 transition-colors"
+          >
+            {/* Icon + Title */}
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-lg bg-yellow-400/10 border border-yellow-400/20 flex items-center justify-center shrink-0 text-yellow-400">
+                {card.icon}
+              </div>
+              <h4 className="text-white font-bold text-sm leading-snug">{card.title}</h4>
+            </div>
+
+            {/* Bullet Items */}
+            <ul className="space-y-2">
+              {card.items.map((item, i) => (
+                <li key={i} className="flex items-start gap-2 text-gray-400 text-xs leading-relaxed">
+                  <span className="mt-1.5 w-1.5 h-1.5 rounded-full bg-gray-500 shrink-0" />
+                  {item}
+                </li>
+              ))}
+            </ul>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+// ─────────────────────────────────────────────
+// TAB: FAQ
+// ─────────────────────────────────────────────
+
+function FaqContent() {
+  return (
+    <div className="space-y-8 mt-2">
+      <StatsBar />
+
+      <div>
+        <h3 className="text-white font-bold text-2xl">Frequently Asked Questions</h3>
+      </div>
+
+      <div className="space-y-0 border border-white/10 rounded-xl overflow-hidden">
+        {FAQS.map((faq, i) => (
+          <FaqItem key={i} faq={faq} index={i} isLast={i === FAQS.length - 1} />
+        ))}
+      </div>
+    </div>
+  )
+}
+
+function FaqItem({ faq, index, isLast }: { faq: { q: string; a: string }; index: number; isLast: boolean }) {
+  const [open, setOpen] = useState(index === 0)
+
+  return (
+    <div className={`${!isLast ? 'border-b border-white/10' : ''} ${open ? 'bg-[#0b1d35]' : 'bg-transparent'} transition-colors`}>
+      <button
+        onClick={() => setOpen(!open)}
+        className="w-full flex items-center justify-between px-6 py-5 text-left"
+      >
+        <p className={`text-sm font-semibold ${open ? 'text-white' : 'text-gray-300'}`}>
+          {faq.q}
+        </p>
+        <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ml-4 transition-colors ${open ? 'bg-yellow-400' : 'border border-white/30 bg-transparent'}`}>
+          <span className={`text-lg font-bold leading-none ${open ? 'text-black' : 'text-white'}`}>
+            {open ? '−' : '+'}
+          </span>
+        </div>
+      </button>
+      {open && (
+        <p className="text-gray-400 text-sm leading-relaxed px-6 pb-5">
+          {faq.a}
+        </p>
+      )}
+    </div>
+  )
+}
+
+// ─────────────────────────────────────────────
+// TAB: FILMS
+// ─────────────────────────────────────────────
+
 interface Category {
   id: string
   name: string
 }
- 
+
 const MOCK_AWARDS: AwardSubmission[] = [
   { id: '1', name: 'AI Sunset',          image_url: '/film/film1.png', likes: 234, views: 1205, play: 45 },
   { id: '2', name: 'Digital Dreams',     image_url: '/film/film2.png', likes: 189, views: 987,  play: 32 },
@@ -521,15 +1041,15 @@ const MOCK_AWARDS: AwardSubmission[] = [
   { id: '6', name: 'AI Canvas',          image_url: '/film/film3.png', likes: 298, views: 1456, play: 62 },
   { id: '7', name: 'Machine Creativity', image_url: '/film/film1.png', likes: 213, views: 1122, play: 39 },
 ]
- 
+
 const MOCK_CATEGORIES: Category[] = [
   { id: '1', name: 'Best AI Short Film' },
   { id: '2', name: 'Best AI Advertising' },
   { id: '3', name: 'Best AI Animation' },
   { id: '4', name: 'Best AI Documentary' },
 ]
- 
-function ProjectsContent() {
+
+function FilmsContent() {
   const [filterBy, setFilterBy] = useState('Latest')
   const [selectedCategory, setSelectedCategory] = useState('')
   const [searchQuery, setSearchQuery] = useState('')
@@ -542,23 +1062,21 @@ function ProjectsContent() {
   const [awardDetail, setAwardDetail] = useState<any>(null)
   const [awardDetailLoading, setAwardDetailLoading] = useState(false)
   const [showAwardDetail, setShowAwardDetail] = useState(false)
- 
-  // ─── Track view + play count when card is clicked ───
+
   const handleCardClick = (id: string | number) => {
     fetch(`https://api.usky.ai/award/view?id=${id}`).catch(() => {})
     fetch(`https://api.usky.ai/award/play?id=${id}`).catch(() => {})
   }
- 
+
   const getSortParam = (filter: string) => {
     switch (filter) {
-      case 'Trending':   return 'latest'
-      case 'Most Liked': return 'likes'
+      case 'Trending':    return 'latest'
+      case 'Most Liked':  return 'likes'
       case 'Most Viewed': return 'views'
-      default:           return 'latest'
+      default:            return 'latest'
     }
   }
- 
-  // Fetch categories
+
   useEffect(() => {
     const fetchCategories = async () => {
       try {
@@ -579,8 +1097,7 @@ function ProjectsContent() {
     }
     fetchCategories()
   }, [])
- 
-  // Fetch award detail
+
   useEffect(() => {
     const fetchAwardDetail = async () => {
       try {
@@ -599,8 +1116,7 @@ function ProjectsContent() {
     }
     fetchAwardDetail()
   }, [])
- 
-  // Fetch awards list
+
   useEffect(() => {
     const fetchAwards = async () => {
       try {
@@ -610,13 +1126,11 @@ function ProjectsContent() {
           sort,
           page: currentPage.toString(),
           limit: '7',
-          view_type: 'potrait',
+          view_type: 'landscape',
         })
         if (selectedCategory) params.append('id_category', selectedCategory)
- 
         const response = await fetch(`/api/awards/list?${params.toString()}`)
         const data = await response.json()
- 
         if (data.status === true && data.list && Array.isArray(data.list) && data.list.length > 0) {
           setSubmissions(data.list as AwardSubmission[])
           if (data.meta) setTotalPages(data.meta.total_pages || 1)
@@ -634,17 +1148,17 @@ function ProjectsContent() {
     }
     fetchAwards()
   }, [filterBy, selectedCategory, currentPage])
- 
+
   const filteredSubmissions = useMemo(() => {
     if (!searchQuery) return submissions
     const q = searchQuery.toLowerCase()
     return submissions.filter((s) => s.name.toLowerCase().includes(q))
   }, [submissions, searchQuery])
- 
+
   return (
     <div className="space-y-8">
- 
-      {/* Award Detail Section */}
+
+      {/* ── Award Detail Section ── */}
       {showAwardDetail && awardDetail && (
         <div className="bg-[#0b1d35] border border-white/10 rounded-xl overflow-hidden">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 p-6 md:p-8">
@@ -703,8 +1217,6 @@ function ProjectsContent() {
               )}
             </div>
           </div>
- 
-          {/* Related Awards */}
           {awardDetail.relate && Array.isArray(awardDetail.relate) && awardDetail.relate.length > 0 && (
             <div className="border-t border-white/10 p-6 md:p-8">
               <h3 className="text-xl font-bold text-white mb-4">Related Awards</h3>
@@ -749,8 +1261,8 @@ function ProjectsContent() {
           )}
         </div>
       )}
- 
-      {/* Stats bar */}
+
+      {/* ── Stats bar ── */}
       <div className="flex flex-col lg:flex-row items-stretch gap-4 w-full">
         <div className="relative flex items-center justify-between overflow-hidden bg-[#0b1d35] border border-white/10 rounded-xl px-6 py-5 lg:flex-[2] w-full shrink-0">
           <div className="absolute inset-0 overflow-hidden pointer-events-none">
@@ -782,69 +1294,39 @@ function ProjectsContent() {
           <span className="text-black font-bold text-sm">Submit Now</span>
         </button>
       </div>
- 
-      {/* Submissions Grid */}
+
+      {/* ── Submissions Grid ── */}
       <div>
         <h2 className="text-base font-bold text-white mb-4">All Submission</h2>
- 
-        {/* Search & Filter */}
-        <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 mb-6 w-full">
-          <div className="relative w-full md:w-[280px]">
-            <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" />
-            <input
-              type="text"
-              placeholder="Search..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full bg-transparent border border-white/15 rounded-lg pl-9 pr-4 py-2 text-white placeholder-gray-500 text-sm focus:outline-none focus:border-white/30 transition-colors"
-            />
-          </div>
-          <div className="flex flex-col md:flex-row items-start md:items-center gap-2.5 shrink-0 w-full md:w-auto">
-            {/* Category Filter */}
-            <div className="flex items-center gap-1.5 border border-white/15 rounded-lg px-3 py-2 bg-transparent w-full md:w-auto">
-              <svg className="w-3.5 h-3.5 text-gray-400 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                <rect x="3" y="3" width="7" height="7" /><rect x="14" y="3" width="7" height="7" /><rect x="14" y="14" width="7" height="7" /><rect x="3" y="14" width="7" height="7" />
-              </svg>
-              <div className="relative flex-1 md:flex-none min-w-[150px]">
-                <select
-                  value={selectedCategory}
-                  onChange={(e) => { setSelectedCategory(e.target.value); setCurrentPage(1) }}
-                  disabled={categoriesLoading}
-                  className="w-full bg-[#0b1d35] text-gray-400 text-sm appearance-none cursor-pointer focus:outline-none pr-5 py-0 truncate [&>option]:bg-[#0b1d35] [&>option]:text-white"
-                >
-                  <option value="">All Categories</option>
-                  {categories.map((cat) => (
-                    <option key={cat.id} value={cat.id}>{cat.name}</option>
-                  ))}
-                </select>
-                <svg className="w-3 h-3 absolute right-0 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none shrink-0" viewBox="0 0 20 20" fill="currentColor">
-                  <path fillRule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.17l3.71-3.94a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" />
-                </svg>
-              </div>
-            </div>
- 
-            {/* Sort Filter */}
-            <div className="flex items-center gap-1.5 border border-white/15 rounded-lg px-3 py-2 bg-transparent w-full md:w-auto">
-              <svg className="w-3.5 h-3.5 text-gray-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                <line x1="4" y1="6" x2="20" y2="6" /><line x1="8" y1="12" x2="16" y2="12" /><line x1="11" y1="18" x2="13" y2="18" />
-              </svg>
-              <div className="relative flex-1 md:flex-none">
-                <select
-                  value={filterBy}
-                  onChange={(e) => setFilterBy(e.target.value)}
-                  className="bg-transparent text-gray-400 text-sm appearance-none cursor-pointer focus:outline-none pr-5 w-full md:w-auto [&>option]:bg-[#0b1d35] [&>option]:text-white"
-                >
-                  {FILTER_OPTIONS.map((opt) => <option key={opt} value={opt}>{opt}</option>)}
-                </select>
-                <svg className="w-3 h-3 absolute right-0 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" viewBox="0 0 20 20" fill="currentColor">
-                  <path fillRule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.17l3.71-3.94a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" />
-                </svg>
-              </div>
-            </div>
-          </div>
+
+        {/* ── Category Pills ── */}
+        <div className="flex items-center gap-2 overflow-x-auto pb-3 mb-5 scrollbar-hide">
+          <button
+            onClick={() => { setSelectedCategory(''); setCurrentPage(1) }}
+            className={`px-4 py-2 rounded-lg text-sm font-semibold whitespace-nowrap transition-all shrink-0 ${
+              selectedCategory === ''
+                ? 'bg-yellow-400 text-black border border-yellow-400'
+                : 'bg-transparent text-gray-300 border border-white/20 hover:border-white/40 hover:text-white'
+            }`}
+          >
+            All Category
+          </button>
+          {categories.map((cat) => (
+            <button
+              key={cat.id}
+              onClick={() => { setSelectedCategory(cat.id); setCurrentPage(1) }}
+              className={`px-4 py-2 rounded-lg text-sm font-semibold whitespace-nowrap transition-all shrink-0 ${
+                selectedCategory === cat.id
+                  ? 'bg-yellow-400 text-black border border-yellow-400'
+                  : 'bg-transparent text-gray-300 border border-white/20 hover:border-white/40 hover:text-white'
+              }`}
+            >
+              {cat.name}
+            </button>
+          ))}
         </div>
- 
-        {/* Awards Grid */}
+
+        {/* ── Grid Cards ── */}
         {loading ? (
           <div className="flex items-center justify-center py-16">
             <div className="text-gray-400">Loading awards...</div>
@@ -854,14 +1336,14 @@ function ProjectsContent() {
             <div className="text-gray-400">No awards found</div>
           </div>
         ) : (
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 md:gap-4 w-full">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 md:gap-4 w-full">
             {filteredSubmissions.map((submission) => (
               <div
                 key={submission.id}
-                className="group relative overflow-hidden rounded-lg bg-[#1e293b] hover:shadow-lg transition-all duration-300 cursor-pointer w-full"
+                className="group relative overflow-hidden rounded-lg bg-[#1e293b] hover:shadow-lg transition-all duration-300 cursor-pointer w-full border border-white/8 hover:border-white/20"
                 onClick={() => handleCardClick(submission.id)}
               >
-                <div className="relative w-full aspect-[3/4] overflow-hidden bg-gray-800">
+                <div className="relative w-full aspect-video overflow-hidden bg-gray-800">
                   <Image
                     src={submission.image_url || '/film/film1.png'}
                     alt={submission.name}
@@ -893,40 +1375,38 @@ function ProjectsContent() {
           </div>
         )}
       </div>
- 
-      {/* Pagination */}
-      <div className="flex justify-center items-center gap-4 pt-8">
-        <button
-          onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-          disabled={currentPage === 1}
-          className="flex items-center gap-2 px-6 py-2.5 bg-[#0a1628] border border-white/10 text-gray-300 rounded-lg text-sm font-semibold hover:border-yellow-500/50 hover:text-yellow-400 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          Previous
-        </button>
-        <span className="text-gray-400 text-sm">Page {currentPage} of {totalPages}</span>
+
+      {/* ── Load More ── */}
+      <div className="flex justify-center pt-8">
         <button
           onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
           disabled={currentPage === totalPages}
-          className="flex items-center gap-2 px-6 py-2.5 bg-[#0a1628] border border-white/10 text-gray-300 rounded-lg text-sm font-semibold hover:border-yellow-500/50 hover:text-yellow-400 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          className="flex items-center gap-2 px-8 py-3 bg-[#0b1d35] border border-white/15 text-gray-300 rounded-xl text-sm font-semibold hover:border-white/30 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          Next
+          <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+            <line x1="12" y1="2" x2="12" y2="6"/><line x1="12" y1="18" x2="12" y2="22"/>
+            <line x1="4.93" y1="4.93" x2="7.76" y2="7.76"/><line x1="16.24" y1="16.24" x2="19.07" y2="19.07"/>
+            <line x1="2" y1="12" x2="6" y2="12"/><line x1="18" y1="12" x2="22" y2="12"/>
+            <line x1="4.93" y1="19.07" x2="7.76" y2="16.24"/><line x1="16.24" y1="7.76" x2="19.07" y2="4.93"/>
+          </svg>
+          Load More
         </button>
       </div>
     </div>
   )
 }
- 
+
 // ─────────────────────────────────────────────
 // PAGE
 // ─────────────────────────────────────────────
- 
+
 export default function AwardsPage() {
-  const [activeTab, setActiveTab] = useState('Projects')
- 
+  const [activeTab, setActiveTab] = useState('Films')
+
   return (
     <div className="min-h-screen bg-[#050d1a] text-white font-sans">
       <Header />
- 
+
       {/* ── HERO ── */}
       <div className="relative w-full overflow-hidden bg-[#050d1a]" style={{ minHeight: '280px' }}>
         <Image src="/images/awards/imageawards.png" alt="Awards hero" fill className="object-cover object-center opacity-50" priority />
@@ -956,16 +1436,16 @@ export default function AwardsPage() {
           <p className="text-gray-400 text-sm md:text-base leading-relaxed">Your film could be the next viral AI masterpiece — seen, judged, and celebrated across Indonesia.</p>
         </div>
       </div>
- 
+
       {/* ── TABS ── */}
       <div className="bg-[#050d1a] py-4">
-        <div className="px-6 md:px-8">
-          <div className="inline-flex items-center border border-white/15 rounded-full bg-[#0b1d35]/60 p-1 gap-1">
+        <div className="px-6 md:px-8 overflow-x-auto">
+          <div className="inline-flex items-center border border-white/15 rounded-full bg-[#0b1d35]/60 p-1 gap-1 min-w-max">
             {TABS.map((tab) => (
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab)}
-                className={`relative px-6 py-2 text-sm font-semibold rounded-full transition-all duration-200 ${
+                className={`relative px-5 py-2 text-sm font-semibold rounded-full transition-all duration-200 whitespace-nowrap ${
                   activeTab === tab ? 'text-white' : 'text-gray-500 hover:text-gray-300'
                 }`}
               >
@@ -978,22 +1458,19 @@ export default function AwardsPage() {
           </div>
         </div>
       </div>
- 
+
       {/* ── TAB CONTENT ── */}
       <div className="px-6 md:px-8 pb-20 mt-6 space-y-6">
-        {activeTab === 'Projects' && <ProjectsContent />}
-        {activeTab === 'Theme'    && <ThemeContent />}
-        {activeTab === 'Terms'    && <TermsContent />}
+        {activeTab === 'Films'       && <FilmsContent />}
+        {activeTab === 'Leaderboard' && <LeaderboardContent />}
+        {activeTab === 'Details'     && <DetailsContent />}
+        {activeTab === 'Direction'   && <DirectionContent />}
+        {activeTab === 'Scoring'     && <ScoringContent />}
+        {activeTab === 'Rules'       && <RulesContent />}
+        {activeTab === 'FAQ'         && <FaqContent />}
       </div>
- 
+
       <Footer />
     </div>
   )
 }
- 
-
-
-
-
-
-
