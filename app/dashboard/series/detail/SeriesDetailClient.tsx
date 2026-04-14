@@ -1,7 +1,7 @@
 // app/dashboard/series/detail/SeriesDetailClient.tsx
 'use client'
 
-import React, { useState, useEffect, Suspense, useCallback } from 'react'
+import React, { useState, useEffect, Suspense, useCallback, useRef } from 'react'
 import { useSearchParams } from 'next/navigation'
 import Image from 'next/image'
 import Link from 'next/link' 
@@ -79,6 +79,13 @@ const truncateText = (text: string | null | undefined, maxLength: number = 200) 
   return plainText.substring(0, maxLength).trim() + '...'
 }
 
+const normalizeRating = (value: string | number | null | undefined): number => {
+  const parsed = Number(value)
+
+  if (!Number.isFinite(parsed) || parsed <= 0) return 0
+  return Math.min(5, Math.floor(parsed))
+}
+
 function SeriesDetailContent() {
   const searchParams = useSearchParams()
   const seriesId = searchParams.get('id_group')
@@ -94,6 +101,12 @@ function SeriesDetailContent() {
   const [loadingComments, setLoadingComments] = useState(true)
   const [newComment, setNewComment] = useState('')
   const [isSubmittingComment, setIsSubmittingComment] = useState(false)
+  const [rating, setRating] = useState(0)
+  const [isSubmittingRating, setIsSubmittingRating] = useState(false)
+  const [showRatingToast, setShowRatingToast] = useState(false)
+  const [ratingToastMessage, setRatingToastMessage] = useState('Thank You for your rating')
+  const [ratingToastType, setRatingToastType] = useState<'success' | 'error'>('success')
+  const ratingToastTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const [activeVideoId, setActiveVideoId] = useState<string | null>(null)
   const [activeVideo, setActiveVideo] = useState<string | null>(null)
@@ -126,11 +139,13 @@ function SeriesDetailContent() {
           setActiveVideo(firstEpisode.video_url)
           setActiveVideoPoster(firstEpisode.image_landscape_url || firstEpisode.image_url)
           setIsInWatchlist(firstEpisode.watch_me === '1')
+          setRating(normalizeRating(firstEpisode.rates))
         } else {
           setActiveVideoId(json.data.id)
           setActiveVideo(json.data.video_url)
           setActiveVideoPoster(json.data.image_landscape_url || json.data.image_url)
           setIsInWatchlist(json.data.watch_me === '1')
+          setRating(normalizeRating(json.data.rates))
         }
       } else {
         setError(json.message || "Series not found")
@@ -175,6 +190,14 @@ function SeriesDetailContent() {
   useEffect(() => {
     fetchComments()
   }, [fetchComments])
+
+  useEffect(() => {
+    return () => {
+      if (ratingToastTimerRef.current) {
+        clearTimeout(ratingToastTimerRef.current)
+      }
+    }
+  }, [])
 
   const handleSubmitComment = async () => {
     if (!newComment.trim() || !activeVideoId) {
@@ -222,6 +245,7 @@ function SeriesDetailContent() {
     setActiveVideo(episode.video_url)
     setActiveVideoPoster(episode.image_landscape_url || episode.image_url)
     setIsInWatchlist(episode.watch_me === '1')
+    setRating(normalizeRating(episode.rates))
     window.scrollTo({ top: 0, behavior: 'smooth' })
   }
 
@@ -345,6 +369,69 @@ function SeriesDetailContent() {
     } catch (error) {
       console.error('Error updating watchlist:', error)
       alert('Failed to update watchlist')
+    }
+  }
+
+  const handleRateSeries = async (stars: number) => {
+    const showToast = (message: string, type: 'success' | 'error' = 'success') => {
+      setRatingToastMessage(message)
+      setRatingToastType(type)
+      setShowRatingToast(true)
+
+      if (ratingToastTimerRef.current) {
+        clearTimeout(ratingToastTimerRef.current)
+      }
+
+      ratingToastTimerRef.current = setTimeout(() => {
+        setShowRatingToast(false)
+      }, 2500)
+    }
+
+    if (!activeVideoId) {
+      showToast('ID episode tidak ditemukan', 'error')
+      return
+    }
+
+    try {
+      const normalizedStars = Number(stars)
+      if (!Number.isFinite(normalizedStars) || normalizedStars < 1 || normalizedStars > 5) {
+        showToast('Rating harus bernilai 1 sampai 5', 'error')
+        return
+      }
+
+      const token = localStorage.getItem('user_token')
+      if (!token) {
+        showToast('Silakan login terlebih dahulu untuk memberikan rating', 'error')
+        return
+      }
+
+      setIsSubmittingRating(true)
+
+      const response = await fetch('/api/series/rating', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          id: activeVideoId,
+          stars: normalizedStars,
+        }),
+      })
+
+      const data = await response.json()
+
+      if (response.ok && data.status === true) {
+        setRating(normalizedStars)
+        showToast('Thank You for your rating', 'success')
+      } else {
+        showToast(data.message || 'Gagal mengirim rating', 'error')
+      }
+    } catch (error) {
+      console.error('Error submitting series rating:', error)
+      showToast('Terjadi kesalahan saat mengirim rating', 'error')
+    } finally {
+      setIsSubmittingRating(false)
     }
   }
 
@@ -497,6 +584,39 @@ function SeriesDetailContent() {
             </div>
 
             <div className="bg-[#0a1628]/50 p-6 rounded-2xl border border-white/5">
+              <label className="text-xs sm:text-sm font-semibold mb-3 block">Rating This Series</label>
+              <div className="flex items-center gap-2 mb-4">
+                {[1, 2, 3, 4, 5].map((star) => (
+                  <button
+                    key={star}
+                    onClick={() => handleRateSeries(star)}
+                    disabled={isSubmittingRating}
+                    className={`text-xl sm:text-2xl transition-colors ${
+                      star <= rating ? 'text-yellow-400' : 'text-white/25'
+                    } ${isSubmittingRating ? 'opacity-60 cursor-not-allowed' : ''}`}
+                    aria-label={`Rate ${star} stars`}
+                  >
+                    ★
+                  </button>
+                ))}
+              </div>
+
+              <div
+                className={`mb-4 rounded-xl border backdrop-blur-md px-4 py-3 text-sm shadow-[0_10px_30px_rgba(0,0,0,0.25)] transition-all duration-300 ${
+                  ratingToastType === 'success'
+                    ? 'border-emerald-300/30 bg-emerald-500/15 text-emerald-100'
+                    : 'border-rose-300/30 bg-rose-500/15 text-rose-100'
+                } ${
+                  showRatingToast
+                    ? 'opacity-100 translate-y-0 scale-100 animate-pulse'
+                    : 'opacity-0 -translate-y-2 scale-95 pointer-events-none h-0 p-0 border-0 mb-0'
+                }`}
+                role="status"
+                aria-live="polite"
+              >
+                {ratingToastMessage}
+              </div>
+
               <textarea 
                 value={newComment}
                 onChange={(e) => setNewComment(e.target.value)}
