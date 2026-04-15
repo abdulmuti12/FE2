@@ -1153,10 +1153,10 @@ const MOCK_AWARDS: AwardSubmission[] = [
 ]
 
 const MOCK_CATEGORIES: Category[] = [
-  { id: '1', name: 'Best AI Short Film' },
-  { id: '2', name: 'Best AI Advertising' },
-  { id: '3', name: 'Best AI Animation' },
-  { id: '4', name: 'Best AI Documentary' },
+  // { id: '1', name: 'Best AI Short Film' },
+  // { id: '2', name: 'Best AI Advertising' },
+  // { id: '3', name: 'Best AI Animation' },
+  // { id: '4', name: 'Best AI Documentary' },
 ]
 
 function FilmsContent() {
@@ -1191,16 +1191,28 @@ function FilmsContent() {
     const fetchCategories = async () => {
       try {
         setCategoriesLoading(true)
-        const response = await fetch('/api/awards/category')
+        const token = localStorage.getItem('user_token')
+
+        if (!token) {
+          setCategories([])
+          return
+        }
+
+        const response = await fetch('/api/award/category', {
+          method: 'GET',
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        })
         const data = await response.json()
         if (data.status === true && data.list && Array.isArray(data.list) && data.list.length > 0) {
           setCategories(data.list as Category[])
         } else {
-          setCategories(MOCK_CATEGORIES)
+          setCategories([])
         }
       } catch (error) {
         console.error('[v0] Failed to fetch categories:', error)
-        setCategories(MOCK_CATEGORIES) 
+        setCategories([])
       } finally {
         setCategoriesLoading(false)
       }

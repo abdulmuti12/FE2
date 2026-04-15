@@ -13,6 +13,8 @@ export function Header() {
   const [userDropdownOpen, setUserDropdownOpen] = useState(false) // desktop dropdown
   const [mobileUserMenuOpen, setMobileUserMenuOpen] = useState(false) // mobile drawer
   const [isSearchActive, setIsSearchActive] = useState(false)
+  const [displayName, setDisplayName] = useState('User')
+  const [username, setUsername] = useState('user')
 
   const dropdownRef = useRef<HTMLDivElement>(null)
   const searchInputRef = useRef<HTMLInputElement>(null)
@@ -40,6 +42,30 @@ export function Header() {
       searchInputRef.current.focus()
     }
   }, [isSearchActive])
+
+  useEffect(() => {
+    const rawProfile = localStorage.getItem('user_profile')
+    if (!rawProfile) return
+
+    try {
+      const profile = JSON.parse(rawProfile)
+      const rawName = String(profile?.name || '').trim()
+      const rawEmail = String(profile?.email || '').trim()
+      const rawUsername = String(profile?.username || '').trim()
+
+      const resolvedDisplayName = rawName || rawUsername || 'User'
+      const resolvedUsername =
+        rawUsername ||
+        (rawEmail ? rawEmail.split('@')[0] : '') ||
+        rawName.toLowerCase().replace(/\s+/g, '') ||
+        'user'
+
+      setDisplayName(resolvedDisplayName)
+      setUsername(resolvedUsername)
+    } catch (error) {
+      console.error('Failed to parse user_profile:', error)
+    }
+  }, [])
 
   // lock body scroll when mobile drawer open
   useEffect(() => {
@@ -88,8 +114,8 @@ export function Header() {
                 <User className="w-5 h-5 text-white/80" />
               </div>
               <div className="min-w-0">
-                <p className="text-white font-semibold leading-tight">leerob</p>
-                <p className="text-white/60 text-sm truncate">leerob@example.com</p>
+                <p className="text-white font-semibold leading-tight">{displayName}</p>
+                <p className="text-white/60 text-sm truncate">@{username}</p>
               </div>
 
               <button
@@ -104,7 +130,7 @@ export function Header() {
             {/* menu items */}
             <div className="py-2">
               <Link
-                href="#"
+                href="/dashboard/event/ticket"
                 onClick={closeMobileMenu}
                 className="flex items-center gap-4 px-5 py-4 text-white/90 hover:bg-white/5 transition-colors"
               >
@@ -296,14 +322,17 @@ export function Header() {
               {userDropdownOpen && (
                 <div className="absolute right-0 mt-3 w-64 bg-[#1a1a2e] border border-white/10 rounded-xl shadow-2xl overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
                   <div className="px-6 py-4 border-b border-white/10">
-                    <p className="font-semibold text-white text-sm">leerob</p>
-                    <p className="text-xs text-gray-400">leerob@example.com</p>
+                    <p className="font-semibold text-white text-sm">{displayName}</p>
+                    <p className="text-xs text-gray-400">@{username}</p>
                   </div>
 
                   <div className="py-2">
-                    <button className="w-full flex items-center gap-4 px-6 py-3 text-sm text-gray-300 hover:bg-white/5 transition-colors">
+                    <Link
+                      href="/dashboard/event/ticket"
+                      className="w-full flex items-center gap-4 px-6 py-3 text-sm text-gray-300 hover:bg-white/5 transition-colors"
+                    >
                       <Calendar className="w-5 h-5" /> My Event
-                    </button>
+                    </Link>
                     <button className="w-full flex items-center gap-4 px-6 py-3 text-sm text-gray-300 hover:bg-white/5 transition-colors">
                       <Ticket className="w-5 h-5" /> My Referral
                     </button>
