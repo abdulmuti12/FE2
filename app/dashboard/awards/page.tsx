@@ -15,7 +15,6 @@ interface AwardSubmission {
   play?: number | string
 }
 
-
 const TABS = ['Films', 'Leaderboard', 'Details', 'Direction', 'Scoring', 'Rules', 'FAQ']
 
 const PRIZE_BREAKDOWN = [
@@ -73,10 +72,10 @@ const FAQS = [
 ]
 
 const TIMELINE = [
-  { label: 'Submission',      date: 'October 20, 2025 – May 31, 2026' },
-  { label: 'Public Voting',   date: 'October 20, 2025 – June 18, 2026' },
-  { label: 'Jury Evaluating', date: 'June 20 – June 30, 2026' },
-  { label: 'Finalist Reveal', date: 'July 2026' },
+  { label: 'Submission',      date: '1–30 July 2025' },
+  { label: 'Public Voting',   date: '15 July – 15 August 2025' },
+  { label: 'Jury Evaluating', date: '16 August 2025' },
+  { label: 'Finalist Reveal', date: '16 August 2025' },
 ]
 
 const JUDGING_CRITERIA = [
@@ -215,17 +214,15 @@ const DIRECTION_CATEGORIES = [
     tools: ['Suno AI', 'Udio', 'AIVA', 'Soundraw', 'Boomy','ChatGPT','Gemini'],
   },
   {
-    id: 7,
-    title: 'Editing &\nPost-Production',
-    icon: (
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-6 h-6">
-      {/* Document/File shape */}
-      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-      {/* Folded corner */}
-      <polyline points="14 2 14 8 20 8" />
-      {/* Pencil icon */}
-      <path d="M16 13l-6 6-3-3 6-6" />
-      <path d="M14.5 9.5l1.5 1.5" />
+  id: 7,
+  title: 'Editing &\nPost-Production',
+  icon: (
+    <svg viewBox="0 0 64 64" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" className="w-6 h-6">
+      {/* Dokumen */}
+      <path d="M20 8h20l8 8v32a4 4 0 0 1-4 4H20a4 4 0 0 1-4-4V12a4 4 0 0 1 4-4z" />
+      <polyline points="40 8 40 16 48 16" />
+      {/* Pensil */}
+      <path d="M22 42l14-14 6 6-14 14H22v-6z" />
     </svg>
   ),
     description: 'Start with a strong foundation—your story. These AI tools assist in generating creative ideas, writing compelling dialogues, and structuring a screenplay. From brainstorming to the final draft, let AI guide your narrative process.',
@@ -258,31 +255,28 @@ const DIRECTION_CATEGORIES = [
 const JUDGES = [
   {
     id: 1,
-    company: 'Perusahaan',
-    name: 'Irakli Beridze',
-    role: 'Head of Centre for Artificial Intelligence and Robotics, United Nations Interregional Crime and Justice Research Institute (UNICRI)',
-    image: '/images/awards/judges1.png',
+    company: 'Ketua Umum',
+    name: 'Adisurya Abdy',
+    role: 'Perkumpulan Tenaga Ahli Televisi dan Film Indonesia (PATFI)',
+    image: '/images/awards/adi.png',
   },
   {
     id: 2,
-    company: 'Perusahaan',
-    name: 'Irakli Beridze',
-    role: 'Head of Centre for Artificial Intelligence and Robotics, United Nations Interregional Crime and Justice Research Institute (UNICRI)',
-    image: '/images/awards/judges2.png',
+    name: 'Syaifullah Agam, PhD',
+    role: 'Direktur Film Kemenbud RI',
+    image: '/images/awards/syaifullah2.png',
   },
   {
     id: 3,
-    company: 'Perusahaan',
-    name: 'Irakli Beridze',
-    role: 'Head of Centre for Artificial Intelligence and Robotics, United Nations Interregional Crime and Justice Research Institute (UNICRI)',
-    image: '/images/awards/judges2.png',
+    name: 'Sandiaga Uno',
+    role: 'Dewan Penasehat USKY Al Film Award',
+    image: '/images/awards/sandiaga5.png',
   },
   {
     id: 4,
-    company: 'Perusahaan',
-    name: 'Irakli Beridze',
-    role: 'Head of Centre for Artificial Intelligence and Robotics, United Nations Interregional Crime and Justice Research Institute (UNICRI)',
-    image: '/images/awards/judges3.png',
+    name: 'Iwan Setiawan',
+    role: 'CEO Marketeers & MarkPlus, Inc.',
+    image: '/images/awards/iwan3.png',
   },
 ]
 
@@ -428,7 +422,7 @@ function PrizeSidebar() {
               <Trophy className="w-4 h-4 text-yellow-400 shrink-0" />
               <span className="text-white text-sm font-bold">Prize Pool</span>
             </div>
-            <span className="text-white font-extrabold text-lg relative z-10">IDR 1,000,000,000</span>
+            <span className="text-white font-extrabold text-lg relative z-10">200 USKY</span>
           </div>
         </div>
         <div className="mx-3 mt-2 mb-3 border border-white/10 rounded-xl overflow-hidden">
@@ -446,14 +440,14 @@ function PrizeSidebar() {
             <FileText className="w-3.5 h-3.5 text-gray-400" />
             <p className="text-gray-400 text-[10px] uppercase tracking-wider">Submission</p>
           </div>
-          <p className="text-white font-extrabold text-lg leading-none">511</p>
+          <p className="text-white font-extrabold text-lg leading-none">245</p>
         </div>
         <div className="bg-[#0b1d35] border border-white/10 rounded-xl px-4 py-3">
           <div className="flex items-center gap-1.5 mb-1.5">
             <Clock className="w-3.5 h-3.5 text-gray-400" />
             <p className="text-gray-400 text-[10px] uppercase tracking-wider">Ends in</p>
           </div>
-          <p className="text-white font-extrabold text-lg leading-none">64 Days</p>
+          <p className="text-white font-extrabold text-lg leading-none">4 Days</p>
         </div>
       </div>
       <button className="w-full bg-yellow-400 hover:bg-yellow-300 active:bg-yellow-500 text-black font-bold text-sm py-3 rounded-xl transition-colors">
@@ -561,10 +555,12 @@ function DetailsContent() {
                   onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }}
                 />
               </div>
-              <div className="p-4">
-                <p className="text-gray-400 text-xs mb-1">{judge.company}</p>
+             <div className="p-4">
+                <p className="text-gray-400 text-xs mb-1 min-h-[16px]">
+                {judge.company ?? ''}
+                </p>
                 <p className="text-white font-bold text-sm mb-2">{judge.name}</p>
-                <p className="text-gray-400 text-xs leading-relaxed">{judge.role}</p>
+                <p className="text-gray-400 text-sm leading-relaxed">{judge.role}</p>
               </div>
             </div>
           ))}
@@ -1153,10 +1149,10 @@ const MOCK_AWARDS: AwardSubmission[] = [
 ]
 
 const MOCK_CATEGORIES: Category[] = [
-  // { id: '1', name: 'Best AI Short Film' },
-  // { id: '2', name: 'Best AI Advertising' },
-  // { id: '3', name: 'Best AI Animation' },
-  // { id: '4', name: 'Best AI Documentary' },
+  { id: '1', name: 'Best AI Short Film' },
+  { id: '2', name: 'Best AI Advertising' },
+  { id: '3', name: 'Best AI Animation' },
+  { id: '4', name: 'Best AI Documentary' },
 ]
 
 function FilmsContent() {
@@ -1191,28 +1187,16 @@ function FilmsContent() {
     const fetchCategories = async () => {
       try {
         setCategoriesLoading(true)
-        const token = localStorage.getItem('user_token')
-
-        if (!token) {
-          setCategories([])
-          return
-        }
-
-        const response = await fetch('/api/award/category', {
-          method: 'GET',
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        })
+        const response = await fetch('/api/awards/category')
         const data = await response.json()
         if (data.status === true && data.list && Array.isArray(data.list) && data.list.length > 0) {
           setCategories(data.list as Category[])
         } else {
-          setCategories([])
+          setCategories(MOCK_CATEGORIES)
         }
       } catch (error) {
         console.error('[v0] Failed to fetch categories:', error)
-        setCategories([])
+        setCategories(MOCK_CATEGORIES) 
       } finally {
         setCategoriesLoading(false)
       }
@@ -1244,38 +1228,25 @@ function FilmsContent() {
       try {
         setLoading(true)
         const sort = getSortParam(filterBy)
-        const token = localStorage.getItem('user_token')
-
-        if (!token) {
-          setSubmissions([])
-          setTotalPages(1)
-          return
-        }
-
-        const params = new URLSearchParams({
+       const params = new URLSearchParams({
           sort,
           page: currentPage.toString(),
-          limit: '15',
-          view_type: 'potrait',
+          limit: '7',
+          view_type: 'potrait', // ← ganti ini
         })
         if (selectedCategory) params.append('id_category', selectedCategory)
-        const response = await fetch(`/api/awards/list?${params.toString()}`, {
-          method: 'GET',
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        })
+        const response = await fetch(`/api/awards/list?${params.toString()}`)
         const data = await response.json()
         if (data.status === true && data.list && Array.isArray(data.list)) {
           setSubmissions(data.list as AwardSubmission[])
           if (data.meta) setTotalPages(data.meta.total_pages || 1)
         } else {
-          setSubmissions([])
+          setSubmissions(MOCK_AWARDS)
           setTotalPages(1)
         }
       } catch (error) {
         console.error('[v0] Failed to fetch awards:', error)
-        setSubmissions([])
+        setSubmissions(MOCK_AWARDS)
         setTotalPages(1)
       } finally {
         setLoading(false)
@@ -1289,27 +1260,6 @@ function FilmsContent() {
     const q = searchQuery.toLowerCase()
     return submissions.filter((s) => s.name.toLowerCase().includes(q))
   }, [submissions, searchQuery])
-
-  const paginationItems = useMemo<(number | string)[]>(() => {
-    if (totalPages <= 1) return [1]
-
-    const pages = new Set<number>([1, totalPages, currentPage - 1, currentPage, currentPage + 1])
-    const sortedPages = Array.from(pages)
-      .filter((p) => p >= 1 && p <= totalPages)
-      .sort((a, b) => a - b)
-
-    const items: (number | string)[] = []
-    for (let i = 0; i < sortedPages.length; i += 1) {
-      const page = sortedPages[i]
-      const prev = sortedPages[i - 1]
-      if (i > 0 && page - prev > 1) {
-        items.push('...')
-      }
-      items.push(page)
-    }
-
-    return items
-  }, [currentPage, totalPages])
 
   return (
     <div className="space-y-8">
@@ -1492,14 +1442,14 @@ function FilmsContent() {
             <div className="text-gray-400">No awards found</div>
           </div>
         ) : (
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3 md:gap-4 transition-all duration-500 w-full">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 md:gap-4 w-full">
             {filteredSubmissions.map((submission) => (
               <div
                 key={submission.id}
-                className="group relative overflow-hidden rounded-xl bg-[#0f172a] hover:shadow-lg transition-all duration-300 cursor-pointer w-full border border-white/8 hover:border-white/20"
+                className="group relative overflow-hidden rounded-lg bg-[#1e293b] hover:shadow-lg transition-all duration-300 cursor-pointer w-full border border-white/8 hover:border-white/20"
                 onClick={() => handleCardClick(submission.id)}
               >
-                <div className="relative w-full aspect-[2/3] overflow-hidden bg-gray-800">
+                <div className="relative w-full aspect-video overflow-hidden bg-gray-800">
                   <Image
                     src={submission.image_url || '/film/film1.png'}
                     alt={submission.name}
@@ -1532,48 +1482,22 @@ function FilmsContent() {
         )}
       </div>
 
-      {/* ── Pagination ── */}
-      {totalPages > 1 && (
-        <div className="flex justify-center pt-8">
-          <div className="flex items-center gap-2 flex-wrap justify-center">
-            <button
-              onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-              disabled={currentPage === 1}
-              className="px-3 py-2 bg-[#0b1d35] border border-white/15 text-gray-300 rounded-lg text-sm font-semibold hover:border-white/30 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              Prev
-            </button>
-
-            {paginationItems.map((item, index) =>
-              item === '...' ? (
-                <span key={`ellipsis-${index}`} className="px-2 text-gray-500 text-sm">
-                  ...
-                </span>
-              ) : (
-                <button
-                  key={`page-${item}`}
-                  onClick={() => setCurrentPage(item as number)}
-                  className={`min-w-[36px] px-3 py-2 rounded-lg text-sm font-semibold transition-colors ${
-                    currentPage === item
-                      ? 'bg-yellow-400 text-black border border-yellow-400'
-                      : 'bg-[#0b1d35] text-gray-300 border border-white/15 hover:border-white/30'
-                  }`}
-                >
-                  {item}
-                </button>
-              )
-            )}
-
-            <button
-              onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
-              disabled={currentPage === totalPages}
-              className="px-3 py-2 bg-[#0b1d35] border border-white/15 text-gray-300 rounded-lg text-sm font-semibold hover:border-white/30 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              Next
-            </button>
-          </div>
-        </div>
-      )}
+      {/* ── Load More ── */}
+      <div className="flex justify-center pt-8">
+        <button
+          onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+          disabled={currentPage === totalPages}
+          className="flex items-center gap-2 px-8 py-3 bg-[#0b1d35] border border-white/15 text-gray-300 rounded-xl text-sm font-semibold hover:border-white/30 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+            <line x1="12" y1="2" x2="12" y2="6"/><line x1="12" y1="18" x2="12" y2="22"/>
+            <line x1="4.93" y1="4.93" x2="7.76" y2="7.76"/><line x1="16.24" y1="16.24" x2="19.07" y2="19.07"/>
+            <line x1="2" y1="12" x2="6" y2="12"/><line x1="18" y1="12" x2="22" y2="12"/>
+            <line x1="4.93" y1="19.07" x2="7.76" y2="16.24"/><line x1="16.24" y1="7.76" x2="19.07" y2="4.93"/>
+          </svg>
+          Load More
+        </button>
+      </div>
     </div>
   )
 }
@@ -1594,7 +1518,7 @@ export default function AwardsPage() {
         <Image src="/images/awards/imageawards.png" alt="Awards hero" fill className="object-cover object-center opacity-50" priority />
         <div className="absolute inset-0 bg-gradient-to-r from-[#050d1a]/95 via-[#050d1a]/60 to-transparent" />
         <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-[#050d1a]" />
-        <div className="relative w-full px-6 md:px-8 pt-8 pb-6 md:pt-12 md:pb-8 flex flex-col justify-end" style={{ minHeight: '280px' }}>
+        <div className="relative w-full px-6 md:px-8 pt-8 pb-10 md:pt-12 md:pb-14 flex flex-col justify-end" style={{ minHeight: '280px' }}>
           <div className="flex items-center gap-2.5 mb-3">
             <div className="flex -space-x-2.5">
               {[1, 2, 3].map((i) => (
@@ -1612,7 +1536,7 @@ export default function AwardsPage() {
               <span className="text-gray-300 text-[11px] uppercase tracking-widest font-semibold">Ends in 30 days</span>
             </div>
           </div>
-          <h1 className="text-xl md:text-3xl lg:text-4xl font-extrabold leading-tight tracking-tight mb-3 text-white whitespace-nowrap">
+          <h1 className="text-2xl md:text-4xl lg:text-5xl font-extrabold leading-tight tracking-tight mb-3 text-white whitespace-nowrap">
             Indonesia's Biggest AI Film Revolution Starts Here<br />1 BILLION IDR in Prizes + National Fame
           </h1>
           <p className="text-gray-400 text-sm md:text-base leading-relaxed">Your film could be the next viral AI masterpiece — seen, judged, and celebrated across Indonesia.</p>
@@ -1620,7 +1544,7 @@ export default function AwardsPage() {
       </div>
 
       {/* ── TABS ── */}
-      <div className="bg-[#050d1a] py-2">
+      <div className="bg-[#050d1a] py-4">
         <div className="px-6 md:px-8 overflow-x-auto">
           <div className="inline-flex items-center border border-white/15 rounded-full bg-[#0b1d35]/60 p-1 gap-1 min-w-max">
             {TABS.map((tab) => (
