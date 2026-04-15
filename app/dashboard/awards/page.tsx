@@ -1278,6 +1278,27 @@ function FilmsContent() {
     return submissions.filter((s) => s.name.toLowerCase().includes(q))
   }, [submissions, searchQuery])
 
+  const paginationItems = useMemo<(number | string)[]>(() => {
+    if (totalPages <= 1) return [1]
+
+    const pages = new Set<number>([1, totalPages, currentPage - 1, currentPage, currentPage + 1])
+    const sortedPages = Array.from(pages)
+      .filter((p) => p >= 1 && p <= totalPages)
+      .sort((a, b) => a - b)
+
+    const items: (number | string)[] = []
+    for (let i = 0; i < sortedPages.length; i += 1) {
+      const page = sortedPages[i]
+      const prev = sortedPages[i - 1]
+      if (i > 0 && page - prev > 1) {
+        items.push('...')
+      }
+      items.push(page)
+    }
+
+    return items
+  }, [currentPage, totalPages])
+
   return (
     <div className="space-y-8">
 
@@ -1499,22 +1520,48 @@ function FilmsContent() {
         )}
       </div>
 
-      {/* ── Load More ── */}
-      <div className="flex justify-center pt-8">
-        <button
-          onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-          disabled={currentPage === totalPages}
-          className="flex items-center gap-2 px-8 py-3 bg-[#0b1d35] border border-white/15 text-gray-300 rounded-xl text-sm font-semibold hover:border-white/30 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-            <line x1="12" y1="2" x2="12" y2="6"/><line x1="12" y1="18" x2="12" y2="22"/>
-            <line x1="4.93" y1="4.93" x2="7.76" y2="7.76"/><line x1="16.24" y1="16.24" x2="19.07" y2="19.07"/>
-            <line x1="2" y1="12" x2="6" y2="12"/><line x1="18" y1="12" x2="22" y2="12"/>
-            <line x1="4.93" y1="19.07" x2="7.76" y2="16.24"/><line x1="16.24" y1="7.76" x2="19.07" y2="4.93"/>
-          </svg>
-          Load More
-        </button>
-      </div>
+      {/* ── Pagination ── */}
+      {totalPages > 1 && (
+        <div className="flex justify-center pt-8">
+          <div className="flex items-center gap-2 flex-wrap justify-center">
+            <button
+              onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+              disabled={currentPage === 1}
+              className="px-3 py-2 bg-[#0b1d35] border border-white/15 text-gray-300 rounded-lg text-sm font-semibold hover:border-white/30 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              Prev
+            </button>
+
+            {paginationItems.map((item, index) =>
+              item === '...' ? (
+                <span key={`ellipsis-${index}`} className="px-2 text-gray-500 text-sm">
+                  ...
+                </span>
+              ) : (
+                <button
+                  key={`page-${item}`}
+                  onClick={() => setCurrentPage(item as number)}
+                  className={`min-w-[36px] px-3 py-2 rounded-lg text-sm font-semibold transition-colors ${
+                    currentPage === item
+                      ? 'bg-yellow-400 text-black border border-yellow-400'
+                      : 'bg-[#0b1d35] text-gray-300 border border-white/15 hover:border-white/30'
+                  }`}
+                >
+                  {item}
+                </button>
+              )
+            )}
+
+            <button
+              onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+              disabled={currentPage === totalPages}
+              className="px-3 py-2 bg-[#0b1d35] border border-white/15 text-gray-300 rounded-lg text-sm font-semibold hover:border-white/30 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              Next
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
