@@ -544,7 +544,7 @@ function SeriesDetailContent() {
       <div className="max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-10 xl:px-14 pb-20">
         <div className="mb-14">
           <h2 className="text-xl md:text-2xl font-bold mb-6">Episodes</h2>
-          <div className="flex gap-4 md:gap-5 overflow-x-auto pb-6 scrollbar-hide">
+          <div className="flex gap-4 md:gap-5 overflow-x-auto pb-2 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
             {seriesData.groups?.map((ep) => (
               <div 
                 key={ep.id} 
