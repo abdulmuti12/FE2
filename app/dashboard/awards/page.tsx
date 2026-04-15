@@ -1142,21 +1142,13 @@ interface Category {
   name: string
 }
 
-const MOCK_AWARDS: AwardSubmission[] = [
-  { id: '1', name: 'AI Sunset',          image_url: '/film/film1.png', likes: 234, views: 1205, play: 45 },
-  { id: '2', name: 'Digital Dreams',     image_url: '/film/film2.png', likes: 189, views: 987,  play: 32 },
-  { id: '3', name: 'Future Vision',      image_url: '/film/film3.png', likes: 312, views: 1543, play: 67 },
-  { id: '4', name: 'Neural Art',         image_url: '/film/film1.png', likes: 156, views: 876,  play: 28 },
-  { id: '5', name: 'Synthetic Beauty',   image_url: '/film/film2.png', likes: 267, views: 1398, play: 51 },
-  { id: '6', name: 'AI Canvas',          image_url: '/film/film3.png', likes: 298, views: 1456, play: 62 },
-  { id: '7', name: 'Machine Creativity', image_url: '/film/film1.png', likes: 213, views: 1122, play: 39 },
-]
+const MOCK_AWARDS: AwardSubmission[] = []
 
 const MOCK_CATEGORIES: Category[] = [
-  // { id: '1', name: 'Best AI Short Film' },
-  // { id: '2', name: 'Best AI Advertising' },
-  // { id: '3', name: 'Best AI Animation' },
-  // { id: '4', name: 'Best AI Documentary' },
+  { id: '1', name: 'Best AI Short Film' },
+  { id: '2', name: 'Best AI Advertising' },
+  { id: '3', name: 'Best AI Animation' },
+  { id: '4', name: 'Best AI Documentary' },
 ]
 
 function FilmsContent() {
@@ -1191,28 +1183,16 @@ function FilmsContent() {
     const fetchCategories = async () => {
       try {
         setCategoriesLoading(true)
-        const token = localStorage.getItem('user_token')
-
-        if (!token) {
-          setCategories([])
-          return
-        }
-
-        const response = await fetch('/api/award/category', {
-          method: 'GET',
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        })
+        const response = await fetch('/api/awards/category')
         const data = await response.json()
         if (data.status === true && data.list && Array.isArray(data.list) && data.list.length > 0) {
           setCategories(data.list as Category[])
         } else {
-          setCategories([])
+          setCategories(MOCK_CATEGORIES)
         }
       } catch (error) {
         console.error('[v0] Failed to fetch categories:', error)
-        setCategories([])
+        setCategories(MOCK_CATEGORIES) 
       } finally {
         setCategoriesLoading(false)
       }
@@ -1255,7 +1235,7 @@ function FilmsContent() {
         const params = new URLSearchParams({
           sort,
           page: currentPage.toString(),
-          limit: '15',
+          limit: '25',
           view_type: 'potrait',
         })
         if (selectedCategory) params.append('id_category', selectedCategory)
