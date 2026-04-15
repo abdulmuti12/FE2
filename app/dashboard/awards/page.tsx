@@ -1232,25 +1232,38 @@ function FilmsContent() {
       try {
         setLoading(true)
         const sort = getSortParam(filterBy)
-       const params = new URLSearchParams({
+        const token = localStorage.getItem('user_token')
+
+        if (!token) {
+          setSubmissions([])
+          setTotalPages(1)
+          return
+        }
+
+        const params = new URLSearchParams({
           sort,
           page: currentPage.toString(),
-          limit: '7',
-          view_type: 'potrait', // ← ganti ini
+          limit: '15',
+          view_type: 'potrait',
         })
         if (selectedCategory) params.append('id_category', selectedCategory)
-        const response = await fetch(`/api/awards/list?${params.toString()}`)
+        const response = await fetch(`/api/awards/list?${params.toString()}`, {
+          method: 'GET',
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        })
         const data = await response.json()
         if (data.status === true && data.list && Array.isArray(data.list)) {
           setSubmissions(data.list as AwardSubmission[])
           if (data.meta) setTotalPages(data.meta.total_pages || 1)
         } else {
-          setSubmissions(MOCK_AWARDS)
+          setSubmissions([])
           setTotalPages(1)
         }
       } catch (error) {
         console.error('[v0] Failed to fetch awards:', error)
-        setSubmissions(MOCK_AWARDS)
+        setSubmissions([])
         setTotalPages(1)
       } finally {
         setLoading(false)
@@ -1446,14 +1459,14 @@ function FilmsContent() {
             <div className="text-gray-400">No awards found</div>
           </div>
         ) : (
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 md:gap-4 w-full">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3 md:gap-4 transition-all duration-500 w-full">
             {filteredSubmissions.map((submission) => (
               <div
                 key={submission.id}
-                className="group relative overflow-hidden rounded-lg bg-[#1e293b] hover:shadow-lg transition-all duration-300 cursor-pointer w-full border border-white/8 hover:border-white/20"
+                className="group relative overflow-hidden rounded-xl bg-[#0f172a] hover:shadow-lg transition-all duration-300 cursor-pointer w-full border border-white/8 hover:border-white/20"
                 onClick={() => handleCardClick(submission.id)}
               >
-                <div className="relative w-full aspect-video overflow-hidden bg-gray-800">
+                <div className="relative w-full aspect-[2/3] overflow-hidden bg-gray-800">
                   <Image
                     src={submission.image_url || '/film/film1.png'}
                     alt={submission.name}
@@ -1522,7 +1535,7 @@ export default function AwardsPage() {
         <Image src="/images/awards/imageawards.png" alt="Awards hero" fill className="object-cover object-center opacity-50" priority />
         <div className="absolute inset-0 bg-gradient-to-r from-[#050d1a]/95 via-[#050d1a]/60 to-transparent" />
         <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-[#050d1a]" />
-        <div className="relative w-full px-6 md:px-8 pt-8 pb-10 md:pt-12 md:pb-14 flex flex-col justify-end" style={{ minHeight: '280px' }}>
+        <div className="relative w-full px-6 md:px-8 pt-8 pb-6 md:pt-12 md:pb-8 flex flex-col justify-end" style={{ minHeight: '280px' }}>
           <div className="flex items-center gap-2.5 mb-3">
             <div className="flex -space-x-2.5">
               {[1, 2, 3].map((i) => (
@@ -1540,7 +1553,7 @@ export default function AwardsPage() {
               <span className="text-gray-300 text-[11px] uppercase tracking-widest font-semibold">Ends in 30 days</span>
             </div>
           </div>
-          <h1 className="text-2xl md:text-4xl lg:text-5xl font-extrabold leading-tight tracking-tight mb-3 text-white whitespace-nowrap">
+          <h1 className="text-xl md:text-3xl lg:text-4xl font-extrabold leading-tight tracking-tight mb-3 text-white whitespace-nowrap">
             Indonesia's Biggest AI Film Revolution Starts Here<br />1 BILLION IDR in Prizes + National Fame
           </h1>
           <p className="text-gray-400 text-sm md:text-base leading-relaxed">Your film could be the next viral AI masterpiece — seen, judged, and celebrated across Indonesia.</p>
@@ -1548,7 +1561,7 @@ export default function AwardsPage() {
       </div>
 
       {/* ── TABS ── */}
-      <div className="bg-[#050d1a] py-4">
+      <div className="bg-[#050d1a] py-2">
         <div className="px-6 md:px-8 overflow-x-auto">
           <div className="inline-flex items-center border border-white/15 rounded-full bg-[#0b1d35]/60 p-1 gap-1 min-w-max">
             {TABS.map((tab) => (

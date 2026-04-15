@@ -5,12 +5,21 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url)
 
     const sort = searchParams.get('sort') || 'latest'
-    const id_category = searchParams.get('id_category') || ''
+    const id_category = searchParams.get('id_category')
     const page = searchParams.get('page') || '1'
-    const limit = searchParams.get('limit') || '7'
+    const limit = searchParams.get('limit') || '15'
     const view_type = searchParams.get('view_type') || 'potrait'
 
-    const token = process.env.USKY_API_TOKEN || ''
+    const authHeader = request.headers.get('authorization')
+    const tokenFromHeader = authHeader?.replace(/^Bearer\s+/i, '').trim()
+    const token = tokenFromHeader || process.env.USKY_API_TOKEN || ''
+
+    if (!token) {
+      return NextResponse.json(
+        { status: false, message: 'Authorization token is required' },
+        { status: 401 }
+      )
+    }
 
     // Build upstream URL dengan semua params
     const params = new URLSearchParams({
@@ -25,9 +34,6 @@ export async function GET(request: NextRequest) {
 
     const url = `https://api.usky.ai/award/list?${params.toString()}`
 
-    console.log('📍 Fetching URL:', url)
-    console.log('🔐 Has Token:', !!token)
-
     const upstreamResponse = await fetch(url, {
       method: 'GET',
       headers: {
@@ -37,27 +43,26 @@ export async function GET(request: NextRequest) {
       cache: 'no-store',
     })
 
-    console.log('📊 Status:', upstreamResponse.status)
-
     const responseText = await upstreamResponse.text()
-    console.log('📄 Response length:', responseText.length)
-    console.log('📄 First 200 chars:', responseText.substring(0, 200))
 
     if (!upstreamResponse.ok) {
-      console.error('❌ API Error:', responseText.substring(0, 500))
+      let errorJson: any = null
+      try {
+        errorJson = JSON.parse(responseText)
+      } catch {
+        errorJson = null
+      }
+
       return NextResponse.json(
-        { status: false, message: `API error ${upstreamResponse.status}` },
+        errorJson || { status: false, message: `API error ${upstreamResponse.status}` },
         { status: upstreamResponse.status }
       )
     }
 
     try {
       const data = JSON.parse(responseText)
-      console.log('✅ Parsed successfully, records:', data.list?.length)
       return NextResponse.json(data)
     } catch (parseError) {
-      console.error('❌ JSON Parse Error:', parseError)
-      console.error('Response was:', responseText.substring(0, 300))
       return NextResponse.json(
         {
           status: false,
@@ -68,7 +73,7 @@ export async function GET(request: NextRequest) {
       )
     }
   } catch (error: any) {
-    console.error('💥 Network Error:', error.message)
+    console.error('Awards list proxy error:', error.message)
     return NextResponse.json(
       { status: false, message: error.message },
       { status: 500 }
