@@ -258,33 +258,31 @@ const DIRECTION_CATEGORIES = [
 const JUDGES = [
   {
     id: 1,
-    company: 'Perusahaan',
-    name: 'Irakli Beridze',
-    role: 'Head of Centre for Artificial Intelligence and Robotics, United Nations Interregional Crime and Justice Research Institute (UNICRI)',
-    image: '/images/awards/judges1.png',
+    company: 'Ketua Umum',
+    name: 'Adisurya Abdy',
+    role: 'Perkumpulan Tenaga Ahli Televisi dan Film Indonesia (PATFI)',
+    image: '/images/awards/ady.jpeg',
   },
   {
     id: 2,
-    company: 'Perusahaan',
-    name: 'Irakli Beridze',
-    role: 'Head of Centre for Artificial Intelligence and Robotics, United Nations Interregional Crime and Justice Research Institute (UNICRI)',
-    image: '/images/awards/judges2.png',
+    name: 'Syaifullah Agam, PhD',
+    role: 'Direktur Film Kemenbud RI',
+    image: '/images/awards/agam.jpeg',
   },
   {
     id: 3,
-    company: 'Perusahaan',
-    name: 'Irakli Beridze',
-    role: 'Head of Centre for Artificial Intelligence and Robotics, United Nations Interregional Crime and Justice Research Institute (UNICRI)',
-    image: '/images/awards/judges2.png',
+    name: 'Sandiaga Uno',
+    role: 'Dewan Penasehat USKY Al Film Award',
+    image: '/images/awards/sandiaga.jpeg',
   },
   {
     id: 4,
-    company: 'Perusahaan',
-    name: 'Irakli Beridze',
-    role: 'Head of Centre for Artificial Intelligence and Robotics, United Nations Interregional Crime and Justice Research Institute (UNICRI)',
-    image: '/images/awards/judges3.png',
+    name: 'Iwan Setiawan',
+    role: 'CEO Marketeers & MarkPlus, Inc.',
+    image: '/images/awards/iwan.jpeg',
   },
 ]
+
 
 // ─────────────────────────────────────────────
 // SPONSOR LOGOS (SVG inline)
