@@ -428,7 +428,7 @@ function PrizeSidebar() {
               <Trophy className="w-4 h-4 text-yellow-400 shrink-0" />
               <span className="text-white text-sm font-bold">Prize Pool</span>
             </div>
-            <span className="text-white font-extrabold text-lg relative z-10">200 USKY</span>
+            <span className="text-white font-extrabold text-lg relative z-10">IDR 1,000,000,000</span>
           </div>
         </div>
         <div className="mx-3 mt-2 mb-3 border border-white/10 rounded-xl overflow-hidden">
@@ -446,14 +446,14 @@ function PrizeSidebar() {
             <FileText className="w-3.5 h-3.5 text-gray-400" />
             <p className="text-gray-400 text-[10px] uppercase tracking-wider">Submission</p>
           </div>
-          <p className="text-white font-extrabold text-lg leading-none">245</p>
+          <p className="text-white font-extrabold text-lg leading-none">511</p>
         </div>
         <div className="bg-[#0b1d35] border border-white/10 rounded-xl px-4 py-3">
           <div className="flex items-center gap-1.5 mb-1.5">
             <Clock className="w-3.5 h-3.5 text-gray-400" />
             <p className="text-gray-400 text-[10px] uppercase tracking-wider">Ends in</p>
           </div>
-          <p className="text-white font-extrabold text-lg leading-none">4 Days</p>
+          <p className="text-white font-extrabold text-lg leading-none">64 Days</p>
         </div>
       </div>
       <button className="w-full bg-yellow-400 hover:bg-yellow-300 active:bg-yellow-500 text-black font-bold text-sm py-3 rounded-xl transition-colors">
