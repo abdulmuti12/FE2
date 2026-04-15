@@ -1,473 +1,593 @@
 'use client'
 
-import { Calendar } from "@/components/ui/calendar"
-import { User, Ticket, CreditCard, Settings, LogOut, Search, X, Menu, Play, Info } from 'lucide-react'
+import {
+  AlertCircle,
+  ChevronLeft,
+  ChevronRight,
+  Info,
+  Menu,
+  Play,
+  X,
+  Volume2,
+  VolumeX,
+} from 'lucide-react'
 import Image from 'next/image'
 import Link from 'next/link'
-import categoriesData from '@/data/categories.json'
-import { CategorySection } from '@/components/category-section'
+import { useRouter } from 'next/navigation'
 import { useState, useRef, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { Header } from '@/components/header'
 import { Footer } from '@/components/footer'
-import { LatestAwards } from '@/components/latest-awards'
-import { FutureFilmmaking } from '@/components/future-filmmaking'
+import { LatestAwards } from '@/components/home/latest-awards'
+import { FutureFilmmaking } from '@/components/home/future-filmmaking'
+import { CategorySection } from '@/components/home/category-section'
+import { MostWatchingFilm } from '@/components/home/most-watching-film'
+import { LatestFilm } from '@/components/home/latest-film'
+import { UpcomingEventsSection } from '@/components/home/upcoming-events-section'
 
-const mockFilms = [
-  { id: 1, title: '[Judul Film]', year: '2025 • 1h 0m', image: '/login-hero.jpg', description: '[Brief Synopsis] Watch groundbreaking films crafted by human creativity and artificial intelligence.', category: 'Action', rating: '8.5/10', categories: ['Films', 'Genre'] },
-  { id: 2, title: '[Judul Film]', year: '2025 • 1h 0m', image: '/login-hero.jpg', description: '[Brief Synopsis] Discover amazing cinematic experiences.', category: 'Drama', rating: '9.0/10', categories: ['Films', 'Genre'] },
-  { id: 3, title: '[Judul Film]', year: '2025 • 1h 0m', image: '/login-hero.jpg', description: '[Brief Synopsis] Experience AI-powered storytelling.', category: 'Sci-Fi', rating: '8.8/10', categories: ['Films', 'Genre'] },
-  { id: 4, title: '[Judul Film]', year: '2025 • 1h 0m', image: '/login-hero.jpg', description: '[Brief Synopsis] Journey through immersive worlds.', category: 'Fantasy', rating: '8.3/10', categories: ['Films', 'Genre'] },
-]
+import {
+  FeaturedSkeleton,
+  SeriesSkeleton,
+  AwardSkeleton,
+} from '@/components/skeleton-loaders'
 
-const mockAwards = [
-  { id: 1, title: '[Judul Film]', image: '/login-hero.jpg', description: '[Brief Synopsis] Watch groundbreaking films crafted by human creativity and artificial intelligence.', category: 'Genre', rating: '8.5/10' },
-  { id: 2, title: '[Judul Film]', image: '/login-hero.jpg', description: '[Brief Synopsis] Watch groundbreaking films crafted by human creativity and artificial intelligence.', category: 'Genre', rating: '9.0/10' },
-  { id: 3, title: '[Judul Film]', image: '/login-hero.jpg', description: '[Brief Synopsis] Watch groundbreaking films crafted by human creativity and artificial intelligence.', category: 'Genre', rating: '8.8/10' },
-  { id: 4, title: '[Judul Film]', image: '/login-hero.jpg', description: '[Brief Synopsis] Watch groundbreaking films crafted by human creativity and artificial intelligence.', category: 'Genre', rating: '8.3/10' },
-]
-
-const mockMostWatching = [
-  { id: 1, title: '[Judul Film]', year: '2025 • 1h 0m', image: '/login-hero.jpg', description: '[Brief Synopsis] Watch groundbreaking films crafted by human creativity and artificial intelligence.', categories: ['Genre', 'Genre'], viewers: 4 },
-  { id: 2, title: '[Judul Film]', year: '2025 • 1h 0m', image: '/login-hero.jpg', description: '[Brief Synopsis] Watch groundbreaking films crafted by human creativity and artificial intelligence.', categories: ['Genre', 'Genre'], viewers: 3 },
-  { id: 3, title: '[Judul Film]', year: '2025 • 1h 0m', image: '/login-hero.jpg', description: '[Brief Synopsis] Watch groundbreaking films crafted by human creativity and artificial intelligence.', categories: ['Genre', 'Genre'], viewers: 3 },
-  { id: 4, title: '[Judul Film]', year: '2025 • 1h 0m', image: '/login-hero.jpg', description: '[Brief Synopsis] Watch groundbreaking films crafted by human creativity and artificial intelligence.', categories: ['Genre', 'Genre'], viewers: 2 },
-]
-
-const mockSeries = [
-  { id: 1, title: '[Judul Series]', episode: 'Episode 1', duration: '1h 0m', image: '/images/featured-series.png', featured: true },
-  { id: 2, title: '[Judul Series]', episode: 'Episode 2', duration: '1h 0m', image: '/film/film1.png' },
-  { id: 3, title: '[Judul Series]', episode: 'Episode 3', duration: '1h 0m', image: '/film/film2.png' },
-  { id: 4, title: '[Judul Series]', episode: 'Episode 4', duration: '1h 0m', image: '/images/imageheader.png' },
-]
-
-const categoryData = [
-  { name: 'Genre', count: '3.2K' },
-  { name: 'Drama', count: '2.8K' },
-  { name: 'Action', count: '2.1K' },
-  { name: 'Sci-Fi', count: '1.9K' },
-  { name: 'Comedy', count: '1.5K' },
-  { name: 'Horror', count: '1.2K' },
-  { name: 'Anime', count: '1.8K' },
-]
-
-const mockCreators = [
-  { id: 1, name: '[Creator]', movies: '3 Movies', colors: ['cyan', 'white'] },
-  { id: 2, name: '[Creator]', movies: '3 Movies', colors: ['pink', 'white'] },
-  { id: 3, name: '[Creator]', movies: '3 Movies', colors: ['cyan', 'white'] },
-  { id: 4, name: '[Creator]', movies: '3 Movies', colors: ['purple', 'white'] },
-  { id: 5, name: '[Creator]', movies: '3 Movies', colors: ['cyan', 'white'] },
-  { id: 6, name: '[Creator]', movies: '3 Movies', colors: ['purple', 'white'] },
-  { id: 7, name: '[Creator]', movies: '3 Movies', colors: ['pink', 'white'] },
-]
-
-const creatorData = [
-  { name: 'Creator', count: '1.2K' },
-  { name: 'Creator', count: '1.1K' },
-  { name: 'Creator', count: '0.9K' },
-  { name: 'Creator', count: '0.8K' },
-  { name: 'Creator', count: '0.7K' },
-  { name: 'Creator', count: '0.6K' },
-  { name: 'Creator', count: '0.5K' },
-]
-
-function CarouselSection({
-  title,
-  viewAllLink = '#',
-  items = mockFilms,
-  layout = 'default',
-}: {
-  title: string
-  viewAllLink?: string
-  items?: typeof mockFilms
-  layout?: 'default' | 'category' | 'creator'
-}) {
-  const [currentIndex, setCurrentIndex] = useState(0)
-  const itemsPerView = layout === 'creator' ? 7 : layout === 'default' ? 4 : 7
-  const maxIndex = Math.max(0, items.length - itemsPerView)
-  const handleNext = () => currentIndex < maxIndex && setCurrentIndex(currentIndex + 1)
-  const handlePrev = () => currentIndex > 0 && setCurrentIndex(currentIndex - 1)
-
-  return (
-    <section className="px-4 md:px-6 lg:px-12 py-6 md:py-8 border-t border-border">
-      <div className="flex items-center justify-between mb-4 md:mb-6">
-        <h2 className="text-sm md:text-2xl font-bold text-foreground">{title}</h2>
-        <a href={viewAllLink} className="text-white text-xs md:text-sm font-medium hover:text-gray-300 transition-colors">
-          View All
-        </a>
-      </div>
-
-      <div className="relative">
-        <div className="overflow-hidden">
-          <div className="flex transition-transform duration-300 gap-2 md:gap-4" style={{ transform: `translateX(-${currentIndex * (100 / itemsPerView)}%)` }}>
-            {layout === 'category'
-              ? categoryData.map((item, idx) => (
-                  <div key={idx} className="flex-shrink-0 w-1/3 sm:w-1/4 lg:w-1/7 text-center">
-                    <div className="w-full aspect-square rounded-full bg-gradient-to-br from-[#4c7c3f] to-[#2a4a2a] mb-2 md:mb-3 flex items-center justify-center">
-                      <span className="text-xl md:text-4xl text-white">🎬</span>
-                    </div>
-                    <p className="text-xs md:text-sm font-medium text-foreground line-clamp-1">{item.name}</p>
-                    <p className="text-xs text-muted-foreground">{item.count}</p>
-                  </div>
-                ))
-              : layout === 'creator'
-              ? creatorData.map((item, idx) => (
-                  <div key={idx} className="flex-shrink-0 w-1/3 sm:w-1/4 lg:w-1/7 text-center">
-                    <div className="w-full aspect-square rounded-full bg-gradient-to-br from-[#7c4c9f] to-[#4a2a6a] mb-2 md:mb-3 flex items-center justify-center">
-                      <span className="text-xl md:text-4xl text-white">👤</span>
-                    </div>
-                    <p className="text-xs md:text-sm font-medium text-foreground line-clamp-1">{item.name}</p>
-                    <p className="text-xs text-muted-foreground">{item.count}</p>
-                  </div>
-                ))
-              : items.map((film) => (
-                  <div key={film.id} className="flex-shrink-0 w-1/2 md:w-1/4 lg:w-1/4">
-                    <div className="relative h-32 md:h-60 mb-2 md:mb-4 rounded-lg overflow-hidden group">
-                      <Image src={film.image || "/placeholder.svg"} alt={film.title} fill className="object-cover hover:scale-105 transition-transform duration-300" />
-                    </div>
-                    <p className="font-semibold text-xs md:text-base text-foreground mb-1 line-clamp-1">{film.title}</p>
-                    {(film as any).year && <p className="text-xs text-muted-foreground hidden md:block">{(film as any).year}</p>}
-                    <p className="text-xs text-muted-foreground mb-2 md:mb-3 line-clamp-2 hidden md:block">{film.description}</p>
-                    <div className="flex gap-2 flex-wrap hidden md:flex">
-                      {(film as any).categories?.map((cat: string, idx: number) => (
-                        <Button key={idx} size="sm" className="text-xs bg-gray-200 text-black hover:bg-gray-300 rounded-full px-4" variant="default">
-                          {cat}
-                        </Button>
-                      )) || (
-                        <>
-                          <Button size="sm" className="text-xs bg-gray-200 text-black hover:bg-gray-300 rounded-full px-4" variant="default">
-                            Watch
-                          </Button>
-                          <Button size="sm" className="text-xs bg-gray-200 text-black hover:bg-gray-300 rounded-full px-4" variant="default">
-                            Add List
-                          </Button>
-                        </>
-                      )}
-                    </div>
-                  </div>
-                ))}
-          </div>
-        </div>
-
-        {currentIndex > 0 && (
-          <button onClick={handlePrev} className="absolute left-0 top-1/3 -translate-y-1/2 -translate-x-8 md:-translate-x-12 lg:-translate-x-6 z-10 bg-accent/20 hover:bg-accent/40 p-1.5 md:p-2 rounded-full transition-colors">
-            <X className="w-4 h-4 md:w-5 md:h-5 text-white" />
-          </button>
-        )}
-        {currentIndex < maxIndex && (
-          <button onClick={handleNext} className="absolute right-0 top-1/3 -translate-y-1/2 translate-x-8 md:translate-x-12 lg:translate-x-6 z-10 bg-accent/20 hover:bg-accent/40 p-1.5 md:p-2 rounded-full transition-colors">
-            <Menu className="w-4 h-4 md:w-5 md:h-5 text-white" />
-          </button>
-        )}
-      </div>
-    </section>
-  )
+// --- Interfaces ---
+interface TrailerData {
+  id: string
+  name?: string
+  description?: string
+  description_text?: string
+  image?: string
+  image_url?: string
+  video?: string
+  id_films?: string
+  video_url?: string
 }
 
-function LatestClipSection({
-  title = "Latest Clip",
-  viewAllLink = "/dashboard/clips",
-  items = mockFilms,
-}: {
-  title?: string
-  viewAllLink?: string
-  items?: typeof mockFilms
-}) {
+interface EventData {
+  id: string
+  title: string
+  image_url?: string
+  tgl_live?: string
+}
+
+interface FilmData {
+  id: string
+  name: string
+  image_url?: string
+  image?: string
+  synopsis?: string
+  description?: string
+  cats?: string
+  run_time_format?: string
+  years?: string
+  rates?: string | null
+}
+
+interface LatestClipData {
+  id: string
+  name: string
+  short_desc?: string | null
+  description?: string
+  description_text?: string
+  image_url?: string
+  cats?: string
+  run_time_format?: string
+}
+
+interface AwardData {
+  id: string
+  name: string
+  image_url?: string
+  description?: string
+  type?: string
+  synopsis?: string
+}
+
+interface SeriesData {
+  id: string
+  name: string
+    description: string
+  asset_name?: string
+  run_time_format?: string
+  image_url?: string
+  image_landscape_url?: string
+}
+
+interface CategoryApiData {
+  id: string
+  name: string
+  images_url?: string
+  total_movie?: string
+}
+
+interface CreatorData {
+  id: string
+  name: string
+  avatar_url?: string
+  total_video?: string
+}
+
+// --- Helper Functions ---
+function stripHtml(html?: string) {
+  if (!html) return ''
+  return html
+    .replace(/<[^>]*>/g, ' ')
+    .replace(/&nbsp;/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+}
+
+// --- Components ---
+function LatestClipSection({ items = [] }: { items?: any[] }) {
   const scrollerRef = useRef<HTMLDivElement | null>(null)
 
-  const scrollByAmount = (dir: "left" | "right") => {
-    const el = scrollerRef.current
-    if (!el) return
-    const amount = Math.round(el.clientWidth * 0.85)
-    el.scrollBy({ left: dir === "right" ? amount : -amount, behavior: "smooth" })
+  const scroll = (dir: 'left' | 'right') => {
+    if (!scrollerRef.current) return
+    const amount = scrollerRef.current.clientWidth * 0.8
+    scrollerRef.current.scrollBy({ left: dir === 'right' ? amount : -amount, behavior: 'smooth' })
   }
 
+
+ 
+
+  if (items.length === 0) return null
+
   return (
-    <section className="px-4 md:px-6 lg:px-12 py-6 md:py-8 border-t border-white/10">
-      <div className="flex items-center justify-between mb-4 md:mb-6">
-        <Link href={viewAllLink} className="inline-flex items-center gap-2 text-white font-semibold">
-          <span className="text-xs md:text-base">{title}</span>
+    <section className="border-t border-white/10 px-4 py-8 md:px-6 md:py-10 lg:px-12">
+      <div className="mb-8 flex items-center justify-between">
+        <h2 className="text-2xl font-bold text-white md:text-3xl">Latest Clip</h2>
+        <Link href="/dashboard/clip/list" className="inline-flex items-center gap-2 font-semibold text-white hover:text-white/80 transition-colors">
+          <span className="text-xs md:text-base">View All</span>
           <span className="text-white/70">›</span>
         </Link>
-
-        <div className="flex items-center gap-1">
-          <span className="w-2 h-[2px] md:w-3 rounded-full bg-white/80" />
-          <span className="w-2 h-[2px] md:w-3 rounded-full bg-white/40" />
-          <span className="w-2 h-[2px] md:w-3 rounded-full bg-white/30" />
-        </div>
       </div>
 
       <div className="relative">
         <div
           ref={scrollerRef}
-          className="flex gap-3 md:gap-6 overflow-x-auto scroll-smooth pb-2 pr-8 md:pr-12"
-          style={{ scrollbarWidth: "none" }}
+          className="flex gap-4 overflow-x-auto scroll-smooth pb-4 md:gap-6"
+          style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
         >
-          {items.map((film) => (
-            <div key={film.id} className="flex-shrink-0 w-[200px] md:w-[260px] lg:w-[280px]">
-              <div className="relative rounded-xl md:rounded-2xl overflow-hidden bg-black group">
-                <div className="relative w-full h-[260px] md:h-[360px]">
-                  <Image
-                    src={film.image || "/placeholder.svg"}
-                    alt={film.title}
-                    fill
-                    className="object-cover object-center group-hover:scale-105 transition-transform duration-500"
-                  />
-
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <div className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-black/35 border border-white/20 flex items-center justify-center backdrop-blur-sm">
-                      <Play className="w-3 h-3 md:w-4 md:h-4 text-white fill-white" />
-                    </div>
+          {items.map((clip) => (
+            <div key={clip.id} className="w-[200px] md:w-[280px] flex-shrink-0">
+              <div className="group relative aspect-[3/4] overflow-hidden rounded-2xl bg-black">
+                <Image src={clip.image || '/placeholder.svg'} alt={clip.title} fill className="object-cover transition-transform group-hover:scale-105" />
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <div className="h-10 w-10 flex items-center justify-center rounded-full bg-black/40 backdrop-blur-sm border border-white/20">
+                    <Play className="h-4 w-4 fill-white text-white" />
                   </div>
-
-                  <div className="absolute inset-x-0 bottom-0 h-40 md:h-44 bg-gradient-to-t from-black/90 via-black/55 to-transparent" />
                 </div>
-
-                <div className="absolute left-0 right-0 bottom-0 p-3 md:p-4">
-                  <p className="text-white font-semibold text-xs md:text-sm mb-1 line-clamp-1">{film.title}</p>
-                  <p className="text-white/70 text-[10px] md:text-[11px] leading-relaxed line-clamp-2 mb-2 md:mb-3 hidden md:block">
-                    {film.description}
-                  </p>
-
-                  <div className="flex items-center justify-between text-[10px] md:text-[11px] text-white/60">
-                    <span>[Genre]</span>
-                    <span>1h 0m</span>
-                  </div>
+                <div className="absolute inset-x-0 bottom-0 p-4 bg-gradient-to-t from-black via-black/60 to-transparent">
+                  <p className="font-semibold text-sm text-white line-clamp-1">{clip.title}</p>
+                  <p className="text-[11px] text-white/70 line-clamp-2 mt-1">{clip.description_text}</p>
                 </div>
               </div>
             </div>
           ))}
         </div>
-
-        <button
-          onClick={() => scrollByAmount("right")}
-          className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-2 md:translate-x-4 lg:translate-x-6 w-8 h-8 md:w-10 md:h-10 rounded-lg bg-white/95 text-black shadow-md hover:bg-white transition-colors flex items-center justify-center"
-          aria-label="Next"
-        >
-          <span className="text-lg md:text-xl leading-none">›</span>
+        <button onClick={() => scroll('right')} className="absolute right-0 top-1/2 flex h-8 w-8 translate-x-2 -translate-y-1/2 items-center justify-center rounded-lg bg-white/95 text-black shadow-md transition-colors hover:bg-white md:h-10 md:w-10 md:translate-x-4 lg:translate-x-6">
+          <span className="text-lg leading-none md:text-xl">›</span>
         </button>
       </div>
     </section>
   )
 }
 
+// --- Main Page ---
 export default function DashboardPage() {
+  const router = useRouter()
+  const videoRef = useRef<HTMLVideoElement | null>(null)
+  
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const [isMuted, setIsMuted] = useState(false)
+
+  const [trailers, setTrailers] = useState<TrailerData[]>([])
+  const [currentTrailerIndex, setCurrentTrailerIndex] = useState(0)
+  
+  const [latestFilms, setLatestFilms] = useState<FilmData[]>([])
+  const [latestClips, setLatestClips] = useState<LatestClipData[]>([])
+  const [latestAwards, setLatestAwards] = useState<AwardData[]>([])
+  const [mostWatchingFilms, setMostWatchingFilms] = useState<FilmData[]>([])
+  const [seriesData, setSeriesData] = useState<SeriesData[]>([])
+  const [categoryApiData, setCategoryApiData] = useState<CategoryApiData[]>([])
+  const [creatorApiData, setCreatorApiData] = useState<CreatorData[]>([])
+  const [eventData, setEventData] = useState<EventData[]>([])
+
+  const seriesScrollRef = useRef<HTMLDivElement>(null)
+
+  const [currentIndex, setCurrentIndex] = useState(0)
+  
+  // Tentukan berapa item yang tampil di layar (sesuaikan dengan desain)
+  const itemsPerView = 10
+  const maxIndex = Math.max(0, creatorApiData.length - itemsPerView)
+
+  const handleNext = () => {
+    if (currentIndex < maxIndex) setCurrentIndex((prev) => prev + 1)
+  }
+
+  const handlePrev = () => {
+    if (currentIndex > 0) setCurrentIndex((prev) => prev - 1)
+  }
+
+   const truncateText = (text: string | null | undefined, maxLength: number = 75) => {
+  if (!text) return ""
+  const plainText = text.replace(/<[^>]+>/g, '').replace(/\n/g, ' ').trim()
+  if (plainText.length <= maxLength) return plainText
+  return plainText.substring(0, maxLength).trim() + '...'
+}
+
+  const scrollSeries = (direction: 'left' | 'right') => {
+    if (seriesScrollRef.current) {
+      const scrollAmount = direction === 'left' ? -300 : 300
+      seriesScrollRef.current.scrollBy({ left: scrollAmount, behavior: 'smooth' })
+    }
+  }
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setLoading(true)
+        const token = localStorage.getItem('user_token')
+        if (!token) { router.push('/'); return }
+
+        const res = await fetch('/api/home', {
+          headers: { Authorization: `Bearer ${token}` },
+          cache: 'no-store'
+        })
+        const json = await res.json()
+
+        if (json.status === true) {
+          const list = json.list
+          setTrailers(list.trailer || [])
+          setLatestFilms(list.films || [])
+          setLatestClips(list.latest || [])
+          setLatestAwards(list.award || [])
+          setMostWatchingFilms(list.watchs || [])
+          setSeriesData(list.series || [])
+          setCategoryApiData(list.category || [])
+          setCreatorApiData(list.creator || [])
+          setEventData(list.event || [])
+        }
+      } catch (err) {
+        setError('Failed to load dashboard')
+      } finally {
+        setLoading(false)
+      }
+    }
+    fetchData()
+  }, [router])
+
+  const toggleMute = () => {
+    if (videoRef.current) {
+      videoRef.current.muted = !videoRef.current.muted
+      setIsMuted(videoRef.current.muted)
+    }
+  }
+
+  const handleVideoEnded = () => {
+    if (trailers.length > 1) {
+      setCurrentTrailerIndex((prevIndex) => (prevIndex + 1) % trailers.length)
+    }
+  }
+
+  // --- Transformers ---
+  const displayFilms = latestFilms.map(f => ({
+    id: f.id,
+    title: f.name,
+    image: f.image_url ,
+    description: f.synopsis || stripHtml(f.description) || 'Watch groundbreaking films.',
+    category: f.cats || 'Films',
+    rating: f.rates ? `${f.rates}/10` : '8.5/10',
+    year: 2025,
+    duration: '1h 0m',
+    genre: f.cats || 'Films',
+  }))
+
+  const displayClips = latestClips.map(c => ({
+    id: c.id,
+    title: c.name,
+    image: c.image_url || '/placeholder.svg',
+    description: stripHtml(c.short_desc || c.description).substring(0, 70) + '...',
+  }))
+
+  const currentTrailer = trailers[currentTrailerIndex]
+  const heroVideo = currentTrailer?.video_url || (currentTrailer?.video ? `https://api.usky.ai/uploads/${currentTrailer.video}` : '')
+  const heroImage = currentTrailer?.image_url 
+
+  useEffect(() => {
+    if (!heroVideo || !videoRef.current) return
+
+    const playPromise = videoRef.current.play()
+    if (playPromise && typeof playPromise.then === 'function') {
+      playPromise.catch(() => {
+        // Ignore autoplay restrictions; video should continue when possible.
+      })
+    }
+  }, [heroVideo])
+
   return (
     <div className="min-h-screen bg-[#0a1628] text-foreground dark">
       <Header />
 
-      {/* Hero Section */}
-     {/* Hero Section (responsive + turun ~3cm) */}
-<section className="relative overflow-hidden min-h-[50vh] md:min-h-[70vh] lg:min-h-screen">
-  <Image src="/login-hero.jpg" alt="Hero" fill priority className="object-cover" />
-
-  {/* overlay */}
-  <div className="absolute inset-0 bg-gradient-to-t from-background via-black/20 to-transparent" />
-
-  {/* CONTENT: turun ~3cm (≈112px) - Mobile: 60px */}
-  <div className="absolute inset-0 flex items-end">
-    <div className="w-full px-4 md:px-6 lg:px-12 pb-[60px] md:pb-[112px] lg:pb-[112px]">
-      <h1 className="text-xl md:text-4xl lg:text-5xl font-bold text-white mb-2 md:mb-3">
-        [Judul Film]
-      </h1>
-
-      <p className="text-xs md:text-base lg:text-lg text-gray-300 mb-4 md:mb-5 max-w-2xl line-clamp-2 md:line-clamp-none">
-        Watch groundbreaking films crafted by human creativity and artificial intelligence.
-      </p>
-
-      <Button className="bg-white text-background hover:bg-gray-200 text-sm md:text-base py-2 md:py-2.5">
-        ▶ Watch Now
-      </Button>
+      {/* Hero Section with Autoplay & Audio Toggle */}
+    <section className="relative min-h-[60vh] lg:min-h-screen overflow-hidden bg-black">
+  {heroVideo ? (
+    <div className="absolute inset-0 w-full h-full">
+      {/* Atribut poster telah dihapus agar langsung memutar video */}
+      <video
+        ref={videoRef}
+        key={heroVideo}
+        autoPlay
+        muted={isMuted}
+        playsInline
+        preload="auto" // Tambahkan ini agar buffering video lebih agresif/cepat
+        onEnded={handleVideoEnded}
+        loop={trailers.length <= 1}
+        className="w-full h-full object-cover"
+      >
+        <source src={heroVideo} type="video/mp4" />
+      </video>
+      
+      {/* Audio Toggle Button (Bottom Right) */}
+      <div className="absolute bottom-20 right-6 md:bottom-32 lg:right-12 z-30">
+        <button onClick={toggleMute} className="h-10 w-10 flex items-center justify-center rounded-full bg-black/40 backdrop-blur-md border border-white/20 text-white transition-all">
+          {isMuted ? <VolumeX className="h-5 w-5" /> : <Volume2 className="h-5 w-5" />}
+        </button>
+      </div>
     </div>
-  </div>
+  ) : (
+    /* DIUBAH: Gambar dihapus dan diganti dengan div kosong berwarna hitam. 
+       Ini mencegah gambar muncul sekilas saat menunggu data API heroVideo. */
+    <div className="absolute inset-0 w-full h-full bg-black" />
+  )}
 
-  {/* INDICATOR: ikut turun ~3cm juga - Mobile: 60px */}
-  <div className="absolute left-1/2 -translate-x-1/2 bottom-[60px] md:bottom-[112px] lg:bottom-[112px]">
-    <div className="flex gap-1">
-      <div className="w-6 h-1 bg-white rounded-full" />
-      <div className="w-1 h-1 bg-gray-400 rounded-full" />
-      <div className="w-1 h-1 bg-gray-400 rounded-full" />
-      <div className="w-1 h-1 bg-gray-400 rounded-full" />
+  <div className="absolute inset-0 bg-gradient-to-t from-[#0a1628] via-black/10 to-transparent" />
+  
+  <div className="absolute inset-0 flex items-end">
+    <div className="w-full px-4 pb-16 md:px-12 md:pb-28 z-20">
+      <h1 className="text-2xl md:text-5xl font-bold text-white mb-4">
+        {currentTrailer?.name}
+      </h1>
+      <p className="max-w-xl text-sm md:text-lg text-gray-300 mb-6 line-clamp-2">
+        { currentTrailer?.description_text }
+      </p>
+      <div className="flex gap-4">
+        {/* =========================================
+            KONDISI TOMBOL WATCH NOW
+            Hanya muncul jika id_films memiliki isi (tidak null)
+            ========================================= */}
+        {currentTrailer?.id_films && (
+          <Button 
+            onClick={() => router.push(`/dashboard/film/detail?id=${currentTrailer.id_films}`)}
+            className="bg-white text-black hover:bg-gray-200 px-8 py-6 rounded-md font-bold flex items-center gap-2"
+          >
+            <Play className="h-5 w-5 fill-black" /> Watch Now
+          </Button>
+        )}
+      </div>
     </div>
   </div>
 </section>
 
-      {/* Latest Films - Hidden on Mobile, shown on MD+ */}
-      <div className="hidden md:block">
-        <CarouselSection title="Latest Films" items={mockFilms} />
-      </div>
+      {/* Content Sections */}
+      <div className="relative z-10 -mt-10">
+        <LatestFilm items={displayFilms} />
+        
+        {/* Latest Series */}
+      <section className="px-4 py-10 md:px-12 border-t border-white/10">
+  <div className="flex justify-between items-center mb-6">
+    <h2 className="text-xl font-bold text-white">Latest Series</h2>
+    <Link href="/dashboard/series" className="bg-white/10 px-4 py-1.5 rounded-full text-xs text-white hover:bg-white/20 transition-colors">
+      View All
+    </Link>
+  </div>
 
-      {/* Latest Series Section */}
-      <section className="px-4 md:px-6 lg:px-12 py-6 md:py-10 border-t border-white/10">
-        <div className="flex items-center justify-between mb-4 md:mb-6">
-          <h2 className="text-sm md:text-lg font-semibold text-white">Latest Series</h2>
-          <Link href="/dashboard/series" className="text-xs font-medium text-white/90 bg-white/10 hover:bg-white/15 border border-white/10 rounded-full px-3 md:px-4 py-1 md:py-1.5 transition-colors">
-            View All
+  {/* =========================================
+      TAMPILAN MOBILE (SLIDER HORIZONTAL)
+      ========================================= */}
+  <div className="relative group lg:hidden">
+    {/* Tombol Kiri Mobile */}
+    <button
+      onClick={() => scrollSeries('left')}
+      className="absolute -left-2 top-1/2 z-10 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full bg-[#003B79] text-white shadow-lg backdrop-blur-md"
+      aria-label="Scroll left"
+    >
+      <ChevronLeft className="h-4 w-4" />
+    </button>
+
+    {/* Kontainer Scroll Mobile */}
+    <div 
+      ref={seriesScrollRef}
+      className="flex gap-4 overflow-x-auto snap-x snap-mandatory pb-4 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]"
+    >
+      {loading ? (
+        <div className="w-[85vw] flex-shrink-0 snap-center">
+          <FeaturedSkeleton />
+        </div>
+      ) : (
+        seriesData.map((s) => (
+          <Link 
+            key={s.id} 
+            href={`/dashboard/series/detail?id_group=${s.id}`} 
+            className="w-[85vw] flex-shrink-0 snap-center group relative aspect-video rounded-2xl overflow-hidden block border border-white/5"
+          >
+            <Image 
+              src={s.image_landscape_url || s.image_url || '/placeholder.svg'} 
+              alt={s.name} 
+              fill 
+              className="object-cover transition-transform duration-300 group-hover:scale-105" 
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent" />
+            <div className="absolute bottom-4 left-4 right-4">
+              <h3 className="text-lg font-bold text-white line-clamp-1">{s.name}</h3>
+              {/* --- TAMBAHAN DESKRIPSI MOBILE --- */}
+              <p className="text-gray-300 text-xs mt-1 line-clamp-2">
+                {s.description ? truncateText(s.description, 100) : ''}
+              </p>
+            </div>
           </Link>
+        ))
+      )}
+    </div>
+
+    {/* Tombol Kanan Mobile */}
+    <button
+      onClick={() => scrollSeries('right')}
+      className="absolute -right-2 top-1/2 z-10 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full bg-[#003B79] text-white shadow-lg backdrop-blur-md"
+      aria-label="Scroll right"
+    >
+      <ChevronRight className="h-4 w-4" />
+    </button>
+  </div>
+
+  {/* =========================================
+      TAMPILAN DESKTOP (GRID LAMA)
+      ========================================= */}
+  <div className="hidden lg:grid lg:grid-cols-[1.5fr_1fr] gap-6">
+    {loading ? <FeaturedSkeleton /> : seriesData[0] && (
+      <Link href={`/dashboard/series/detail?id_group=${seriesData[0].id}`} className="group relative aspect-video rounded-3xl overflow-hidden block">
+        <Image src={seriesData[0].image_landscape_url || seriesData[0].image_url || ''} alt={seriesData[0].name} fill className="object-cover transition-transform group-hover:scale-105" />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent" />
+        <div className="absolute bottom-6 left-6 right-6">
+          <h3 className="text-2xl font-bold text-white">{seriesData[0].name}</h3>
+          {/* --- TAMBAHAN DESKRIPSI DESKTOP KIRI --- */}
+          <p className="text-gray-300 text-sm mt-2 line-clamp-2 max-w-xl">
+             {seriesData[0].description ? truncateText(seriesData[0].description, 120) : ''}
+          </p>
         </div>
-
-        {/* Mobile: Stack vertically, Desktop: Grid */}
-        <div className="grid gap-4 md:gap-6 grid-cols-1 lg:grid-cols-[1fr_340px]">
-          {mockSeries[0] && (
-            <Link href={`/dashboard/series/detail?id=${mockSeries[0].id}`} className="group block">
-              <div className="relative w-full aspect-[16/10] md:aspect-[1066/660] rounded-xl md:rounded-3xl overflow-hidden bg-black">
-                <Image
-                  src="/login-hero.jpg"
-                  alt={mockSeries[0].title}
-                  fill
-                  priority
-                  sizes="(min-width: 1066px) 65vw, 100vw"
-                  className="absolute inset-0 h-full w-full object-cover object-center group-hover:scale-105 transition-transform duration-500"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/30 to-transparent" />
-
-                <div className="absolute bottom-4 md:bottom-6 left-4 md:left-6 right-4 md:right-6">
-                  <h3 className="text-white font-semibold text-base md:text-xl mb-3 md:mb-4">{mockSeries[0].title}</h3>
-                  <div className="flex items-center gap-2 md:gap-3">
-                    <button className="inline-flex items-center gap-2 bg-white text-black hover:bg-gray-200 rounded-full px-4 md:px-5 py-1.5 md:py-2 text-xs md:text-sm font-semibold transition-colors">
-                      <Play className="w-3 h-3 md:w-4 md:h-4 fill-black" />
-                      Watch Now
-                    </button>
-                    <button className="w-9 h-9 md:w-10 md:h-10 rounded-full bg-white/10 hover:bg-white/20 border border-white/10 flex items-center justify-center text-white transition-colors">
-                      <Info className="w-4 h-4 md:w-5 md:h-5" />
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </Link>
-          )}
-
-          <div className="flex flex-col gap-3 md:gap-6">
-            {mockSeries.slice(1, 4).map((series) => (
-              <Link key={series.id} href={`/dashboard/series/detail?id=${series.id}`} className="relative rounded-lg md:rounded-2xl overflow-hidden group">
-                <div className="relative w-full aspect-[16/9] md:aspect-[302/160] bg-black">
-                  <Image
-                    src={series.image || "/placeholder.svg"}
-                    alt={series.title}
-                    fill
-                    className="object-cover group-hover:scale-105 transition-transform duration-500"
-                  />
-                </div>
-
-                <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/30 to-transparent" />
-
-                <div className="absolute bottom-3 left-3 right-3 md:bottom-4 md:left-4 md:right-4">
-                  <p className="text-white font-semibold text-xs md:text-sm truncate">{series.title}</p>
-                  <p className="text-white/70 text-[10px] md:text-xs mt-0.5 md:mt-1">
-                    {series.episode} • {series.duration}
-                  </p>
-                </div>
-              </Link>
-            ))}
+      </Link>
+    )}
+    
+    <div className="flex flex-col gap-4">
+      {seriesData.slice(1, 4).map(s => (
+        <Link key={s.id} href={`/dashboard/series/detail?id_group=${s.id}`} className="group relative h-32 rounded-2xl overflow-hidden flex items-center bg-white/5 border border-white/5 hover:bg-white/10 transition-colors">
+          <div className="relative h-full aspect-video">
+            <Image src={s.image_landscape_url || s.image_url || ''} alt={s.name} fill className="object-cover" />
           </div>
+          <div className="px-4 py-2 flex flex-col justify-center">
+            <p className="font-bold text-white text-sm line-clamp-1 mb-1">{s.name}</p>
+            {/* Deskripsi List Kanan Desktop (Sudah ada, saya rapikan spacing-nya) */}
+            <p className="text-gray-300 text-xs leading-snug line-clamp-2">
+              {s.description ? truncateText(s.description, 100) : ''}
+            </p>
+          </div>
+        </Link>
+      ))}
+    </div>
+  </div>
+</section>
+
+        <LatestClipSection items={displayClips} />
+        <UpcomingEventsSection items={eventData} />
+        
+        {latestAwards.length > 0 && (
+          <LatestAwards title="Latest Awards" items={latestAwards.map(a => ({ ...a, id: String(a.id), image_url: a.image_url || '' }))} />
+        )}
+
+        <CategorySection 
+          title="Categories"
+          items={categoryApiData.map(c => ({ id: c.id, name: c.name, count: c.total_movie || '0', image: c.images_url || '/placeholder.svg' }))} 
+        />
+
+        <MostWatchingFilm items={transformFilmData(mostWatchingFilms)} />
+
+        {/* Creators */}
+     <section className="px-4 py-12 lg:px-12 border-t border-white/10">
+      
+      {/* ===== HEADER: Judul Kiri, Tombol Kanan ===== */}
+      <div className="flex items-center justify-between mb-8">
+        <h2 className="text-2xl font-bold text-white">Creators</h2>
+        
+        {/* Tombol Kanan Atas */}
+        <div className="flex overflow-hidden rounded-sm border border-white/10 bg-[#0a2342]">
+          <button
+            onClick={handlePrev}
+            disabled={currentIndex === 0}
+            className="flex h-10 w-10 items-center justify-center border-r border-white/10 text-white transition-colors hover:bg-white/10 disabled:opacity-30 disabled:cursor-not-allowed"
+            aria-label="Previous creators"
+          >
+            <ChevronLeft className="h-4 w-4" />
+          </button>
+          <button
+            onClick={handleNext}
+            disabled={currentIndex === maxIndex}
+            className="flex h-10 w-10 items-center justify-center text-white transition-colors hover:bg-white/10 disabled:opacity-30 disabled:cursor-not-allowed"
+            aria-label="Next creators"
+          >
+            <ChevronRight className="h-4 w-4" />
+          </button>
         </div>
-      </section>
-
-      {/* Latest Clip Section (baru, presisi seperti screenshot) */}
-      <LatestClipSection title="Latest Clip" items={mockFilms} />
-
-      <LatestAwards title="Latest Awards" viewAllLink="#" items={mockAwards} />
-<CategorySection title="Category" viewAllLink="#" items={categoriesData} />      {/* Most Watching - Hidden on Mobile, shown on MD+ */}
-      <div className="hidden md:block">
-        <CarouselSection title="Most Watching Film" items={mockMostWatching as any} />
       </div>
 
-      {/* Creator Section */}
-      <section className="px-4 md:px-6 lg:px-12 py-6 md:py-8 border-t border-border">
-        <div className="flex items-center justify-between mb-4 md:mb-6">
-          <h2 className="text-lg md:text-2xl font-bold text-foreground">Creator</h2>
-          <div className="flex gap-2">
-            <button className="bg-accent/20 hover:bg-accent/40 p-1.5 md:p-2 rounded-full transition-colors">
-              <X className="w-4 h-4 md:w-5 md:h-5 text-white" />
-            </button>
-            <button className="bg-accent/20 hover:bg-accent/40 p-1.5 md:p-2 rounded-full transition-colors">
-              <Menu className="w-4 h-4 md:w-5 md:h-5 text-white" />
-            </button>
-          </div>
-        </div>
-
-        <div className="flex gap-3 md:gap-6 overflow-x-auto pb-4">
-          {mockCreators.map((creator) => (
-            <div key={creator.id} className="flex-shrink-0 flex flex-col items-center">
-              <div className="w-16 h-16 md:w-24 md:h-24 rounded-full mb-2 md:mb-4 overflow-hidden">
-                <Image src="/images/pngs.png" alt={creator.name} width={100} height={100} className="w-full h-full object-cover" />
+      {/* ===== CREATOR LIST (Slider Logic) ===== */}
+      <div className="relative overflow-hidden">
+        {/* PERUBAHAN 1: gap-8 diubah menjadi gap-4 agar jarak antar kreator lebih kecil (rapat) */}
+        <div 
+          className="flex transition-transform duration-500 ease-in-out gap-4"
+          style={{ transform: `translateX(-${currentIndex * (100 / itemsPerView)}%)` }}
+        >
+          {creatorApiData.map(creator => (
+            /* PERUBAHAN 2: 2rem diubah menjadi 1rem karena mengikuti ukuran gap-4 yang baru */
+            <div 
+              key={creator.id} 
+              className="flex flex-col items-center flex-shrink-0 w-32 md:w-40 lg:w-[calc(100%/10-0.9rem)]"
+            >
+              <div className="relative h-24 w-24 rounded-full overflow-hidden mb-3 border-2 border-white/10">
+                <Image 
+                  src={creator.avatar_url || '/images/pngs.png'} 
+                  alt={creator.name} 
+                  fill 
+                  className="object-cover" 
+                />
               </div>
-              <p className="font-semibold text-foreground text-center text-sm">{creator.name}</p>
-              <p className="text-xs text-muted-foreground text-center">{creator.movies}</p>
+              <p className="font-semibold text-sm text-center line-clamp-1">{creator.name}</p>
+              <p className="text-xs text-gray-500">{creator.total_video} movies</p>
             </div>
           ))}
         </div>
+      </div>
 
-        <div className="flex justify-center mt-8">
-          <Button className="bg-transparent border border-white/20 hover:bg-white/10 text-white">View All Creators</Button>
-        </div>
-      </section>
+      {/* ===== VIEW ALL BUTTON ===== */}
+      <div className="mt-8 flex justify-center">
+        <Link href="/dashboard/creator" className="inline-block">
+          <button className="px-6 py-2 rounded-md border border-white/20 bg-transparent text-white hover:bg-white/10 transition-colors">
+            View All Creators
+          </button>
+        </Link>
+      </div>
+    </section>
 
-         {/* Banner Section */}
-      <section className="px-4 md:px-6 lg:px-12 py-8 md:py-12 border-t border-border">
-        <div className="relative rounded-xl overflow-hidden min-h-96 md:min-h-[500px]">
-          {/* Background Image */}
+         <section className="border-t border-border px-4 py-8 md:px-6 md:py-12 lg:px-12">
+        <div className="relative min-h-96 overflow-hidden rounded-xl md:min-h-[500px]">
           <div className="absolute inset-0">
-            <Image 
-              src="/images/design-mode/a.png" 
-              alt="Banner Background" 
-              fill 
-              className="object-cover"
-            />
+            <Image src="/images/design-mode/a.png" alt="Banner Background" fill className="object-cover" />
           </div>
-          
-          {/* Dark Overlay */}
+
           <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/60 to-transparent" />
-          
-          {/* Content */}
-      <FutureFilmmaking />
+
+          <FutureFilmmaking />
         </div>
       </section>
 
-
-         <section className="mt-8 md:mt-12 mb-6 md:mb-8 mx-4 md:mx-6 lg:mx-12">
-        <div className="relative rounded-lg overflow-hidden border border-white/10">
-          <div className="absolute inset-0">
-            <Image 
-              src="/images/usky-tv-bg.png" 
-              alt="Background" 
-              fill 
-              className="object-cover"
-            />
-          </div>
-          <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/60 to-black/40" />
-          
-          <div className="relative flex flex-col lg:flex-row items-center justify-between px-4 md:px-6 lg:px-12 py-6 md:py-8 lg:py-12 gap-4 md:gap-8">
-            <div className="flex-1 max-w-md">
-              <div className="inline-block bg-foreground text-background text-xs font-semibold px-3 py-1 rounded-full mb-3 md:mb-4">
-                Coming Soon
-              </div>
-              <h2 className="text-2xl md:text-3xl lg:text-4xl font-bold text-foreground mb-3 md:mb-4 leading-tight">
-                Get the USKY TV for free
-              </h2>
-              <ul className="space-y-1.5 md:space-y-2 text-muted-foreground text-xs md:text-sm">
-                <li className="flex items-start gap-2">
-                  <span className="text-accent mt-1">•</span>
-                  <span>Live events, films and shows</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-accent mt-1">•</span>
-                  <span>Offline viewing</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-accent mt-1">•</span>
-                  <span>Event reminders</span>
-                </li>
-              </ul>
-            </div>
-            
-
-          </div>
-        </div>
-      </section>
-
+      </div>
 
       <Footer />
     </div>
   )
+}
+
+function transformFilmData(films: FilmData[]) {
+  return films.map(f => ({
+    id: f.id,
+    title: f.name,
+    image: f.image_url,
+    description: f.synopsis || 'Watch groundbreaking films.',
+    category: f.cats || 'Films',
+    rating: f.rates ? `${f.rates}/10` : '8.5/10',
+    year: 2025,
+    duration: '1h 0m',
+    genre: f.cats || 'Films',
+  }))
 }

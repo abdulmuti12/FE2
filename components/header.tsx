@@ -2,18 +2,29 @@
 
 import Image from 'next/image'
 import Link from 'next/link'
+import { Video } from 'lucide-react'
 import { useState, useRef, useEffect } from 'react'
-import { usePathname } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 import { Search, User, Calendar, Ticket, CreditCard, Settings, LogOut, X } from 'lucide-react'
 
 export function Header() {
   const pathname = usePathname()
+  const router = useRouter()
   const [userDropdownOpen, setUserDropdownOpen] = useState(false) // desktop dropdown
   const [mobileUserMenuOpen, setMobileUserMenuOpen] = useState(false) // mobile drawer
   const [isSearchActive, setIsSearchActive] = useState(false)
+  const [displayName, setDisplayName] = useState('User')
+  const [username, setUsername] = useState('user')
 
   const dropdownRef = useRef<HTMLDivElement>(null)
   const searchInputRef = useRef<HTMLInputElement>(null)
+
+  const handleSignOut = () => {
+    localStorage.removeItem('user_token')
+    setUserDropdownOpen(false)
+    setMobileUserMenuOpen(false)
+    router.push('/')
+  }
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -32,6 +43,30 @@ export function Header() {
     }
   }, [isSearchActive])
 
+  useEffect(() => {
+    const rawProfile = localStorage.getItem('user_profile')
+    if (!rawProfile) return
+
+    try {
+      const profile = JSON.parse(rawProfile)
+      const rawName = String(profile?.name || '').trim()
+      const rawEmail = String(profile?.email || '').trim()
+      const rawUsername = String(profile?.username || '').trim()
+
+      const resolvedDisplayName = rawName || rawUsername || 'User'
+      const resolvedUsername =
+        rawUsername ||
+        (rawEmail ? rawEmail.split('@')[0] : '') ||
+        rawName.toLowerCase().replace(/\s+/g, '') ||
+        'user'
+
+      setDisplayName(resolvedDisplayName)
+      setUsername(resolvedUsername)
+    } catch (error) {
+      console.error('Failed to parse user_profile:', error)
+    }
+  }, [])
+
   // lock body scroll when mobile drawer open
   useEffect(() => {
     if (mobileUserMenuOpen) {
@@ -47,9 +82,9 @@ export function Header() {
   const navItems = [
     { label: 'Films', href: '/dashboard/film' },
     { label: 'Series', href: '/dashboard/series' },
-    { label: 'Clips', href: '/dashboard/clip' },
+    { label: 'Clips', href: '/dashboard/clip/list' },
     { label: 'Events', href: '/dashboard/event' },
-    { label: 'Awards', href: '#' },
+    { label: 'Awards', href: '/dashboard/awards' },
   ]
 
   const isActive = (href: string) => {
@@ -79,8 +114,8 @@ export function Header() {
                 <User className="w-5 h-5 text-white/80" />
               </div>
               <div className="min-w-0">
-                <p className="text-white font-semibold leading-tight">leerob</p>
-                <p className="text-white/60 text-sm truncate">leerob@example.com</p>
+                <p className="text-white font-semibold leading-tight">{displayName}</p>
+                <p className="text-white/60 text-sm truncate">@{username}</p>
               </div>
 
               <button
@@ -95,7 +130,7 @@ export function Header() {
             {/* menu items */}
             <div className="py-2">
               <Link
-                href="#"
+                href="/dashboard/event/ticket"
                 onClick={closeMobileMenu}
                 className="flex items-center gap-4 px-5 py-4 text-white/90 hover:bg-white/5 transition-colors"
               >
@@ -113,7 +148,7 @@ export function Header() {
               </Link>
 
               <Link
-                href="/dashboard/myaccount"
+                href="/dashboard/profile"
                 onClick={closeMobileMenu}
                 className="flex items-center gap-4 px-5 py-4 text-white/90 hover:bg-white/5 transition-colors"
               >
@@ -138,17 +173,25 @@ export function Header() {
                 <Settings className="w-5 h-5 text-white/70" />
                 <span>Change Password</span>
               </Link>
-            </div>
 
-            <div className="border-t border-white/10 py-2">
-              <Link
-                href="/"
+              <Link 
+                href="https://creator.usky.ai/login" target="_blank"
                 onClick={closeMobileMenu}
                 className="flex items-center gap-4 px-5 py-4 text-white/90 hover:bg-white/5 transition-colors"
               >
+                <Video className="w-5 h-5 text-white/70" />
+                <span>My Video</span>
+              </Link>
+            </div>
+
+            <div className="border-t border-white/10 py-2">
+              <button
+                onClick={handleSignOut}
+                className="w-full flex items-center gap-4 px-5 py-4 text-white/90 hover:bg-white/5 transition-colors"
+              >
                 <LogOut className="w-5 h-5 text-white/70" />
                 <span>Sign Out</span>
-              </Link>
+              </button>
             </div>
           </div>
         </div>
@@ -159,13 +202,15 @@ export function Header() {
         <div className="flex flex-col gap-4 md:hidden">
           {/* Row 1 */}
           <div className="flex items-center justify-between">
-            <Image
-              src="/usky-logo.png"
-              alt="USKY Logo"
-              width={120}
-              height={40}
-              className="h-8 w-auto object-contain"
-            />
+            <Link href="/dashboard">
+              <Image
+                src="/usky-logo.png"
+                alt="USKY Logo"
+                width={120}
+                height={40}
+                className="h-8 w-auto object-contain cursor-pointer hover:opacity-80 transition-opacity"
+              />
+            </Link>
 
             <div className="flex items-center gap-4">
               {!isSearchActive ? (
@@ -235,13 +280,15 @@ export function Header() {
         <div className="hidden md:flex flex-col md:flex-row md:items-center justify-between gap-4">
           {/* LEFT */}
           <div className="flex items-center justify-between w-full md:w-auto">
-            <Image
-              src="/usky-logo.png"
-              alt="USKY Logo"
-              width={80}
-              height={35}
-              className="h-8 md:h-9 w-auto object-contain"
-            />
+            <Link href="/dashboard">
+              <Image
+                src="/usky-logo.png"
+                alt="USKY Logo"
+                width={80}
+                height={35}
+                className="h-8 md:h-9 w-auto object-contain cursor-pointer hover:opacity-80 transition-opacity"
+              />
+            </Link>
           </div>
 
           {/* RIGHT */}
@@ -275,39 +322,50 @@ export function Header() {
               {userDropdownOpen && (
                 <div className="absolute right-0 mt-3 w-64 bg-[#1a1a2e] border border-white/10 rounded-xl shadow-2xl overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
                   <div className="px-6 py-4 border-b border-white/10">
-                    <p className="font-semibold text-white text-sm">leerob</p>
-                    <p className="text-xs text-gray-400">leerob@example.com</p>
+                    <p className="font-semibold text-white text-sm">{displayName}</p>
+                    <p className="text-xs text-gray-400">@{username}</p>
                   </div>
 
                   <div className="py-2">
-                    <button className="w-full flex items-center gap-4 px-6 py-3 text-sm text-gray-300 hover:bg-white/5 transition-colors">
+                    <Link
+                      href="/dashboard/event/ticket"
+                      className="w-full flex items-center gap-4 px-6 py-3 text-sm text-gray-300 hover:bg-white/5 transition-colors"
+                    >
                       <Calendar className="w-5 h-5" /> My Event
-                    </button>
+                    </Link>
                     <button className="w-full flex items-center gap-4 px-6 py-3 text-sm text-gray-300 hover:bg-white/5 transition-colors">
                       <Ticket className="w-5 h-5" /> My Referral
                     </button>
 
                     <Link
-                      href="/dashboard/myaccount"
+                      href="/dashboard/profile"
                       className="w-full flex items-center gap-4 px-6 py-3 text-sm text-gray-300 hover:bg-white/5 transition-colors"
                     >
                       <CreditCard className="w-5 h-5" /> My Account
                     </Link>
 
-                    <Link href="/dashboard/changepass">
-                      <button className="w-full flex items-center gap-4 px-6 py-3 text-sm text-gray-300 hover:bg-white/5 transition-colors">
-                        <Settings className="w-5 h-5" /> Change Password
-                      </button>
+                    <Link 
+                      href="/dashboard/changepass"
+                      className="w-full flex items-center gap-4 px-6 py-3 text-sm text-gray-300 hover:bg-white/5 transition-colors"
+                    >
+                      <Settings className="w-5 h-5" /> Change Password
+                    </Link>
+                    
+                    <Link 
+                      href="https://creator.usky.ai/login" target="_blank"
+                      className="w-full flex items-center gap-4 px-6 py-3 text-sm text-gray-300 hover:bg-white/5 transition-colors"
+                    >
+                      <Video className="w-5 h-5" /> My Video
                     </Link>
                   </div>
 
                   <div className="border-t border-white/10 py-2">
-                    <Link
-                      href="/"
+                    <button
+                      onClick={handleSignOut}
                       className="w-full flex items-center gap-4 px-6 py-3 text-sm text-gray-300 hover:bg-white/5 transition-colors"
                     >
                       <LogOut className="w-5 h-5" /> Sign Out
-                    </Link>
+                    </button>
                   </div>
                 </div>
               )}

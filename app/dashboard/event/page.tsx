@@ -2,355 +2,413 @@
 
 import { Header } from '@/components/header'
 import { Footer } from '@/components/footer'
-import { ChevronRight, ChevronLeft, Calendar, Play, Filter, ChevronDown } from 'lucide-react'
-import { useState } from 'react'
+// import { ChevronRight, Calendar, Play } from 'lucide-react'
+import { AllEvents } from '@/components/event/all-events'
 import { useRouter } from 'next/navigation'
+// import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
+import { ChevronRight, ChevronLeft, Calendar, Play } from 'lucide-react'
 
-// Mock Data
-const upcomingEvents = [
-  {
-    id: 1,
-    title: 'BALAIRUNG UI MOVIE NIGHT',
-    subtitle: 'Legacy of Heroes',
-    date: '22-11-2025',
-    image: '/images/event/example.png', 
-    price: 'GRATIS!'
-  },
-  {
-    id: 2,
-    title: 'AI FILM DAY',
-    subtitle: 'Watch, Learn, Create',
-    date: '22-11-2025',
-    image: '/images/event/example.png',
-    price: 'Rp50.000'
-  },
-  {
-    id: 3,
-    title: 'AI MASTERPLAY 2025',
-    subtitle: 'Yang Telah Belajar AI',
-    date: '22-11-2025',
-    image: '/images/event/example.png',
-    price: 'Rp2.000.000'
-  },
-  {
-    id: 4,
-    title: 'DIPONEGORO HERO',
-    subtitle: '200 Tahun Perang Jawa',
-    date: '22-11-2025',
-    image: '/images/event/example.png',
-    price: 'GRATIS!'
-  },
-  {
-    id: 5,
-    title: 'DIPONEGORO FESTIVAL',
-    subtitle: 'Festival Budaya',
-    date: '22-11-2025',
-    image: '/images/event/example.png',
-    price: 'Coming Soon'
-  }
-]
+const upcomingEvents = []
 
-const recapEvents = [
-  {
-    id: 1,
-    title: 'BALAIRUNG UI RECAP',
-    desc: 'Watch groundbreaking films crafted by human creativity.',
-    image: '/images/landscape1.jpg',
-    type: 'Tipe Event'
-  },
-  {
-    id: 2,
-    title: 'AI FILM DAY HIGHLIGHTS',
-    desc: 'Highlights from the AI Film Day event.',
-    image: '/images/landscape2.jpg',
-    type: 'Tipe Event'
-  },
-  {
-    id: 3,
-    title: 'MASTERPLAY SESSION',
-    desc: 'Deep dive into AI technology.',
-    image: '/images/landscape3.jpg',
-    type: 'Tipe Event'
+const recapEvents = []
+
+interface EventItem {
+  id: string
+  title: string
+  image?: string
+  image_url?: string
+  from_dates?: string
+  start_date?: string
+  event_category?: {
+    name: string
   }
-]
+}
+
+interface Category {
+  id: string
+  name: string
+}
+
+interface UpcomingEvent {
+  id: string
+  title: string
+  image?: string
+  image_url?: string
+  from_dates?: string
+  price?: string
+  event_category?: {
+    name: string
+  }
+}
+
+interface CompletedEvent {
+  id: string
+  title: string
+  image?: string
+  image_url?: string
+  from_dates?: string
+  to_dates?: string
+  event_category?: {
+    name: string
+  }
+}
+
+const EVENT_ID_STORAGE_KEY = 'selected_event_id'
 
 export default function EventPage() {
   const router = useRouter()
-  const [activeFilter, setActiveFilter] = useState('All')
-  const [sortBy, setSortBy] = useState('Latest')
 
-  // Menggabungkan data untuk simulasi grid All Events
-  const allEvents = [...upcomingEvents, ...upcomingEvents, ...upcomingEvents]
-  const filterOptions = ['All', 'Nonton Bareng', 'Webinar', 'Kelas', 'Seminar']
+  const [upcomingEventsList, setUpcomingEventsList] = useState<UpcomingEvent[]>([])
+  const [completedEventsList, setCompletedEventsList] = useState<CompletedEvent[]>([])
+  const [allEvents, setAllEvents] = useState<EventItem[]>([])
+  const [categories, setCategories] = useState<Category[]>([])
+  const [currentPage, setCurrentPage] = useState(1)
+  const [totalPages, setTotalPages] = useState(1)
+  const [loading, setLoading] = useState(true)
+  const [upcomingLoading, setUpcomingLoading] = useState(true)
+  const [completedLoading, setCompletedLoading] = useState(true)
+  const [categoriesLoading, setCategoriesLoading] = useState(true)
+  const [paginationHtml, setPaginationHtml] = useState<string>('')
+
+  const [idCategory, setIdCategory] = useState('')
+  const [idPartner, setIdPartner] = useState('')
+  const [sortBy, setSortBy] = useState('latest')
+
+  // Referensi untuk membidik container scroll
+  const scrollContainerRef = useRef<HTMLDivElement>(null)
+
+  // Fungsi untuk menggeser card saat tombol diklik
+  const scroll = (direction: 'left' | 'right') => {
+    if (scrollContainerRef.current) {
+      // Menentukan seberapa jauh jarak gesernya (300px, bisa disesuaikan)
+      const scrollAmount = direction === 'left' ? -300 : 300
+      scrollContainerRef.current.scrollBy({ left: scrollAmount, behavior: 'smooth' })
+    }
+  }
+
+  const LIMIT = 20
+
+  const openEventDetail = (eventId: string) => {
+    sessionStorage.setItem(EVENT_ID_STORAGE_KEY, eventId)
+    router.push('/dashboard/event/detail')
+  }
+
+  useEffect(() => {
+    const token = localStorage.getItem('user_token')
+
+    console.log('[v0] Token from localStorage:', token ? 'Found' : 'Not found')
+
+    if (!token) {
+      router.push('/')
+      return
+    }
+
+    fetchCategories(token)
+    fetchUpcomingEvents(token)
+    fetchCompletedEvents(token)
+    fetchEvents(token, currentPage, idCategory, idPartner, sortBy)
+  }, [currentPage, idCategory, idPartner, sortBy, router])
+
+  const fetchCategories = async (token: string) => {
+    try {
+      setCategoriesLoading(true)
+      const response = await fetch('/api/event/event-categories', {
+        method: 'GET',
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      })
+
+      const data = await response.json()
+
+      if (data.list && Array.isArray(data.list)) {
+        setCategories(data.list)
+      }
+    } catch (error) {
+      console.error('[v0] Error fetching categories:', error)
+    } finally {
+      setCategoriesLoading(false)
+    }
+  }
+
+  const fetchUpcomingEvents = async (token: string) => {
+    try {
+      setUpcomingLoading(true)
+      const params = new URLSearchParams({
+        id_category: '',
+        page: '1',
+      })
+
+      const response = await fetch(`/api/event/upcoming-events?${params.toString()}`, {
+        method: 'GET',
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      })
+
+      const data = await response.json()
+
+      if (data.list && Array.isArray(data.list)) {
+        setUpcomingEventsList(data.list.slice(0, 2))
+      }
+    } catch (error) {
+      console.error('[v0] Error fetching upcoming events:', error)
+    } finally {
+      setUpcomingLoading(false)
+    }
+  }
+
+  const fetchCompletedEvents = async (token: string) => {
+    try {
+      setCompletedLoading(true)
+      const params = new URLSearchParams({
+        id_category: '',
+        page: '0',
+      })
+
+      const response = await fetch(`/api/completed-events?${params.toString()}`, {
+        method: 'GET',
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      })
+
+      const data = await response.json()
+
+      if (data.status && data.list && Array.isArray(data.list)) {
+        setCompletedEventsList(data.list.slice(0, 3))
+      }
+    } catch (error) {
+      console.error('[v0] Error fetching completed events:', error)
+    } finally {
+      setCompletedLoading(false)
+    }
+  }
+
+  const fetchEvents = async (
+    token: string,
+    page: number,
+    category: string,
+    partner: string,
+    sort: string
+  ) => {
+    try {
+      setLoading(true)
+
+      const params = new URLSearchParams({
+        sort,
+        id_category: category,
+        id_partner: partner,
+        page: page.toString(),
+        limit: LIMIT.toString(),
+      })
+
+      const url = `/api/event/events?${params.toString()}`
+
+      const response = await fetch(url, {
+        method: 'GET',
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        cache: 'no-store',
+      })
+
+      if (!response.ok) {
+        throw new Error('API request failed')
+      }
+
+      const data = await response.json()
+
+      if (data.list && Array.isArray(data.list)) {
+        setAllEvents(data.list)
+        
+        if (data.pagination) {
+          setPaginationHtml(data.pagination)
+          const pageMatches = data.pagination.match(/data-ci-pagination-page="(\d+)"/g)
+          if (pageMatches && pageMatches.length > 0) {
+            const pages = pageMatches.map((match: string) => parseInt(match.match(/\d+/)?.[0] || '1'))
+            const maxPage = Math.max(...pages)
+            setTotalPages(maxPage)
+          }
+        } else {
+          const total = Math.ceil((data.total || 0) / LIMIT)
+          setTotalPages(total > 0 ? total : 1)
+        }
+      }
+
+      else if (data.data && Array.isArray(data.data)) {
+        setAllEvents(data.data)
+
+        if (data.pagination) {
+          setPaginationHtml(data.pagination)
+          const pageMatches = data.pagination.match(/data-ci-pagination-page="(\d+)"/g)
+          if (pageMatches && pageMatches.length > 0) {
+            const pages = pageMatches.map((match: string) => parseInt(match.match(/\d+/)?.[0] || '1'))
+            const maxPage = Math.max(...pages)
+            setTotalPages(maxPage)
+          }
+        } else {
+          const total = Math.ceil((data.total || data.pagination?.total || 0) / LIMIT)
+          setTotalPages(total > 0 ? total : 1)
+        }
+      }
+
+      else if (Array.isArray(data)) {
+        setAllEvents(data)
+        setTotalPages(1)
+      }
+
+      else {
+        setAllEvents([])
+      }
+
+    } catch (error) {
+      console.error('[v0] Error fetching events:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
 
   return (
-    <div className="min-h-screen bg-[#050B14] text-white font-sans selection:bg-yellow-500 selection:text-black">
+    <div className="min-h-screen bg-[#050B14] text-white">
+
       <Header />
 
-      {/* Hero Section */}
-      <div className="relative w-full h-[450px] md:h-[400px] overflow-hidden">
-        <div 
+      {/* <div className="relative w-full h-[450px] overflow-hidden">
+        <div
           className="absolute inset-0 bg-cover bg-center"
-          style={{ backgroundImage: 'url(/images/privacy-header.jpg)' }}
-        >
-          <div className="absolute inset-0 bg-gradient-to-r from-[#050B14] via-[#050B14]/80 to-transparent"></div>
-          <div className="absolute inset-0 bg-gradient-to-t from-[#050B14] via-transparent to-transparent"></div>
-        </div>
+          style={{ backgroundImage: 'url(/images/imageheader.png)' }}
+        />
+      </div> */}
 
-        <div className="relative h-full max-w-7xl mx-auto px-6 md:px-12 flex flex-col justify-center pt-16 md:pt-20">
-          <h1 className="text-4xl md:text-6xl font-bold text-white mb-4 tracking-tight">Event</h1>
-          <p className="text-gray-400 text-sm md:text-base max-w-xl leading-relaxed">
-            Watch groundbreaking films crafted by human creativity and artificial intelligence.
-            Join us for upcoming sessions and screenings.
-          </p>
-        </div>
-      </div>
+      <div className="max-w-[1400px] mx-auto px-6 py-8">
 
-      {/* Main Content */}
-      <div className="max-w-[1400px] mx-auto px-6 md:px-12 py-8 pb-24 space-y-12 md:space-y-16">
-        
-        {/* === SECTION 1: UPCOMING EVENTS === */}
-        <section>
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-xl md:text-2xl font-bold text-white border-l-4 border-yellow-500 pl-4">
-              Upcoming Events
-            </h2>
+        <section className="mb-12">
+          <h2 className="text-xl font-bold border-l-4 border-yellow-500 pl-4 mb-6">
+            Upcoming Events
+          </h2>
+
+          <div className="flex gap-4">
+            {upcomingLoading ? (
+              <div className="text-gray-400">Loading events...</div>
+            ) : upcomingEventsList.length > 0 ? (
+              upcomingEventsList.map((event) => (
+                <div
+                  key={event.id}
+                  className="w-[220px] rounded-xl overflow-hidden border border-white/10 cursor-pointer"
+                  onClick={() => openEventDetail(event.id)}
+                >
+                  <img src={event.image_url || event.image} className="w-full h-[280px] object-cover" />
+
+                  <div className="p-4">
+                    <h3 className="font-bold">{event.title}</h3>
+
+                    <div className="flex items-center text-xs text-gray-400 mt-2">
+                      <Calendar className="w-3 h-3 mr-1" />
+                      {event.from_dates}
+                    </div>
+                  </div>
+                </div>
+              ))
+            ) : (
+              <div className="text-gray-400">No upcoming events</div>
+            )}
           </div>
-          
-          <div className="relative group">
-            <div className="overflow-x-auto pb-6 scrollbar-hide -mx-6 px-6 md:mx-0 md:px-0">
-              <div className="flex gap-4 md:gap-5 min-w-max">
-                {upcomingEvents.map((event) => (
-                  <div 
-                    key={event.id} 
-                    onClick={() => router.push('/dashboard/event/detail')}
-                    className="relative w-[220px] md:w-[240px] aspect-[2/3] rounded-xl overflow-hidden cursor-pointer border border-white/10 group/card hover:border-yellow-500 transition-colors"
-                  >
-                    <img 
-                      src={event.image || "/placeholder.svg"} 
-                      alt={event.title}
-                      className="w-full h-full object-cover"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-[#020617] via-[#020617]/70 to-transparent opacity-90"></div>
+        </section>
 
-                    <div className="absolute bottom-0 left-0 w-full p-4 flex flex-col justify-end h-full">
-                      <span className="text-[10px] uppercase tracking-wider text-yellow-500 font-semibold mb-1">
-                        [Tipe Event]
-                      </span>
-                      <h3 className="text-white font-bold text-lg leading-tight mb-1 line-clamp-2">
-                        {event.title}
-                      </h3>
-                      <p className="text-gray-300 text-xs mb-3 line-clamp-1">{event.subtitle}</p>
-                      
-                      <div className="flex items-center justify-between border-t border-white/20 pt-3 mt-1">
-                        <div className="flex items-center gap-1.5 text-gray-400 text-xs">
-                          <Calendar className="w-3 h-3" />
-                          <span>{event.date}</span>
-                        </div>
+<section className="mb-12">
+          <h2 className="text-xl font-bold border-l-4 border-yellow-500 pl-4 mb-6">
+            Recaps and Event Replays
+          </h2>
+
+          {/* Wrapper relative agar tombol panah bisa melayang di atas card */}
+          <div className="relative group">
+            
+            {/* Tombol Kiri */}
+            {completedEventsList.length > 0 && (
+              <button
+                onClick={() => scroll('left')}
+                className="absolute left-2 top-1/2 z-10 -translate-y-1/2 flex h-10 w-10 items-center justify-center rounded-full bg-black/60 border border-white/20 text-white backdrop-blur-md shadow-lg transition-transform hover:scale-110 active:scale-95 md:-left-5"
+                aria-label="Scroll left"
+              >
+                <ChevronLeft className="h-6 w-6" />
+              </button>
+            )}
+
+            {/* Container yang sudah ditambahkan ref={scrollContainerRef} */}
+            <div 
+              ref={scrollContainerRef}
+              className="flex gap-4 overflow-x-auto snap-x snap-mandatory pb-6 md:pb-0 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]"
+            >
+              {completedLoading ? (
+                <div className="text-gray-400">Loading recaps...</div>
+              ) : completedEventsList.length > 0 ? (
+                completedEventsList.map((event) => (
+                  <div
+                    key={event.id}
+                    className="w-[85vw] md:w-[220px] flex-shrink-0 snap-center md:snap-align-none rounded-xl overflow-hidden border border-white/10 cursor-pointer relative bg-[#0a1424]"
+                    onClick={() => openEventDetail(event.id)}
+                  >
+                    <div className="relative h-[420px] md:h-[280px]">
+                      <img src={event.image_url || event.image} className="w-full h-full object-cover" alt={event.title} />
+
+                      <div className="absolute inset-0 flex items-center justify-center bg-black/10 hover:bg-black/20 transition-colors">
+                        <Play className="text-white w-14 h-14 md:w-10 md:h-10 opacity-90 drop-shadow-lg" />
+                      </div>
+                    </div>
+
+                    <div className="p-4 md:p-4 p-5">
+                      <h3 className="font-bold text-lg md:text-base line-clamp-2 leading-snug">{event.title}</h3>
+
+                      <div className="flex items-center text-sm md:text-xs text-gray-400 mt-3 md:mt-2">
+                        <Calendar className="w-4 h-4 md:w-3 md:h-3 mr-2 md:mr-1" />
+                        {event.from_dates}
                       </div>
                     </div>
                   </div>
-                ))}
-              </div>
-            </div>
-            {/* Desktop Nav Button */}
-            <button className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-4 bg-white text-black p-3 rounded-full shadow-lg hidden md:flex items-center justify-center z-10 hover:bg-yellow-400 transition-colors">
-              <ChevronRight className="w-5 h-5" />
-            </button>
-          </div>
-        </section>
-
-        {/* === SECTION 2: RECAPS === */}
-        <section>
-          <h2 className="text-xl md:text-2xl font-bold text-white border-l-4 border-yellow-500 pl-4 mb-6">
-            Recaps and Event Replays
-          </h2>
-          
-          <div className="overflow-x-auto pb-6 scrollbar-hide -mx-6 px-6 md:mx-0 md:px-0">
-            <div className="flex gap-4 md:gap-6 min-w-max">
-              {recapEvents.map((event) => (
-                <div 
-                  key={event.id} 
-                  className="relative w-[300px] md:w-[380px] aspect-video rounded-xl overflow-hidden cursor-pointer group/video border border-white/10"
-                >
-                  <img 
-                    src={event.image || "/placeholder.svg"} 
-                    alt={event.title}
-                    className="w-full h-full object-cover"
-                  />
-                  <div className="absolute inset-0 bg-black/40 group-hover/video:bg-black/50 transition-colors"></div>
-
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <div className="w-10 h-10 md:w-12 md:h-12 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center">
-                      <Play className="w-4 h-4 md:w-5 md:h-5 text-white fill-current ml-1" />
-                    </div>
-                  </div>
-
-                  <div className="absolute bottom-0 left-0 w-full p-4 bg-gradient-to-t from-black via-black/80 to-transparent">
-                    <div className="inline-block px-2 py-0.5 bg-white/10 backdrop-blur-md rounded text-[10px] text-white mb-2 border border-white/20">
-                      {event.type}
-                    </div>
-                    <h3 className="text-white font-bold text-sm md:text-base mb-1">{event.title}</h3>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        {/* === SECTION 3: ALL EVENT (MOBILE & DESKTOP DIFFERENT LAYOUTS) === */}
-        <section>
-          {/* Header Title */}
-           <div className="mb-6">
-            <h2 className="text-xl md:text-2xl font-bold text-white md:border-l-4 md:border-yellow-500 md:pl-4">
-              Event
-            </h2>
-          </div>
-
-          {/* --- MOBILE FILTER LAYOUT (Sesuai Gambar 2) --- */}
-          <div className="md:hidden flex flex-col gap-4 mb-8">
-            {/* Filter By Toggle */}
-            <div className="flex items-center justify-between py-2 border-b border-white/10">
-              <span className="text-sm text-gray-300 font-medium tracking-wide">FILTER BY</span>
-              <Filter className="w-4 h-4 text-white" />
+                ))
+              ) : (
+                <div className="text-gray-400">No completed events available</div>
+              )}
             </div>
 
-            {/* Sort By Dropdown */}
-            <div className="flex items-center justify-between">
-               <span className="text-sm text-gray-300 font-medium tracking-wide">SORT BY</span>
-               <div className="relative">
-                  <select 
-                    value={sortBy}
-                    onChange={(e) => setSortBy(e.target.value)}
-                    className="bg-[#0F172A] text-gray-300 pl-3 pr-8 py-1.5 rounded text-sm appearance-none border border-white/10 focus:outline-none"
-                  >
-                    <option>Latest</option>
-                    <option>Oldest</option>
-                    <option>Popular</option>
-                  </select>
-                  <ChevronDown className="w-4 h-4 text-gray-400 absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none" />
-               </div>
-            </div>
-
-            {/* Tabs Scrollable (Line Style) */}
-            <div className="flex overflow-x-auto scrollbar-hide border-b border-white/10 mt-2">
-              {filterOptions.map((filter) => (
-                 <button
-                 key={filter}
-                 onClick={() => setActiveFilter(filter)}
-                 className={`px-4 py-3 text-sm font-medium whitespace-nowrap transition-colors relative ${
-                   activeFilter === filter
-                     ? 'text-white'
-                     : 'text-gray-400'
-                 }`}
-               >
-                 {filter}
-                 {/* Yellow Underline for Active */}
-                 {activeFilter === filter && (
-                    <span className="absolute bottom-0 left-0 w-full h-[2px] bg-yellow-500"></span>
-                 )}
-               </button>
-              ))}
-            </div>
-          </div>
-
-          {/* --- DESKTOP FILTER LAYOUT (Original) --- */}
-          <div className="hidden md:flex flex-col gap-6 mb-8">
-            <div className="flex items-center justify-between gap-4 border-b border-white/10 pb-4">
-              <div className="flex items-center gap-3">
-                <span className="text-gray-400 text-xs uppercase font-semibold tracking-wide">Sort By</span>
-                <div className="relative">
-                    <select 
-                    value={sortBy}
-                    onChange={(e) => setSortBy(e.target.value)}
-                    className="bg-[#0F172A] text-white px-4 py-2 pr-8 rounded-lg text-sm appearance-none border border-white/10 focus:outline-none cursor-pointer"
-                    >
-                    <option>Latest</option>
-                    <option>Oldest</option>
-                    <option>Popular</option>
-                    </select>
-                    <ChevronRight className="w-4 h-4 text-gray-400 absolute right-3 top-1/2 -translate-y-1/2 rotate-90 pointer-events-none" />
-                </div>
-              </div>
-
-              <div className="flex flex-wrap gap-2">
-                {filterOptions.map((filter) => (
-                  <button
-                    key={filter}
-                    onClick={() => setActiveFilter(filter)}
-                    className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all ${
-                      activeFilter === filter
-                        ? 'bg-transparent text-white border border-yellow-500'
-                        : 'text-gray-400 hover:text-white hover:bg-white/5 border border-transparent'
-                    }`}
-                  >
-                    {filter}
-                  </button>
-                ))}
-              </div>
-            </div>
-          </div>
-
-          {/* Grid Layout (1 Col Mobile, 5 Col Desktop) */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-x-4 gap-y-8">
-            {allEvents.map((event, index) => (
-              <div 
-                key={`${event.id}-${index}`}
-                onClick={() => router.push('/dashboard/event/detail')}
-                className="group cursor-pointer flex flex-col hover:opacity-80 transition-opacity"
+            {/* Tombol Kanan */}
+            {completedEventsList.length > 0 && (
+              <button
+                onClick={() => scroll('right')}
+                className="absolute right-2 top-1/2 z-10 -translate-y-1/2 flex h-10 w-10 items-center justify-center rounded-full bg-black/60 border border-white/20 text-white backdrop-blur-md shadow-lg transition-transform hover:scale-110 active:scale-95 md:-right-5"
+                aria-label="Scroll right"
               >
-                {/* Poster Card */}
-                <div className="relative w-full aspect-[2/3] bg-gray-800 rounded-lg overflow-hidden mb-3 border border-white/5">
-                  <img 
-                    src={event.image || "/placeholder.svg"} 
-                    alt={event.title}
-                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-                  />
-                   <div className="absolute inset-0 bg-gradient-to-t from-[#020617] via-[#020617]/50 to-transparent"></div>
-                   <div className="absolute bottom-0 left-0 w-full p-3 md:p-3 p-5"> 
-                        <span className="text-[10px] text-yellow-500 font-bold mb-1 block">[Judul Event]</span>
-                        <h3 className="text-white font-bold text-lg md:text-sm leading-tight line-clamp-2 mb-2 group-hover:text-yellow-400 transition-colors">
-                            {event.title}
-                        </h3>
-                   </div>
-                </div>
-                
-                {/* Meta Data */}
-                <div className="px-1">
-                    <div className="flex items-center gap-2 text-gray-400 text-xs mb-1">
-                        <Calendar className="w-3 h-3" />
-                        <span>{event.date}</span>
-                    </div>
-                </div>
-              </div>
-            ))}
-          </div>
+                <ChevronRight className="h-6 w-6" />
+              </button>
+            )}
 
-          {/* Pagination (New) */}
-          <div className="flex items-center justify-center gap-3 mt-12 md:justify-end">
-             <button className="flex items-center gap-1 px-4 py-2 rounded-lg bg-[#0F172A] text-sm text-gray-300 hover:text-white border border-white/10 hover:border-yellow-500 transition-colors">
-                <ChevronLeft className="w-4 h-4" />
-                <span className="hidden sm:inline">Previous</span>
-             </button>
-             
-             <button className="w-9 h-9 rounded-lg bg-[#0F172A] text-white text-sm font-medium border border-yellow-500">
-                1
-             </button>
-             <button className="w-9 h-9 rounded-lg bg-transparent text-gray-400 text-sm font-medium hover:bg-white/5">
-                2
-             </button>
-             <span className="text-gray-500">...</span>
-             
-             <button className="flex items-center gap-1 px-4 py-2 rounded-lg bg-[#0F172A] text-sm text-gray-300 hover:text-white border border-white/10 hover:border-yellow-500 transition-colors">
-                <span className="hidden sm:inline">Next</span>
-                <ChevronRight className="w-4 h-4" />
-             </button>
           </div>
-
         </section>
+
+        <AllEvents
+          allEvents={allEvents}
+          currentPage={currentPage}
+          totalPages={totalPages}
+          onPageChange={setCurrentPage}
+          loading={loading}
+          onSortChange={setSortBy}
+          onCategoryChange={setIdCategory}
+          onPartnerChange={setIdPartner}
+          currentSort={sortBy}
+          categories={categories}
+          categoriesLoading={categoriesLoading}
+          paginationHtml={paginationHtml}
+        />
+
       </div>
 
       <Footer />
+
     </div>
   )
 }

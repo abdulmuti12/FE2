@@ -4,6 +4,8 @@ import Image from 'next/image'
 import { Button } from '@/components/ui/button'
 import { useState } from 'react'
 import { ChevronRight } from 'lucide-react'
+import Link from "next/link";
+
 
 const features = [
   {
@@ -141,9 +143,11 @@ export function FutureFilmmaking() {
           </div>
 
           {/* CTA Button */}
-          <Button className="w-full bg-white text-black hover:bg-gray-200 font-semibold text-sm md:text-base py-2.5 md:py-2.5">
-            Explore Skydio.Ai
-          </Button>
+       <Link href="https://skydio.id/" target="_blank">
+  <Button className="w-full bg-white text-black hover:bg-gray-200 font-semibold text-sm md:text-base py-2.5 md:py-2.5">
+    Explore Skydio.Ai
+  </Button>
+</Link>
         </div>
       </div>
     </section>
