@@ -1138,15 +1138,7 @@ interface Category {
   name: string
 }
 
-const MOCK_AWARDS: AwardSubmission[] = [
-  { id: '1', name: 'AI Sunset',          image_url: '/film/film1.png', likes: 234, views: 1205, play: 45 },
-  { id: '2', name: 'Digital Dreams',     image_url: '/film/film2.png', likes: 189, views: 987,  play: 32 },
-  { id: '3', name: 'Future Vision',      image_url: '/film/film3.png', likes: 312, views: 1543, play: 67 },
-  { id: '4', name: 'Neural Art',         image_url: '/film/film1.png', likes: 156, views: 876,  play: 28 },
-  { id: '5', name: 'Synthetic Beauty',   image_url: '/film/film2.png', likes: 267, views: 1398, play: 51 },
-  { id: '6', name: 'AI Canvas',          image_url: '/film/film3.png', likes: 298, views: 1456, play: 62 },
-  { id: '7', name: 'Machine Creativity', image_url: '/film/film1.png', likes: 213, views: 1122, play: 39 },
-]
+const MOCK_AWARDS: AwardSubmission[] = []
 
 const MOCK_CATEGORIES: Category[] = [
   { id: '1', name: 'Best AI Short Film' },
@@ -1231,8 +1223,13 @@ function FilmsContent() {
        const params = new URLSearchParams({
           sort,
           page: currentPage.toString(),
+<<<<<<< HEAD
           limit: '7',
           view_type: 'potrait', // ← ganti ini
+=======
+          limit: '25',
+          view_type: 'potrait',
+>>>>>>> connecting-api-dummy
         })
         if (selectedCategory) params.append('id_category', selectedCategory)
         const response = await fetch(`/api/awards/list?${params.toString()}`)
