@@ -1223,13 +1223,8 @@ function FilmsContent() {
        const params = new URLSearchParams({
           sort,
           page: currentPage.toString(),
-<<<<<<< HEAD
-          limit: '7',
-          view_type: 'potrait', // ← ganti ini
-=======
           limit: '25',
           view_type: 'potrait',
->>>>>>> connecting-api-dummy
         })
         if (selectedCategory) params.append('id_category', selectedCategory)
         const response = await fetch(`/api/awards/list?${params.toString()}`)

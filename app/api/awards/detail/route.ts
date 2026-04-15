@@ -2,9 +2,24 @@ import { NextRequest, NextResponse } from 'next/server'
 
 export async function GET(request: NextRequest) {
   try {
+    const { searchParams } = new URL(request.url)
+    const id = searchParams.get('id')
+
+    if (!id) {
+      return NextResponse.json(
+        { status: false, message: 'id is required' },
+        { status: 400 }
+      )
+    }
+
     const authHeader = request.headers.get('authorization')
     const tokenFromHeader = authHeader?.replace(/^Bearer\s+/i, '').trim()
-    const token = tokenFromHeader || process.env.USKY_API_TOKEN || ''
+    const token =
+      tokenFromHeader ||
+      process.env.USKY_API_TOKEN ||
+      process.env.NEXT_PUBLIC_API_TOKEN ||
+      process.env.API_TOKEN ||
+      ''
 
     if (!token) {
       return NextResponse.json(
@@ -13,7 +28,7 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    const response = await fetch('https://api.usky.ai/award/category', {
+    const response = await fetch(`https://api.usky.ai/award/detail?id=${id}`, {
       method: 'GET',
       headers: {
         Authorization: `Bearer ${token}`,
@@ -38,11 +53,11 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    return NextResponse.json(data || { status: true, list: [], message: 'success' })
+    return NextResponse.json(data || { status: false, message: 'Invalid response from API' })
   } catch (error: any) {
-    console.error('Award category proxy error:', error.message)
+    console.error('Awards detail proxy error:', error.message)
     return NextResponse.json(
-      { status: false, message: 'Failed to fetch award category' },
+      { status: false, message: 'Failed to fetch award detail' },
       { status: 500 }
     )
   }
