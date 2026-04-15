@@ -15,7 +15,7 @@ interface AwardSubmission {
   play?: number | string
 }
 
-const FILTER_OPTIONS = ['Trending', 'Latest', 'Most Liked', 'Most Viewed']
+
 const TABS = ['Films', 'Leaderboard', 'Details', 'Direction', 'Scoring', 'Rules', 'FAQ']
 
 const PRIZE_BREAKDOWN = [
@@ -584,42 +584,77 @@ function DetailsContent() {
   )
 }
 // ─────────────────────────────────────────────
-// MOCK LEADERBOARD DATA
+// TAB: LEADERBOARD  (replace the existing LeaderboardContent function)
 // ─────────────────────────────────────────────
 
-const MOCK_LEADERBOARD_CATEGORIES = [
-  { id: '1', name: 'Long AI Film' },
-  { id: '2', name: 'Short AI Film' },
-  { id: '3', name: 'Documentary AI Film' },
-  { id: '4', name: 'Video Clip' },
-  { id: '5', name: 'Video Advertising AI' },
-  { id: '6', name: 'AI Content For Social Media' },
-]
+// ── Types ──────────────────────────────────────────────────────────────────
+interface LeaderboardCreator {
+  id: string | number
+  name: string
+  email?: string
+  avatar?: string | null
+  watch: string | number
+  likes: string | number
+  vote: string | number
+  views: string | number
+  play: string | number
+  totals: string | number
+}
 
-const MOCK_LEADERBOARD_CREATORS = [
-  { id: '1',  name: 'Cody Fisher',     vote: 429, play: 426, likes: 994, watch: 540, views: 185, totals: 883 },
-  { id: '2',  name: 'Jenny Wilson',    vote: 429, play: 426, likes: 994, watch: 540, views: 185, totals: 883 },
-  { id: '3',  name: 'Leslie Alexander',vote: 429, play: 426, likes: 994, watch: 540, views: 185, totals: 883 },
-  { id: '4',  name: 'Robert Fox',      vote: 429, play: 426, likes: 994, watch: 540, views: 185, totals: 883 },
-  { id: '5',  name: 'Ronald Richards', vote: 429, play: 426, likes: 994, watch: 540, views: 185, totals: 883 },
-  { id: '6',  name: 'Kathryn Murphy',  vote: 429, play: 426, likes: 994, watch: 540, views: 185, totals: 883 },
-  { id: '7',  name: 'Cody Fisher',     vote: 429, play: 426, likes: 994, watch: 540, views: 185, totals: 883 },
-  { id: '8',  name: 'Jenny Wilson',    vote: 429, play: 426, likes: 994, watch: 540, views: 185, totals: 883 },
-  { id: '9',  name: 'Leslie Alexander',vote: 429, play: 426, likes: 994, watch: 540, views: 185, totals: 883 },
-  { id: '10', name: 'Robert Fox',      vote: 429, play: 426, likes: 994, watch: 540, views: 185, totals: 883 },
-  { id: '11', name: 'Ronald Richards', vote: 429, play: 426, likes: 994, watch: 540, views: 185, totals: 883 },
-  { id: '12', name: 'Kathryn Murphy',  vote: 429, play: 426, likes: 994, watch: 540, views: 185, totals: 883 },
-  { id: '13', name: 'Robert Fox',      vote: 429, play: 426, likes: 994, watch: 540, views: 185, totals: 883 },
-  { id: '14', name: 'Ronald Richards', vote: 429, play: 426, likes: 994, watch: 540, views: 185, totals: 883 },
-  { id: '15', name: 'Kathryn Murphy',  vote: 429, play: 426, likes: 994, watch: 540, views: 185, totals: 883 },
-]
+interface LeaderboardCategory {
+  id: string | number
+  name: string
+  displays?: string | number
+  duration_from?: string | number
+  duration_to?: string | number
+  creator?: LeaderboardCreator[]
+}
 
-// ─────────────────────────────────────────────
-// TAB: LEADERBOARD
-// ─────────────────────────────────────────────
+// ── Helper ─────────────────────────────────────────────────────────────────
+function num(v: string | number | undefined): number {
+  return Number(v ?? 0)
+}
 
+// ── Component ──────────────────────────────────────────────────────────────
 function LeaderboardContent() {
-  const [selectedCategory, setSelectedCategory] = useState('1')
+  const [categories, setCategories] = useState<LeaderboardCategory[]>([])
+  const [selectedCategoryId, setSelectedCategoryId] = useState<string>('')
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+
+  // Fetch on mount
+  useEffect(() => {
+    const fetchLeaderboard = async () => {
+      try {
+        setLoading(true)
+        setError(null)
+
+        const res = await fetchWithRetry('/api/awards/leaderboard', 2)
+        const data = await res.json()
+
+        if (data.status === true && Array.isArray(data.count) && data.count.length > 0) {
+          setCategories(data.count as LeaderboardCategory[])
+          setSelectedCategoryId(String(data.count[0].id))
+        } else {
+          setError(data.message ?? 'No data returned')
+        }
+      } catch (err) {
+        console.error('[leaderboard] error:', err)
+        setError('Failed to load leaderboard.')
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchLeaderboard()
+  }, [])
+
+  // Derive current category & its sorted creators
+  const currentCategory = categories.find((c) => String(c.id) === selectedCategoryId)
+  const creators: LeaderboardCreator[] = currentCategory?.creator ?? []
+
+  // Sort descending by totals (already sorted server-side, but keep as safety)
+  const sorted = [...creators].sort((a, b) => num(b.totals) - num(a.totals))
 
   return (
     <div className="space-y-6 mt-2">
@@ -627,81 +662,146 @@ function LeaderboardContent() {
 
       <div>
         <h3 className="text-white font-bold text-2xl">Real Time Leaderboard</h3>
-        <p className="text-gray-400 text-sm mt-1">See which films are climbing the ranks based on viewer interaction.</p>
+        <p className="text-gray-400 text-sm mt-1">
+          See which films are climbing the ranks based on viewer interaction.
+        </p>
       </div>
 
-      {/* Category Pills */}
-<div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
-  {MOCK_LEADERBOARD_CATEGORIES.map((cat) => (
-    <button
-      key={cat.id}
-      onClick={() => setSelectedCategory(cat.id)}
-     className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold whitespace-nowrap transition-all shrink-0 ${
-  selectedCategory === cat.id
-    ? 'bg-yellow-400 text-black'
-    : 'bg-transparent text-gray-300 border border-white/20 hover:border-white/40'
-}`}
-    >
-      {/* Ganti div dot → play circle icon */}
-      <svg
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="1.5"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        className="w-4 h-4 shrink-0"
-      >
-        <circle cx="12" cy="12" r="10" />
-        <polygon
-          points="10 8 16 12 10 16 10 8"
-          fill="currentColor"
-          stroke="none"
-        />
-      </svg>
-      {cat.name}
-    </button>
-  ))}
-</div>
-
-      {/* Table */}
-      <div className="overflow-x-auto">
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="border-b border-white/10">
-              <th className="text-left py-3 px-2 text-gray-400 font-semibold w-12">No.</th>
-              <th className="text-left py-3 px-2 text-gray-400 font-semibold">Creator</th>
-              <th className="text-left py-3 px-4 text-gray-400 font-semibold">Most Vote</th>
-              <th className="text-left py-3 px-4 text-gray-400 font-semibold">Most Play</th>
-              <th className="text-left py-3 px-4 text-gray-400 font-semibold">Most Like</th>
-              <th className="text-left py-3 px-4 text-gray-400 font-semibold">Most Watch</th>
-              <th className="text-left py-3 px-4 text-gray-400 font-semibold">Most View</th>
-              <th className="text-right py-3 px-2 text-gray-400 font-semibold">Total</th>
-            </tr>
-          </thead>
-          <tbody>
-            {MOCK_LEADERBOARD_CREATORS.map((creator, index) => (
-              <tr
-                key={creator.id}
-                className="border-b border-white/5 hover:bg-white/[0.02] transition-colors"
+      {/* ── Category Pills ── */}
+      <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
+        {loading
+          ? // Skeleton pills while loading
+            Array.from({ length: 5 }).map((_, i) => (
+              <div
+                key={i}
+                className="shrink-0 h-9 w-32 rounded-lg bg-white/5 animate-pulse"
+              />
+            ))
+          : categories.map((cat) => (
+              <button
+                key={cat.id}
+                onClick={() => setSelectedCategoryId(String(cat.id))}
+                className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold whitespace-nowrap transition-all shrink-0 ${
+                  selectedCategoryId === String(cat.id)
+                    ? 'bg-yellow-400 text-black'
+                    : 'bg-transparent text-gray-300 border border-white/20 hover:border-white/40'
+                }`}
               >
-                <td className="py-4 px-2 text-gray-400 text-sm">{index + 1}.</td>
-                <td className="py-4 px-2 text-white text-sm font-medium">{creator.name}</td>
-                <td className="py-4 px-4 text-gray-300 text-sm">{creator.vote}</td>
-                <td className="py-4 px-4 text-gray-300 text-sm">{creator.play}</td>
-                <td className="py-4 px-4 text-gray-300 text-sm">{creator.likes}</td>
-                <td className="py-4 px-4 text-gray-300 text-sm">{creator.watch}</td>
-                <td className="py-4 px-4 text-gray-300 text-sm">{creator.views}</td>
-                <td className="py-4 px-2 text-right text-yellow-400 font-bold text-sm">{creator.totals}</td>
-              </tr>
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  className="w-4 h-4 shrink-0"
+                >
+                  <circle cx="12" cy="12" r="10" />
+                  <polygon points="10 8 16 12 10 16 10 8" fill="currentColor" stroke="none" />
+                </svg>
+                {cat.name}
+              </button>
             ))}
-          </tbody>
-        </table>
       </div>
+
+      {/* ── Table ── */}
+      {loading ? (
+        // Skeleton rows
+        <div className="space-y-2">
+          {Array.from({ length: 8 }).map((_, i) => (
+            <div key={i} className="h-12 rounded-lg bg-white/5 animate-pulse" />
+          ))}
+        </div>
+      ) : error ? (
+        <div className="flex items-center justify-center py-16">
+          <p className="text-red-400 text-sm">{error}</p>
+        </div>
+      ) : sorted.length === 0 ? (
+        <div className="flex items-center justify-center py-16">
+          <p className="text-gray-400 text-sm">No data for this category yet.</p>
+        </div>
+      ) : (
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b border-white/10">
+                <th className="text-left py-3 px-2 text-gray-400 font-semibold w-12">No.</th>
+                <th className="text-left py-3 px-2 text-gray-400 font-semibold">Creator</th>
+                <th className="text-left py-3 px-4 text-gray-400 font-semibold">Most Vote</th>
+                <th className="text-left py-3 px-4 text-gray-400 font-semibold">Most Play</th>
+                <th className="text-left py-3 px-4 text-gray-400 font-semibold">Most Like</th>
+                <th className="text-left py-3 px-4 text-gray-400 font-semibold">Most Watch</th>
+                <th className="text-left py-3 px-4 text-gray-400 font-semibold">Most View</th>
+                <th className="text-right py-3 px-2 text-gray-400 font-semibold">Total</th>
+              </tr>
+            </thead>
+            <tbody>
+              {sorted.map((creator, index) => {
+                const rank = index + 1
+                const rankColor =
+                  rank === 1
+                    ? 'text-yellow-400'
+                    : rank === 2
+                    ? 'text-gray-300'
+                    : rank === 3
+                    ? 'text-amber-600'
+                    : 'text-gray-400'
+
+                return (
+                  <tr
+                    key={`${creator.id}-${index}`}
+                    className="border-b border-white/5 hover:bg-white/[0.02] transition-colors"
+                  >
+                    {/* Rank */}
+                    <td className={`py-4 px-2 text-sm font-bold ${rankColor}`}>{rank}.</td>
+
+                    {/* Creator name + avatar */}
+                    <td className="py-4 px-2">
+                      <div className="flex items-center gap-2.5">
+                        {creator.avatar ? (
+                          <img
+                            src={`https://cdn.usky.ai/avatars/${creator.avatar}`}
+                            alt={creator.name}
+                            className="w-7 h-7 rounded-full object-cover shrink-0 bg-gray-700"
+                            onError={(e) => {
+                              ;(e.target as HTMLImageElement).style.display = 'none'
+                            }}
+                          />
+                        ) : (
+                          <div className="w-7 h-7 rounded-full bg-[#1e3a5f] flex items-center justify-center shrink-0">
+                            <span className="text-[10px] font-bold text-gray-300 uppercase">
+                              {creator.name?.charAt(0) ?? '?'}
+                            </span>
+                          </div>
+                        )}
+                        <span className="text-white text-sm font-medium truncate max-w-[140px]">
+                          {creator.name}
+                        </span>
+                      </div>
+                    </td>
+
+                    <td className="py-4 px-4 text-gray-300 text-sm">{num(creator.vote).toLocaleString()}</td>
+                    <td className="py-4 px-4 text-gray-300 text-sm">{num(creator.play).toLocaleString()}</td>
+                    <td className="py-4 px-4 text-gray-300 text-sm">{num(creator.likes).toLocaleString()}</td>
+                    <td className="py-4 px-4 text-gray-300 text-sm">{num(creator.watch).toLocaleString()}</td>
+                    <td className="py-4 px-4 text-gray-300 text-sm">{num(creator.views).toLocaleString()}</td>
+
+                    {/* Total – highlighted */}
+                    <td className="py-4 px-2 text-right">
+                      <span className="text-yellow-400 font-bold text-sm">
+                        {num(creator.totals).toLocaleString()}
+                      </span>
+                    </td>
+                  </tr>
+                )
+              })}
+            </tbody>
+          </table>
+        </div>
+      )}
     </div>
   )
 }
-
 // ─────────────────────────────────────────────
 // TAB: DIRECTION
 // ─────────────────────────────────────────────
@@ -1100,7 +1200,7 @@ function FilmsContent() {
         }
       } catch (error) {
         console.error('[v0] Failed to fetch categories:', error)
-        setCategories(MOCK_CATEGORIES)
+        setCategories(MOCK_CATEGORIES) 
       } finally {
         setCategoriesLoading(false)
       }
@@ -1132,16 +1232,16 @@ function FilmsContent() {
       try {
         setLoading(true)
         const sort = getSortParam(filterBy)
-        const params = new URLSearchParams({
+       const params = new URLSearchParams({
           sort,
           page: currentPage.toString(),
           limit: '7',
-          view_type: 'landscape',
+          view_type: 'potrait', // ← ganti ini
         })
         if (selectedCategory) params.append('id_category', selectedCategory)
         const response = await fetch(`/api/awards/list?${params.toString()}`)
         const data = await response.json()
-        if (data.status === true && data.list && Array.isArray(data.list) && data.list.length > 0) {
+        if (data.status === true && data.list && Array.isArray(data.list)) {
           setSubmissions(data.list as AwardSubmission[])
           if (data.meta) setTotalPages(data.meta.total_pages || 1)
         } else {
@@ -1483,4 +1583,20 @@ export default function AwardsPage() {
       <Footer />
     </div>
   )
+}
+
+async function fetchWithRetry(url: string, retries = 2) {
+  for (let i = 0; i <= retries; i++) {
+    try {
+      const res = await fetch(url, {
+        method: 'GET',
+        credentials: 'include',
+      })
+      if (res.ok) return res
+      if (i < retries) await new Promise(r => setTimeout(r, 1000 * (i + 1)))
+    } catch (err) {
+      if (i < retries) await new Promise(r => setTimeout(r, 1000 * (i + 1)))
+    }
+  }
+  throw new Error('Fetch gagal setelah retry')
 }
