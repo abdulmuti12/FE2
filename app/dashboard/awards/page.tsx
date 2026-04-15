@@ -5,6 +5,7 @@ import { Footer } from '@/components/footer'
 import { Heart, Eye, Search, Plus, Clock, FileText, Trophy, Play } from 'lucide-react'
 import { useState, useMemo, useEffect } from 'react'
 import Image from 'next/image'
+import Link from 'next/link'
 
 interface AwardSubmission {
   id: string | number
@@ -1222,7 +1223,7 @@ function FilmsContent() {
     const fetchAwardDetail = async () => {
       try {
         setAwardDetailLoading(true)
-        const response = await fetch('/api/awards/awards-detail?id=440')
+        const response = await fetch('/api/awards/detail?id=440')
         const data = await response.json()
         if (data.list) {
           setAwardDetail(data.list)
@@ -1253,7 +1254,7 @@ function FilmsContent() {
         const params = new URLSearchParams({
           sort,
           page: currentPage.toString(),
-          limit: '15',
+          limit: '25',
           view_type: 'potrait',
         })
         if (selectedCategory) params.append('id_category', selectedCategory)
@@ -1376,8 +1377,9 @@ function FilmsContent() {
               <h3 className="text-xl font-bold text-white mb-4">Related Awards</h3>
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 md:gap-4">
                 {awardDetail.relate.map((related: any) => (
-                  <div
+                  <Link
                     key={related.id}
+                    href={`/dashboard/awards/detail?id=${related.id}`}
                     className="group relative overflow-hidden rounded-lg bg-[#1e293b] hover:shadow-lg transition-all duration-300 cursor-pointer"
                     onClick={() => handleCardClick(related.id)}
                   >
@@ -1408,7 +1410,7 @@ function FilmsContent() {
                         </div>
                       </div>
                     </div>
-                  </div>
+                  </Link>
                 ))}
               </div>
             </div>
@@ -1492,8 +1494,9 @@ function FilmsContent() {
         ) : (
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3 md:gap-4 transition-all duration-500 w-full">
             {filteredSubmissions.map((submission) => (
-              <div
+              <Link
                 key={submission.id}
+                href={`/dashboard/awards/detail?id=${submission.id}`}
                 className="group relative overflow-hidden rounded-xl bg-[#0f172a] hover:shadow-lg transition-all duration-300 cursor-pointer w-full border border-white/8 hover:border-white/20"
                 onClick={() => handleCardClick(submission.id)}
               >
@@ -1524,7 +1527,7 @@ function FilmsContent() {
                     </div>
                   </div>
                 </div>
-              </div>
+              </Link>
             ))}
           </div>
         )}
