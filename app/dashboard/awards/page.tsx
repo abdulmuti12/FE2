@@ -73,10 +73,10 @@ const FAQS = [
 ]
 
 const TIMELINE = [
-  { label: 'Submission',      date: '1–30 July 2025' },
-  { label: 'Public Voting',   date: '15 July – 15 August 2025' },
-  { label: 'Jury Evaluating', date: '16 August 2025' },
-  { label: 'Finalist Reveal', date: '16 August 2025' },
+  { label: 'Submission',      date: 'October 20, 2025 – May 31, 2026' },
+  { label: 'Public Voting',   date: 'October 20, 2025 – June 18, 2026' },
+  { label: 'Jury Evaluating', date: 'June 20 – June 30, 2026' },
+  { label: 'Finalist Reveal', date: 'July 2026' },
 ]
 
 const JUDGING_CRITERIA = [
