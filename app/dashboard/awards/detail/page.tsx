@@ -25,6 +25,7 @@ interface AwardDetailData {
   name: string
   dates?: string
   description?: string
+  rates?: string | number | null
   type?: string
   run_time_format?: string
   watch?: string | number
@@ -50,6 +51,12 @@ interface AwardCommentItem {
 const convertToSecureUrl = (url: string | null | undefined): string => {
   if (!url) return ''
   return url.replace('http://', 'https://')
+}
+
+const normalizeRating = (value: string | number | null | undefined): number => {
+  const parsed = Number(value)
+  if (!Number.isFinite(parsed) || parsed <= 0) return 0
+  return Math.min(5, Math.floor(parsed))
 }
 
 function AwardsDetailContent() {
@@ -119,6 +126,7 @@ function AwardsDetailContent() {
 
         if (response.ok && result?.status === true && result?.list) {
           setAwardData(result.list)
+          setRating(normalizeRating(result.list.rates))
         } else {
           setError(result?.message || raw || 'Gagal mengambil detail award')
         }
