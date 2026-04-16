@@ -27,7 +27,9 @@ interface AwardDetailData {
   description?: string
   type?: string
   run_time_format?: string
+  watch?: string | number
   likes?: string | number
+  vote?: string | number
   views?: string | number
   play?: string | number
   my_favorit?: string
@@ -69,7 +71,10 @@ function AwardsDetailContent() {
   const [showShare, setShowShare] = useState(false)
   const [isSubmittingVote, setIsSubmittingVote] = useState(false)
   const [isSubmittingLove, setIsSubmittingLove] = useState(false)
+  const [isSubmittingWatchlist, setIsSubmittingWatchlist] = useState(false)
   const [isLoved, setIsLoved] = useState(false)
+  const [isWatched, setIsWatched] = useState(false)
+  const [isVoted, setIsVoted] = useState(false)
   const [showShareToast, setShowShareToast] = useState(false)
   const [shareToastMessage, setShareToastMessage] = useState('Success share')
   const [shareToastType, setShareToastType] = useState<'success' | 'error'>('success')
@@ -182,7 +187,14 @@ function AwardsDetailContent() {
   }, [awardId])
 
   useEffect(() => {
-    setIsLoved(awardData?.my_favorit === '1')
+    const likesOne = Number(awardData?.likes ?? 0) === 1
+    const watchOne = Number(awardData?.watch ?? 0) === 1
+    const voteOne = Number(awardData?.vote ?? 0) === 1
+    const favoritOne = awardData?.my_favorit === '1'
+
+    setIsLoved(likesOne || favoritOne)
+    setIsWatched(watchOne)
+    setIsVoted(voteOne)
   }, [awardData])
 
   useEffect(() => {
@@ -461,7 +473,9 @@ function AwardsDetailContent() {
         result = null
       }
 
-      if (!(response.ok && result?.status === true)) {
+      if (response.ok && result?.status === true) {
+        setIsVoted((prev) => !prev)
+      } else {
         alert(result?.message || raw || 'Gagal mengirim vote')
       }
     } catch (error) {
@@ -469,6 +483,50 @@ function AwardsDetailContent() {
       alert('Terjadi kesalahan saat mengirim vote')
     } finally {
       setIsSubmittingVote(false)
+    }
+  }
+
+  const handleWatchlistAward = async () => {
+    if (!awardId) return
+
+    try {
+      setIsSubmittingWatchlist(true)
+      const token = localStorage.getItem('user_token') || ''
+
+      if (!token) {
+        alert('Silakan login terlebih dahulu untuk add to watch')
+        return
+      }
+
+      const response = await fetch('/api/awards/wacthlist', {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          id: awardId,
+        }),
+      })
+
+      const raw = await response.text()
+      let result: any = null
+      try {
+        result = raw ? JSON.parse(raw) : null
+      } catch {
+        result = null
+      }
+
+      if (response.ok && result?.status === true) {
+        setIsWatched((prev) => !prev)
+      } else {
+        alert(result?.message || raw || 'Gagal add to watch')
+      }
+    } catch (error) {
+      console.error('Error submitting award watchlist:', error)
+      alert('Terjadi kesalahan saat add to watch')
+    } finally {
+      setIsSubmittingWatchlist(false)
     }
   }
 
@@ -657,15 +715,27 @@ function AwardsDetailContent() {
               >
                 <Heart className={`w-4 h-4 ${isLoved ? 'fill-current' : ''}`} /> Like
               </button>
-              <button className="flex items-center gap-2 px-5 py-2 rounded-full border border-white/20 hover:bg-white/10 transition-colors text-sm">
-                <Plus className="w-4 h-4" /> Add to Watch
+              <button
+                onClick={handleWatchlistAward}
+                disabled={isSubmittingWatchlist}
+                className={`flex items-center gap-2 px-5 py-2 rounded-full border transition-colors text-sm ${
+                  isWatched
+                    ? 'border-red-500/50 text-red-400 bg-red-500/10 hover:bg-red-500/15'
+                    : 'border-white/20 hover:bg-white/10'
+                } disabled:opacity-50 disabled:cursor-not-allowed`}
+              >
+                <Plus className={`w-4 h-4 ${isWatched ? 'fill-current' : ''}`} /> Add to Watch
               </button>
               <button
                 onClick={handleVoteAward}
                 disabled={isSubmittingVote}
-                className="flex items-center gap-2 px-5 py-2 rounded-full border border-white/20 hover:bg-white/10 transition-colors text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                className={`flex items-center gap-2 px-5 py-2 rounded-full border transition-colors text-sm disabled:opacity-50 disabled:cursor-not-allowed ${
+                  isVoted
+                    ? 'border-red-500/50 text-red-400 bg-red-500/10 hover:bg-red-500/15'
+                    : 'border-white/20 hover:bg-white/10'
+                }`}
               >
-                <ThumbsUp className="w-4 h-4" /> Vote
+                <ThumbsUp className={`w-4 h-4 ${isVoted ? 'fill-current' : ''}`} /> Vote
               </button>
               <button onClick={() => setShowShare(true)} className="flex items-center justify-center w-10 h-10 rounded-full border border-white/20 hover:bg-white/10 transition-colors">
                 <Share2 className="w-4 h-4" />
