@@ -41,7 +41,7 @@ const convertToSecureUrl = (url: string | null | undefined): string => {
 }
 
 // Dummy data untuk komentar (Menyesuaikan dengan gambar)
-const DUMMY_COMMENTS = [
+const Comments = [
   { id: 1, user: 'fredthegreat', date: '09/05/2025', text: '[Comment] Lorem ipsum dolor sit amet consectetur...' },
   { id: 2, user: 'fredthegreat', date: '09/05/2025', text: '[Comment] Lorem ipsum dolor sit amet consectetur...' },
   { id: 3, user: 'fredthegreat', date: '09/05/2025', text: '[Comment] Lorem ipsum dolor sit amet consectetur...' },
@@ -57,6 +57,7 @@ function AwardsDetailContent() {
   const [error, setError] = useState<string | null>(null)
   const relatedScrollerRef = useRef<HTMLDivElement | null>(null)
   const [relatedIndex, setRelatedIndex] = useState(0)
+  const [showAllMobileComments, setShowAllMobileComments] = useState(false)
 
   useEffect(() => {
     const fetchAwardDetail = async () => {
@@ -86,12 +87,19 @@ function AwardsDetailContent() {
           },
         })
 
-        const result = await response.json()
+        const raw = await response.text()
+        let result: any = null
 
-        if (response.ok && result.status === true && result.list) {
+        try {
+          result = raw ? JSON.parse(raw) : null
+        } catch {
+          result = null
+        }
+
+        if (response.ok && result?.status === true && result?.list) {
           setAwardData(result.list)
         } else {
-          setError(result.message || 'Gagal mengambil detail award')
+          setError(result?.message || raw || 'Gagal mengambil detail award')
         }
       } catch (err) {
         console.error('Error fetching award detail:', err)
@@ -106,6 +114,7 @@ function AwardsDetailContent() {
 
   useEffect(() => {
     setRelatedIndex(0)
+    setShowAllMobileComments(false)
   }, [awardId])
 
   const handleShare = async () => {
@@ -195,12 +204,12 @@ function AwardsDetailContent() {
           </div>
 
           {/* RIGHT: Comment & Review Section */}
-          <div className="w-full lg:w-1/3 xl:w-[30%] bg-[#12161E] border border-white/5 rounded-xl p-5 md:p-6 flex flex-col">
+          <div className="hidden lg:flex w-full lg:w-1/3 xl:w-[30%] bg-[#12161E] border border-white/5 rounded-xl p-5 md:p-6 flex-col">
             <h2 className="text-lg font-bold mb-4">Comment</h2>
             
             {/* Comment List */}
             <div className="flex-1 overflow-y-auto max-h-[250px] md:max-h-[350px] pr-2 space-y-4 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:bg-white/20 [&::-webkit-scrollbar-track]:bg-transparent">
-              {DUMMY_COMMENTS.map((comment) => (
+              {Comments.map((comment) => (
                 <div key={comment.id} className="flex gap-3">
                   <div className="w-8 h-8 rounded-full bg-gray-500 shrink-0 flex items-center justify-center overflow-hidden">
                     <User className="w-5 h-5 text-white/80" />
@@ -294,6 +303,62 @@ function AwardsDetailContent() {
           {/* Synopsis / Description */}
           <div className="mt-6 text-white/60 text-sm leading-relaxed max-w-5xl">
             <p dangerouslySetInnerHTML={{ __html: awardData.description || '[Brief Synopsis] Lorem ipsum dolor sit amet consectetur. Volutpat turpis in aliquam pellentesque quis vulputate et imperdiet. Faucibus quam eleifend egestas ac amet sociis velit. Et cras tristique montes nec velit.' }} />
+          </div>
+        </div>
+
+        {/* ========================================================= */}
+        {/* MOBILE/TABLET: Comment Section (below movie info/actions) */}
+        {/* ========================================================= */}
+        <div className="mb-12 lg:hidden">
+          <div className="w-full bg-[#12161E] border border-white/5 rounded-xl p-5 md:p-6 flex flex-col">
+            <h2 className="text-lg font-bold mb-4">Comment</h2>
+
+            <div className="space-y-4">
+              {(showAllMobileComments ? Comments : Comments.slice(-1)).map((comment) => (
+                <div key={comment.id} className="flex gap-3">
+                  <div className="w-8 h-8 rounded-full bg-gray-500 shrink-0 flex items-center justify-center overflow-hidden">
+                    <User className="w-5 h-5 text-white/80" />
+                  </div>
+                  <div className="flex-1">
+                    <div className="flex justify-between items-center mb-1">
+                      <span className="text-sm font-semibold">{comment.user}</span>
+                      <span className="text-xs text-white/40">{comment.date}</span>
+                    </div>
+                    <p className="text-xs text-white/60 leading-relaxed line-clamp-2">
+                      {comment.text}
+                    </p>
+                  </div>
+                </div>
+              ))}
+
+              {Comments.length > 1 && (
+                <button
+                  onClick={() => setShowAllMobileComments((prev) => !prev)}
+                  className="text-xs text-[#D4A84B] hover:text-[#E2C57A] transition-colors"
+                >
+                  {showAllMobileComments ? 'Tampilkan 1 komentar terakhir' : 'Lihat semua komentar'}
+                </button>
+              )}
+            </div>
+
+            <div className="mt-6 border-t border-white/10 pt-4">
+              <p className="text-sm font-semibold mb-2">Rating This Film</p>
+              <div className="flex gap-1 mb-6 text-white/10">
+                {[1, 2, 3, 4, 5].map((star) => (
+                  <Star key={star} className="w-6 h-6 fill-current cursor-pointer hover:text-yellow-500 transition-colors" />
+                ))}
+              </div>
+
+              <p className="text-sm font-semibold mb-2">Your Review</p>
+              <input
+                type="text"
+                placeholder="Placeholder"
+                className="w-full bg-[#1A1F29] border border-white/10 rounded-md px-4 py-3 text-sm text-white placeholder-white/30 focus:outline-none focus:border-white/30 mb-4"
+              />
+              <button className="w-full bg-white text-black font-semibold rounded-full py-3 text-sm hover:bg-gray-200 transition-colors">
+                Submit Review
+              </button>
+            </div>
           </div>
         </div>
 
