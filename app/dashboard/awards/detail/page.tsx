@@ -106,7 +106,7 @@ function AwardsDetailContent() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-[#020817] flex flex-col items-center justify-center text-white font-sans">
+      <div className="min-h-screen bg-[#050B14] flex flex-col items-center justify-center text-white font-sans">
         <div className="w-10 h-10 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mb-4"></div>
         <p>Memuat Award...</p>
       </div>
@@ -115,7 +115,7 @@ function AwardsDetailContent() {
 
   if (error || !awardData) {
     return (
-      <div className="min-h-screen bg-[#020817] flex flex-col items-center justify-center text-white font-sans gap-4">
+      <div className="min-h-screen bg-[#050B14] flex flex-col items-center justify-center text-white font-sans gap-4">
         <p className="text-xl font-bold">Oops!</p>
         <p className="text-gray-400">{error || 'Data award tidak ditemukan.'}</p>
         <Link href="/dashboard/awards" className="px-6 py-2 bg-blue-600 hover:bg-blue-700 rounded-full transition-colors">
@@ -129,127 +129,116 @@ function AwardsDetailContent() {
     <>
       <Header />
 
-      <div className="bg-gradient-to-b from-[#0b1222] via-[#020817] to-[#020817] pb-8 md:pb-10">
-        <div className="w-full px-4 md:px-8 lg:px-12 pt-4 md:pt-6">
-          <div className="relative w-full rounded-xl md:rounded-2xl overflow-hidden bg-black shadow-[0_20px_60px_rgba(0,0,0,0.6)]">
-            <div className="relative w-full aspect-video md:max-h-[85vh] bg-black mx-auto">
-              {awardData.video_url ? (
-                <video
-                  key={awardData.video_url}
-                  controls
-                  controlsList="nodownload"
-                  className="w-full h-full object-contain"
-                  poster={convertToSecureUrl(awardData.image_landscape_url || awardData.image_url)}
-                >
-                  <source src={convertToSecureUrl(awardData.video_url)} type="video/mp4" />
-                  Browser Anda tidak mendukung pemutar video ini.
-                </video>
-              ) : (
-                <div className="w-full h-full flex items-center justify-center text-white/50">
-                  Video tidak tersedia
-                </div>
-              )}
-            </div>
+      <div className="max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-10 xl:px-14 py-6 md:py-10">
+        <div className="flex flex-col lg:flex-row gap-6 lg:gap-8">
+          <div className="w-full lg:w-2/3 xl:w-[70%] relative bg-black rounded-2xl overflow-hidden aspect-video border border-white/10 shadow-2xl">
+            {awardData.video_url ? (
+              <video
+                key={awardData.video_url}
+                controls
+                controlsList="nodownload"
+                className="w-full h-full object-contain"
+                poster={convertToSecureUrl(awardData.image_landscape_url || awardData.image_url)}
+              >
+                <source src={convertToSecureUrl(awardData.video_url)} type="video/mp4" />
+                Browser Anda tidak mendukung pemutar video ini.
+              </video>
+            ) : (
+              <div className="w-full h-full flex items-center justify-center text-white/50">
+                Video tidak tersedia
+              </div>
+            )}
           </div>
 
-          <div className="mt-5 md:mt-8 flex flex-col md:flex-row md:items-start md:justify-between gap-4 md:gap-6">
-            <div className="space-y-2 md:space-y-3">
-              <h1 className="text-lg sm:text-xl md:text-3xl font-bold">{awardData.name}</h1>
+          <div className="w-full lg:w-1/3 xl:w-[30%] bg-[#0a1628]/80 backdrop-blur-xl border border-white/5 rounded-2xl p-6 md:p-8 flex flex-col">
+            <h1 className="text-2xl md:text-3xl font-bold mb-3">{awardData.name}</h1>
 
-              <div className="flex flex-wrap items-center gap-2 md:gap-3 text-xs md:text-sm">
-                <span className="px-2.5 py-1 rounded-full bg-white/10 border border-white/10">
-                  {awardData.type || 'Award'}
-                </span>
-                <span className="text-white/60">{awardData.run_time_format || '-'}</span>
-                <span className="text-white/60">
-                  {awardData.dates
-                    ? new Date(awardData.dates).toLocaleDateString('en-US', {
-                        year: 'numeric',
-                        month: 'short',
-                        day: 'numeric',
-                      })
-                    : '-'}
-                </span>
-                <div className="flex items-center gap-1 text-white/70">
-                  <Heart className="w-3.5 h-3.5" />
-                  <span>{awardData.likes || 0}</span>
-                </div>
-                <div className="flex items-center gap-1 text-white/70">
-                  <Eye className="w-3.5 h-3.5" />
-                  <span>{awardData.views || 0}</span>
-                </div>
-              </div>
+            <div className="flex flex-wrap items-center gap-3 mb-4 text-xs md:text-sm">
+              <span className="bg-white/10 px-2 py-0.5 rounded text-gray-300">{awardData.type || 'Award'}</span>
+              <span className="text-white/60">{awardData.run_time_format || '-'}</span>
+              <span className="text-white/60">
+                {awardData.dates
+                  ? new Date(awardData.dates).toLocaleDateString('en-US', {
+                      year: 'numeric',
+                      month: 'short',
+                      day: 'numeric',
+                    })
+                  : '-'}
+              </span>
+              <span className="inline-flex items-center gap-1 text-white/70">
+                <Heart className="w-3.5 h-3.5" />
+                {awardData.likes || 0}
+              </span>
+              <span className="inline-flex items-center gap-1 text-white/70">
+                <Eye className="w-3.5 h-3.5" />
+                {awardData.views || 0}
+              </span>
             </div>
 
-            <div className="flex items-center gap-2 md:gap-3">
+            <div
+              className="text-gray-300 text-sm leading-relaxed mb-6 flex-grow overflow-y-auto max-h-[300px] [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]"
+              dangerouslySetInnerHTML={{ __html: awardData.description || 'Tidak ada deskripsi award.' }}
+            />
+
+            <div className="flex items-center gap-3 pt-4 mt-auto">
               <Link
                 href="/dashboard/awards"
-                className="h-9 px-4 md:h-10 rounded-full border border-white/15 text-white bg-white/5 hover:bg-white/10 transition-colors flex items-center justify-center text-xs md:text-sm"
+                className="flex-1 flex items-center justify-center gap-2 h-11 md:h-12 rounded-full bg-[#02050A] border border-white/10 hover:bg-white/10 transition-colors text-white text-sm md:text-base font-medium"
               >
                 Back
               </Link>
               <button
                 onClick={handleShare}
-                className="h-9 w-9 md:h-10 md:w-10 rounded-full border border-white/15 bg-white/5 hover:bg-white/10 transition-colors flex items-center justify-center"
+                className="shrink-0 w-11 h-11 md:w-12 md:h-12 flex items-center justify-center rounded-full bg-[#02050A] border border-white/10 text-white hover:bg-white/10 transition-colors"
                 title="Share"
               >
                 <Share2 className="w-4 h-4 md:w-5 md:h-5" />
               </button>
             </div>
           </div>
-
-          <div
-            className="mt-3 md:mt-5 text-white/70 text-xs sm:text-sm leading-relaxed md:max-w-[80%] overflow-hidden [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]"
-            dangerouslySetInnerHTML={{ __html: awardData.description || 'Tidak ada deskripsi award.' }}
-          />
         </div>
       </div>
 
-      <div className="w-full px-4 md:px-8 lg:px-12 pb-14 md:pb-16">
-        <section className="mt-8 md:mt-10 rounded-2xl bg-white/5 border border-white/10 overflow-hidden">
-          <div className="px-4 sm:px-6 py-4 sm:py-5 border-b border-white/10">
-            <h2 className="text-base sm:text-lg md:text-xl font-bold">Related Awards</h2>
-          </div>
-
-          <div className="px-4 sm:px-6 py-5 sm:py-6">
-            {!awardData.relate || awardData.relate.length === 0 ? (
-              <p className="text-white/60 text-sm">Belum ada related awards.</p>
-            ) : (
-              <div className="flex gap-4 md:gap-5 overflow-x-auto pb-2 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
-                {awardData.relate.map((related) => (
-                  <Link
-                    key={related.id}
-                    href={`/dashboard/awards/detail?id=${related.id}`}
-                    className="snap-start shrink-0 w-[240px] cursor-pointer p-2 rounded-xl border border-white/10 hover:border-white/30 bg-white/5 transition-all"
-                  >
-                    <div className="relative aspect-video rounded-lg overflow-hidden mb-2 bg-gray-800">
-                      <Image
-                        src={convertToSecureUrl(related.image_landscape_url || related.image_url) || '/film/film1.png'}
-                        alt={related.name}
-                        fill
-                        className="object-cover"
-                      />
-                      <div className="absolute inset-0 bg-black/20 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity">
-                        <Play className="text-white w-5 h-5" />
-                      </div>
+      <div className="max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-10 xl:px-14 pb-20">
+        <div className="mb-14">
+          <h2 className="text-xl md:text-2xl font-bold mb-6">Related Awards</h2>
+          {!awardData.relate || awardData.relate.length === 0 ? (
+            <p className="text-white/60 text-sm">Belum ada related awards.</p>
+          ) : (
+            <div className="flex gap-4 md:gap-5 overflow-x-auto pb-2 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+              {awardData.relate.map((related) => (
+                <Link
+                  key={related.id}
+                  href={`/dashboard/awards/detail?id=${related.id}`}
+                  className="snap-start shrink-0 w-[240px] cursor-pointer p-2 rounded-xl border border-white/10 hover:border-[#D4A84B] bg-white/5 transition-all"
+                >
+                  <div className="relative aspect-video rounded-lg overflow-hidden mb-2 bg-gray-800">
+                    <Image
+                      src={convertToSecureUrl(related.image_landscape_url || related.image_url) || '/film/film1.png'}
+                      alt={related.name}
+                      fill
+                      className="object-cover"
+                    />
+                    <div className="absolute inset-0 bg-black/20 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity">
+                      <Play className="text-white w-5 h-5" />
                     </div>
-                    <h3 className="font-bold text-sm truncate">{related.name}</h3>
-                    <div className="mt-1 flex items-center gap-3 text-white/65 text-xs">
-                      <span className="inline-flex items-center gap-1">
-                        <Heart className="w-3.5 h-3.5" />
-                        {related.likes || 0}
-                      </span>
-                      <span className="inline-flex items-center gap-1">
-                        <Eye className="w-3.5 h-3.5" />
-                        {related.views || 0}
-                      </span>
-                    </div>
-                  </Link>
-                ))}
-              </div>
-            )}
-          </div>
-        </section>
+                  </div>
+                  <h3 className="font-bold text-sm truncate">{related.name}</h3>
+                  <div className="mt-1 flex items-center gap-3 text-white/65 text-xs">
+                    <span className="inline-flex items-center gap-1">
+                      <Heart className="w-3.5 h-3.5" />
+                      {related.likes || 0}
+                    </span>
+                    <span className="inline-flex items-center gap-1">
+                      <Eye className="w-3.5 h-3.5" />
+                      {related.views || 0}
+                    </span>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
 
       <Footer />
@@ -259,7 +248,7 @@ function AwardsDetailContent() {
 
 export default function AwardsDetailPage() {
   return (
-    <div className="min-h-screen bg-[#020817] text-white font-sans">
+    <div className="min-h-screen bg-[#050B14] text-white font-sans">
       <Suspense
         fallback={
           <div className="min-h-screen flex items-center justify-center">
