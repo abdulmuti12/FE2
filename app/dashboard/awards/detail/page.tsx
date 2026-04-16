@@ -1,6 +1,6 @@
 'use client'
 
-import { Suspense, useEffect, useRef, useState } from 'react'
+import { Suspense, useCallback, useEffect, useRef, useState } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
@@ -35,18 +35,18 @@ interface AwardDetailData {
   relate?: RelatedAward[]
 }
 
+interface AwardCommentItem {
+  id: string
+  comment: string
+  name: string
+  time_ago: string
+  avatar_url?: string
+}
+
 const convertToSecureUrl = (url: string | null | undefined): string => {
   if (!url) return ''
   return url.replace('http://', 'https://')
 }
-
-// Dummy data untuk komentar (Menyesuaikan dengan gambar)
-const Comments = [
-  { id: 1, user: 'fredthegreat', date: '09/05/2025', text: '[Comment] Lorem ipsum dolor sit amet consectetur...' },
-  { id: 2, user: 'fredthegreat', date: '09/05/2025', text: '[Comment] Lorem ipsum dolor sit amet consectetur...' },
-  { id: 3, user: 'fredthegreat', date: '09/05/2025', text: '[Comment] Lorem ipsum dolor sit amet consectetur...' },
-  { id: 4, user: 'fredthegreat', date: '09/05/2025', text: '[Comment] Lorem ipsum dolor sit amet consectetur...' },
-]
 
 function AwardsDetailContent() {
   const searchParams = useSearchParams()
@@ -58,6 +58,10 @@ function AwardsDetailContent() {
   const relatedScrollerRef = useRef<HTMLDivElement | null>(null)
   const [relatedIndex, setRelatedIndex] = useState(0)
   const [showAllMobileComments, setShowAllMobileComments] = useState(false)
+  const [comments, setComments] = useState<AwardCommentItem[]>([])
+  const [loadingComments, setLoadingComments] = useState(true)
+  const [newComment, setNewComment] = useState('')
+  const [isSubmittingComment, setIsSubmittingComment] = useState(false)
 
   useEffect(() => {
     const fetchAwardDetail = async () => {
@@ -112,6 +116,54 @@ function AwardsDetailContent() {
     fetchAwardDetail()
   }, [awardId])
 
+  const fetchComments = useCallback(async () => {
+    if (!awardId) return
+
+    try {
+      setLoadingComments(true)
+      const token = localStorage.getItem('user_token') || ''
+
+      if (!token) {
+        setComments([])
+        return
+      }
+
+      const url = new URL('/api/awards/comment', window.location.origin)
+      url.searchParams.set('id', awardId)
+
+      const response = await fetch(url.toString(), {
+        method: 'GET',
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      })
+
+      const raw = await response.text()
+      let result: any = null
+      try {
+        result = raw ? JSON.parse(raw) : null
+      } catch {
+        result = null
+      }
+
+      if (response.ok && result?.status === true && Array.isArray(result?.list)) {
+        setComments(result.list as AwardCommentItem[])
+      } else {
+        setComments([])
+      }
+    } catch (error) {
+      console.error('Error fetching award comments:', error)
+      setComments([])
+    } finally {
+      setLoadingComments(false)
+    }
+  }, [awardId])
+
+  useEffect(() => {
+    fetchComments()
+  }, [fetchComments])
+
   useEffect(() => {
     setRelatedIndex(0)
     setShowAllMobileComments(false)
@@ -142,6 +194,52 @@ function AwardsDetailContent() {
     if (target) {
       target.scrollIntoView({ behavior: 'smooth', inline: 'start', block: 'nearest' })
       setRelatedIndex(nextIndex)
+    }
+  }
+
+  const handleSubmitComment = async () => {
+    if (!awardId || !newComment.trim()) return
+
+    try {
+      setIsSubmittingComment(true)
+      const token = localStorage.getItem('user_token') || ''
+
+      if (!token) {
+        alert('Silakan login terlebih dahulu untuk memberikan komentar')
+        return
+      }
+
+      const response = await fetch('/api/awards/comment', {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          id: awardId,
+          comment: newComment.trim(),
+        }),
+      })
+
+      const raw = await response.text()
+      let result: any = null
+      try {
+        result = raw ? JSON.parse(raw) : null
+      } catch {
+        result = null
+      }
+
+      if (response.ok && result?.status === true) {
+        setNewComment('')
+        await fetchComments()
+      } else {
+        alert(result?.message || raw || 'Gagal mengirim komentar')
+      }
+    } catch (error) {
+      console.error('Error posting award comment:', error)
+      alert('Terjadi kesalahan saat mengirim komentar')
+    } finally {
+      setIsSubmittingComment(false)
     }
   }
 
@@ -209,22 +307,38 @@ function AwardsDetailContent() {
             
             {/* Comment List */}
             <div className="flex-1 overflow-y-auto max-h-[250px] md:max-h-[350px] pr-2 space-y-4 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:bg-white/20 [&::-webkit-scrollbar-track]:bg-transparent">
-              {Comments.map((comment) => (
-                <div key={comment.id} className="flex gap-3">
-                  <div className="w-8 h-8 rounded-full bg-gray-500 shrink-0 flex items-center justify-center overflow-hidden">
-                    <User className="w-5 h-5 text-white/80" />
-                  </div>
-                  <div className="flex-1">
-                    <div className="flex justify-between items-center mb-1">
-                      <span className="text-sm font-semibold">{comment.user}</span>
-                      <span className="text-xs text-white/40">{comment.date}</span>
+              {loadingComments ? (
+                <p className="text-sm text-white/50">Loading comments...</p>
+              ) : comments.length === 0 ? (
+                <p className="text-sm text-white/50">Belum ada komentar.</p>
+              ) : (
+                comments.map((comment) => (
+                  <div key={comment.id} className="flex gap-3">
+                    <div className="w-8 h-8 rounded-full bg-gray-500 shrink-0 flex items-center justify-center overflow-hidden">
+                      {comment.avatar_url ? (
+                        <Image
+                          src={convertToSecureUrl(comment.avatar_url)}
+                          alt={comment.name}
+                          width={32}
+                          height={32}
+                          className="w-8 h-8 object-cover"
+                        />
+                      ) : (
+                        <User className="w-5 h-5 text-white/80" />
+                      )}
                     </div>
-                    <p className="text-xs text-white/60 leading-relaxed line-clamp-2">
-                      {comment.text}
-                    </p>
+                    <div className="flex-1">
+                      <div className="flex justify-between items-center mb-1">
+                        <span className="text-sm font-semibold">{comment.name}</span>
+                        <span className="text-xs text-white/40">{comment.time_ago}</span>
+                      </div>
+                      <p className="text-xs text-white/60 leading-relaxed line-clamp-2">
+                        {comment.comment}
+                      </p>
+                    </div>
                   </div>
-                </div>
-              ))}
+                ))
+              )}
             </div>
 
             {/* Rating Section */}
@@ -240,11 +354,17 @@ function AwardsDetailContent() {
               <p className="text-sm font-semibold mb-2">Your Review</p>
               <input 
                 type="text" 
-                placeholder="Placeholder"
+                value={newComment}
+                onChange={(e) => setNewComment(e.target.value)}
+                placeholder="Tulis komentar Anda..."
                 className="w-full bg-[#1A1F29] border border-white/10 rounded-md px-4 py-3 text-sm text-white placeholder-white/30 focus:outline-none focus:border-white/30 mb-4"
               />
-              <button className="w-full bg-white text-black font-semibold rounded-full py-3 text-sm hover:bg-gray-200 transition-colors">
-                Submit Review
+              <button
+                onClick={handleSubmitComment}
+                disabled={isSubmittingComment || !newComment.trim()}
+                className="w-full bg-white text-black font-semibold rounded-full py-3 text-sm hover:bg-gray-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isSubmittingComment ? 'Submitting...' : 'Submit Review'}
               </button>
             </div>
           </div>
@@ -314,24 +434,40 @@ function AwardsDetailContent() {
             <h2 className="text-lg font-bold mb-4">Comment</h2>
 
             <div className="space-y-4">
-              {(showAllMobileComments ? Comments : Comments.slice(-1)).map((comment) => (
-                <div key={comment.id} className="flex gap-3">
-                  <div className="w-8 h-8 rounded-full bg-gray-500 shrink-0 flex items-center justify-center overflow-hidden">
-                    <User className="w-5 h-5 text-white/80" />
-                  </div>
-                  <div className="flex-1">
-                    <div className="flex justify-between items-center mb-1">
-                      <span className="text-sm font-semibold">{comment.user}</span>
-                      <span className="text-xs text-white/40">{comment.date}</span>
+              {loadingComments ? (
+                <p className="text-sm text-white/50">Loading comments...</p>
+              ) : comments.length === 0 ? (
+                <p className="text-sm text-white/50">Belum ada komentar.</p>
+              ) : (
+                (showAllMobileComments ? comments : comments.slice(-1)).map((comment) => (
+                  <div key={comment.id} className="flex gap-3">
+                    <div className="w-8 h-8 rounded-full bg-gray-500 shrink-0 flex items-center justify-center overflow-hidden">
+                      {comment.avatar_url ? (
+                        <Image
+                          src={convertToSecureUrl(comment.avatar_url)}
+                          alt={comment.name}
+                          width={32}
+                          height={32}
+                          className="w-8 h-8 object-cover"
+                        />
+                      ) : (
+                        <User className="w-5 h-5 text-white/80" />
+                      )}
                     </div>
-                    <p className="text-xs text-white/60 leading-relaxed line-clamp-2">
-                      {comment.text}
-                    </p>
+                    <div className="flex-1">
+                      <div className="flex justify-between items-center mb-1">
+                        <span className="text-sm font-semibold">{comment.name}</span>
+                        <span className="text-xs text-white/40">{comment.time_ago}</span>
+                      </div>
+                      <p className="text-xs text-white/60 leading-relaxed line-clamp-2">
+                        {comment.comment}
+                      </p>
+                    </div>
                   </div>
-                </div>
-              ))}
+                ))
+              )}
 
-              {Comments.length > 1 && (
+              {comments.length > 1 && (
                 <button
                   onClick={() => setShowAllMobileComments((prev) => !prev)}
                   className="text-xs text-[#D4A84B] hover:text-[#E2C57A] transition-colors"
@@ -352,11 +488,17 @@ function AwardsDetailContent() {
               <p className="text-sm font-semibold mb-2">Your Review</p>
               <input
                 type="text"
-                placeholder="Placeholder"
+                value={newComment}
+                onChange={(e) => setNewComment(e.target.value)}
+                placeholder="Tulis komentar Anda..."
                 className="w-full bg-[#1A1F29] border border-white/10 rounded-md px-4 py-3 text-sm text-white placeholder-white/30 focus:outline-none focus:border-white/30 mb-4"
               />
-              <button className="w-full bg-white text-black font-semibold rounded-full py-3 text-sm hover:bg-gray-200 transition-colors">
-                Submit Review
+              <button
+                onClick={handleSubmitComment}
+                disabled={isSubmittingComment || !newComment.trim()}
+                className="w-full bg-white text-black font-semibold rounded-full py-3 text-sm hover:bg-gray-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isSubmittingComment ? 'Submitting...' : 'Submit Review'}
               </button>
             </div>
           </div>
