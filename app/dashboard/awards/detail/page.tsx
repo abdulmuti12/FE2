@@ -6,6 +6,7 @@ import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
 import { Header } from '@/components/header'
 import { Footer } from '@/components/footer'
+import { ClipShare } from '@/components/clip/clip-share'
 import { Eye, Heart, Play, Share2, Star, Plus, ThumbsUp, User } from 'lucide-react'
 
 interface RelatedAward {
@@ -62,6 +63,9 @@ function AwardsDetailContent() {
   const [loadingComments, setLoadingComments] = useState(true)
   const [newComment, setNewComment] = useState('')
   const [isSubmittingComment, setIsSubmittingComment] = useState(false)
+  const [rating, setRating] = useState(0)
+  const [isSubmittingRating, setIsSubmittingRating] = useState(false)
+  const [showShare, setShowShare] = useState(false)
 
   useEffect(() => {
     const fetchAwardDetail = async () => {
@@ -169,14 +173,54 @@ function AwardsDetailContent() {
     setShowAllMobileComments(false)
   }, [awardId])
 
-  const handleShare = async () => {
+  const handlePlatformShare = async (platform: string) => {
     const url = window.location.href
-    try {
-      await navigator.clipboard.writeText(url)
-      alert('Link copied to clipboard!')
-    } catch {
-      alert('Gagal menyalin link')
+    const title = awardData?.name || 'Award'
+    const text = `Check out this award: ${title}`
+
+    switch (platform) {
+      case 'copy':
+        await navigator.clipboard.writeText(url)
+        alert('Link copied to clipboard!')
+        break
+      case 'whatsapp':
+        window.open(`https://wa.me/?text=${encodeURIComponent(text + ' ' + url)}`, '_blank')
+        break
+      case 'facebook':
+        window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`, '_blank')
+        break
+      case 'x':
+        window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}`, '_blank')
+        break
+      case 'telegram':
+        window.open(`https://t.me/share/url?url=${encodeURIComponent(url)}&text=${encodeURIComponent(text)}`, '_blank')
+        break
+      case 'linkedin':
+        window.open(`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(url)}`, '_blank')
+        break
+      default:
+        break
     }
+
+    try {
+      const token = localStorage.getItem('user_token')
+      if (token && awardId) {
+        await fetch('/api/awards/share', {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            id: awardId,
+          }),
+        })
+      }
+    } catch (error) {
+      console.error('Error sending award share data to API:', error)
+    }
+
+    setShowShare(false)
   }
 
   const scrollRelatedByAmount = (dir: 'left' | 'right') => {
@@ -240,6 +284,56 @@ function AwardsDetailContent() {
       alert('Terjadi kesalahan saat mengirim komentar')
     } finally {
       setIsSubmittingComment(false)
+    }
+  }
+
+  const handleRateAward = async (stars: number) => {
+    if (!awardId) return
+
+    const normalizedStars = Number(stars)
+    if (!Number.isFinite(normalizedStars) || normalizedStars < 1 || normalizedStars > 5) {
+      return
+    }
+
+    try {
+      setIsSubmittingRating(true)
+      const token = localStorage.getItem('user_token') || ''
+
+      if (!token) {
+        alert('Silakan login terlebih dahulu untuk memberikan rating')
+        return
+      }
+
+      const response = await fetch('/api/awards/rating', {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          id: awardId,
+          stars: normalizedStars,
+        }),
+      })
+
+      const raw = await response.text()
+      let result: any = null
+      try {
+        result = raw ? JSON.parse(raw) : null
+      } catch {
+        result = null
+      }
+
+      if (response.ok && result?.status === true) {
+        setRating(normalizedStars)
+      } else {
+        alert(result?.message || raw || 'Gagal mengirim rating')
+      }
+    } catch (error) {
+      console.error('Error posting award rating:', error)
+      alert('Terjadi kesalahan saat mengirim rating')
+    } finally {
+      setIsSubmittingRating(false)
     }
   }
 
@@ -344,9 +438,21 @@ function AwardsDetailContent() {
             {/* Rating Section */}
             <div className="mt-6 border-t border-white/10 pt-4">
               <p className="text-sm font-semibold mb-2">Rating This Film</p>
-              <div className="flex gap-1 mb-6 text-white/10">
+              <div className="flex gap-1 mb-6">
                 {[1, 2, 3, 4, 5].map((star) => (
-                  <Star key={star} className="w-6 h-6 fill-current cursor-pointer hover:text-yellow-500 transition-colors" />
+                  <button
+                    key={star}
+                    onClick={() => handleRateAward(star)}
+                    disabled={isSubmittingRating}
+                    className={`transition-colors ${isSubmittingRating ? 'opacity-60 cursor-not-allowed' : ''}`}
+                    aria-label={`Rate ${star} stars`}
+                  >
+                    <Star
+                      className={`w-6 h-6 fill-current ${
+                        star <= rating ? 'text-yellow-500' : 'text-white/10 hover:text-yellow-500'
+                      }`}
+                    />
+                  </button>
                 ))}
               </div>
 
@@ -414,7 +520,7 @@ function AwardsDetailContent() {
               <button className="flex items-center gap-2 px-5 py-2 rounded-full border border-white/20 hover:bg-white/10 transition-colors text-sm">
                 <ThumbsUp className="w-4 h-4" /> Vote
               </button>
-              <button onClick={handleShare} className="flex items-center justify-center w-10 h-10 rounded-full border border-white/20 hover:bg-white/10 transition-colors">
+              <button onClick={() => setShowShare(true)} className="flex items-center justify-center w-10 h-10 rounded-full border border-white/20 hover:bg-white/10 transition-colors">
                 <Share2 className="w-4 h-4" />
               </button>
             </div>
@@ -479,9 +585,21 @@ function AwardsDetailContent() {
 
             <div className="mt-6 border-t border-white/10 pt-4">
               <p className="text-sm font-semibold mb-2">Rating This Film</p>
-              <div className="flex gap-1 mb-6 text-white/10">
+              <div className="flex gap-1 mb-6">
                 {[1, 2, 3, 4, 5].map((star) => (
-                  <Star key={star} className="w-6 h-6 fill-current cursor-pointer hover:text-yellow-500 transition-colors" />
+                  <button
+                    key={star}
+                    onClick={() => handleRateAward(star)}
+                    disabled={isSubmittingRating}
+                    className={`transition-colors ${isSubmittingRating ? 'opacity-60 cursor-not-allowed' : ''}`}
+                    aria-label={`Rate ${star} stars`}
+                  >
+                    <Star
+                      className={`w-6 h-6 fill-current ${
+                        star <= rating ? 'text-yellow-500' : 'text-white/10 hover:text-yellow-500'
+                      }`}
+                    />
+                  </button>
                 ))}
               </div>
 
@@ -583,6 +701,14 @@ function AwardsDetailContent() {
       </main>
 
       <Footer />
+
+      <ClipShare
+        showShare={showShare}
+        clipId={awardId || ''}
+        clipName={awardData?.name || 'Award'}
+        onClose={() => setShowShare(false)}
+        onPlatformShare={handlePlatformShare}
+      />
     </>
   )
 }
