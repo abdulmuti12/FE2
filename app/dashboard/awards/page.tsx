@@ -386,14 +386,14 @@ function StatsBar() {
         <FileText className="w-4 h-4 text-gray-400 shrink-0" />
         <div>
           <p className="text-xs text-gray-400 leading-none mb-1.5">Submission</p>
-          <p className="text-white font-extrabold text-xl leading-none">245</p>
+          <p className="text-white font-extrabold text-xl leading-none">511</p>
         </div>
       </div>
       <div className="flex items-center gap-3 bg-[#0b1d35] border border-white/10 rounded-xl px-5 py-5 lg:flex-1 w-full shrink-0">
         <Clock className="w-4 h-4 text-gray-400 shrink-0" />
         <div>
           <p className="text-xs text-gray-400 leading-none mb-1.5">Ends in</p>
-          <p className="text-white font-extrabold text-xl leading-none">30 Days</p>
+          <p className="text-white font-extrabold text-xl leading-none">64 Days</p>
         </div>
       </div>
       <button className="flex items-center justify-center gap-2 bg-yellow-400 hover:bg-yellow-300 active:bg-yellow-500 transition-colors rounded-xl px-6 py-5 lg:flex-1 w-full shrink-0">
@@ -560,11 +560,13 @@ function DetailsContent() {
                   onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }}
                 />
               </div>
-              <div className="p-4">
-                <p className="text-gray-400 text-xs mb-1">{judge.company}</p>
-                <p className="text-white font-bold text-sm mb-2">{judge.name}</p>
-                <p className="text-gray-400 text-xs leading-relaxed">{judge.role}</p>
-              </div>
+             <div className="p-4">
+              <p className="text-gray-400 text-xs mb-1 min-h-[16px]">
+                {judge.company ?? ''}
+              </p>
+              <p className="text-white font-bold text-sm mb-2">{judge.name}</p>
+              <p className="text-gray-400 text-xs leading-relaxed">{judge.role}</p>
+            </div>
             </div>
           ))}
         </div>
@@ -1429,20 +1431,20 @@ function FilmsContent() {
             <Trophy className="w-5 h-5 text-yellow-400 shrink-0" />
             <span className="text-gray-400 text-sm font-semibold">Prize Pool</span>
           </div>
-          <span className="text-white font-extrabold text-2xl md:text-3xl tracking-tight relative z-10">200 USKY</span>
+          <span className="text-white font-extrabold text-2xl md:text-3xl tracking-tight relative z-10">IDR 1,000,000,000</span>
         </div>
         <div className="flex items-center gap-3 bg-[#0b1d35] border border-white/10 rounded-xl px-5 py-5 lg:flex-1 w-full shrink-0">
           <FileText className="w-4 h-4 text-gray-400 shrink-0" />
           <div>
             <p className="text-xs text-gray-400 leading-none mb-1.5">Submission</p>
-            <p className="text-white font-extrabold text-xl leading-none">245</p>
+            <p className="text-white font-extrabold text-xl leading-none">511</p>
           </div>
         </div>
         <div className="flex items-center gap-3 bg-[#0b1d35] border border-white/10 rounded-xl px-5 py-5 lg:flex-1 w-full shrink-0">
           <Clock className="w-4 h-4 text-gray-400 shrink-0" />
           <div>
             <p className="text-xs text-gray-400 leading-none mb-1.5">Ends in</p>
-            <p className="text-white font-extrabold text-xl leading-none">4 Days</p>
+            <p className="text-white font-extrabold text-xl leading-none">64 Days</p>
           </div>
         </div>
         <button className="flex items-center justify-center gap-2 bg-yellow-400 hover:bg-yellow-300 active:bg-yellow-500 transition-colors rounded-xl px-6 py-5 lg:flex-1 w-full shrink-0">
