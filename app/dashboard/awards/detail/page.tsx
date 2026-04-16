@@ -30,6 +30,7 @@ interface AwardDetailData {
   likes?: string | number
   views?: string | number
   play?: string | number
+  my_favorit?: string
   image_url?: string
   image_landscape_url?: string
   video_url?: string
@@ -66,6 +67,13 @@ function AwardsDetailContent() {
   const [rating, setRating] = useState(0)
   const [isSubmittingRating, setIsSubmittingRating] = useState(false)
   const [showShare, setShowShare] = useState(false)
+  const [isSubmittingVote, setIsSubmittingVote] = useState(false)
+  const [isSubmittingLove, setIsSubmittingLove] = useState(false)
+  const [isLoved, setIsLoved] = useState(false)
+  const [showShareToast, setShowShareToast] = useState(false)
+  const [shareToastMessage, setShareToastMessage] = useState('Success share')
+  const [shareToastType, setShareToastType] = useState<'success' | 'error'>('success')
+  const shareToastTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   useEffect(() => {
     const fetchAwardDetail = async () => {
@@ -173,7 +181,33 @@ function AwardsDetailContent() {
     setShowAllMobileComments(false)
   }, [awardId])
 
+  useEffect(() => {
+    setIsLoved(awardData?.my_favorit === '1')
+  }, [awardData])
+
+  useEffect(() => {
+    return () => {
+      if (shareToastTimerRef.current) {
+        clearTimeout(shareToastTimerRef.current)
+      }
+    }
+  }, [])
+
   const handlePlatformShare = async (platform: string) => {
+    const showToast = (message: string, type: 'success' | 'error' = 'success') => {
+      setShareToastMessage(message)
+      setShareToastType(type)
+      setShowShareToast(true)
+
+      if (shareToastTimerRef.current) {
+        clearTimeout(shareToastTimerRef.current)
+      }
+
+      shareToastTimerRef.current = setTimeout(() => {
+        setShowShareToast(false)
+      }, 2500)
+    }
+
     const url = window.location.href
     const title = awardData?.name || 'Award'
     const text = `Check out this award: ${title}`
@@ -181,7 +215,7 @@ function AwardsDetailContent() {
     switch (platform) {
       case 'copy':
         await navigator.clipboard.writeText(url)
-        alert('Link copied to clipboard!')
+        showToast('Link copied to clipboard!', 'success')
         break
       case 'whatsapp':
         window.open(`https://wa.me/?text=${encodeURIComponent(text + ' ' + url)}`, '_blank')
@@ -203,9 +237,9 @@ function AwardsDetailContent() {
     }
 
     try {
-      const token = localStorage.getItem('user_token')
+      const token = localStorage.getItem('user_token') || ''
       if (token && awardId) {
-        await fetch('/api/awards/share', {
+        const response = await fetch('/api/awards/share', {
           method: 'POST',
           headers: {
             Authorization: `Bearer ${token}`,
@@ -215,9 +249,24 @@ function AwardsDetailContent() {
             id: awardId,
           }),
         })
+
+        const raw = await response.text()
+        let result: any = null
+        try {
+          result = raw ? JSON.parse(raw) : null
+        } catch {
+          result = null
+        }
+
+        if (response.ok && result?.status === true) {
+          showToast('Success share', 'success')
+        } else {
+          showToast(result?.message || raw || 'Gagal share', 'error')
+        }
       }
     } catch (error) {
-      console.error('Error sending award share data to API:', error)
+      console.error('Error submitting award share:', error)
+      showToast('Terjadi kesalahan saat share', 'error')
     }
 
     setShowShare(false)
@@ -334,6 +383,92 @@ function AwardsDetailContent() {
       alert('Terjadi kesalahan saat mengirim rating')
     } finally {
       setIsSubmittingRating(false)
+    }
+  }
+
+  const handleLoveAward = async () => {
+    if (!awardId) return
+
+    try {
+      setIsSubmittingLove(true)
+      const token = localStorage.getItem('user_token') || ''
+
+      if (!token) {
+        alert('Silakan login terlebih dahulu untuk favorit')
+        return
+      }
+
+      const response = await fetch('/api/awards/love', {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          id: awardId,
+        }),
+      })
+
+      const raw = await response.text()
+      let result: any = null
+      try {
+        result = raw ? JSON.parse(raw) : null
+      } catch {
+        result = null
+      }
+
+      if (response.ok && result?.status === true) {
+        setIsLoved((prev) => !prev)
+      } else {
+        alert(result?.message || raw || 'Gagal memperbarui favorit')
+      }
+    } catch (error) {
+      console.error('Error submitting award favorit:', error)
+      alert('Terjadi kesalahan saat memperbarui favorit')
+    } finally {
+      setIsSubmittingLove(false)
+    }
+  }
+
+  const handleVoteAward = async () => {
+    if (!awardId) return
+
+    try {
+      setIsSubmittingVote(true)
+      const token = localStorage.getItem('user_token') || ''
+
+      if (!token) {
+        alert('Silakan login terlebih dahulu untuk melakukan vote')
+        return
+      }
+
+      const response = await fetch('/api/awards/vote', {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          id: awardId,
+        }),
+      })
+
+      const raw = await response.text()
+      let result: any = null
+      try {
+        result = raw ? JSON.parse(raw) : null
+      } catch {
+        result = null
+      }
+
+      if (!(response.ok && result?.status === true)) {
+        alert(result?.message || raw || 'Gagal mengirim vote')
+      }
+    } catch (error) {
+      console.error('Error submitting award vote:', error)
+      alert('Terjadi kesalahan saat mengirim vote')
+    } finally {
+      setIsSubmittingVote(false)
     }
   }
 
@@ -511,13 +646,25 @@ function AwardsDetailContent() {
 
             {/* Action Buttons */}
             <div className="flex flex-wrap gap-3">
-              <button className="flex items-center gap-2 px-5 py-2 rounded-full border border-white/20 hover:bg-white/10 transition-colors text-sm">
-                <Heart className="w-4 h-4" /> Like
+              <button
+                onClick={handleLoveAward}
+                disabled={isSubmittingLove}
+                className={`flex items-center gap-2 px-5 py-2 rounded-full border transition-colors text-sm disabled:opacity-50 disabled:cursor-not-allowed ${
+                  isLoved
+                    ? 'border-red-500/50 text-red-400 bg-red-500/10 hover:bg-red-500/15'
+                    : 'border-white/20 hover:bg-white/10'
+                }`}
+              >
+                <Heart className={`w-4 h-4 ${isLoved ? 'fill-current' : ''}`} /> Like
               </button>
               <button className="flex items-center gap-2 px-5 py-2 rounded-full border border-white/20 hover:bg-white/10 transition-colors text-sm">
                 <Plus className="w-4 h-4" /> Add to Watch
               </button>
-              <button className="flex items-center gap-2 px-5 py-2 rounded-full border border-white/20 hover:bg-white/10 transition-colors text-sm">
+              <button
+                onClick={handleVoteAward}
+                disabled={isSubmittingVote}
+                className="flex items-center gap-2 px-5 py-2 rounded-full border border-white/20 hover:bg-white/10 transition-colors text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+              >
                 <ThumbsUp className="w-4 h-4" /> Vote
               </button>
               <button onClick={() => setShowShare(true)} className="flex items-center justify-center w-10 h-10 rounded-full border border-white/20 hover:bg-white/10 transition-colors">
@@ -701,6 +848,22 @@ function AwardsDetailContent() {
       </main>
 
       <Footer />
+
+      <div
+        className={`fixed left-1/2 top-6 z-[120] -translate-x-1/2 rounded-xl border backdrop-blur-md px-4 py-3 text-sm shadow-[0_10px_30px_rgba(0,0,0,0.25)] transition-all duration-300 ${
+          shareToastType === 'success'
+            ? 'border-emerald-300/30 bg-emerald-500/15 text-emerald-100'
+            : 'border-rose-300/30 bg-rose-500/15 text-rose-100'
+        } ${
+          showShareToast
+            ? 'opacity-100 translate-y-0 scale-100 animate-pulse'
+            : 'opacity-0 -translate-y-2 scale-95 pointer-events-none'
+        }`}
+        role="status"
+        aria-live="polite"
+      >
+        {shareToastMessage}
+      </div>
 
       <ClipShare
         showShare={showShare}
