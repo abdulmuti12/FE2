@@ -5,6 +5,7 @@ import { Header } from '@/components/header'
 import { Footer } from '@/components/footer'
 import { ChevronRight, Search, ChevronDown } from 'lucide-react'
 import { useRouter } from 'next/navigation'
+import Image from 'next/image'
 
 interface Creator {
   id: string
@@ -186,11 +187,15 @@ export default function CreatorsPage() {
 >                    {/* Avatar Circle */}
                     <div className={`w-32 h-32 md:w-40 md:h-40 rounded-full ${!avatarUrl ? bgColor : ''} flex items-center justify-center mb-4 transition-transform duration-300 group-hover:scale-105 border-4 border-[#020817] shadow-xl overflow-hidden`}>
                       {avatarUrl ? (
-                        <img 
-                          src={avatarUrl} 
-                          alt={creator.name}
-                          className="w-full h-full object-cover"
-                        />
+                        <div className="relative w-full h-full">
+                          <Image
+                            src={avatarUrl}
+                            alt={creator.name}
+                            fill
+                            sizes="(max-width: 768px) 128px, 160px"
+                            className="object-cover"
+                          />
+                        </div>
                       ) : (
                         <div className="w-20 h-20 bg-white/30 grid grid-cols-3 gap-1 p-1">
                           <div className="bg-white/60 col-span-3"></div>

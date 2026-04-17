@@ -349,14 +349,18 @@ function formatEndInLabel(value: unknown): string {
 }
 
 interface AwardsStats {
+  prizePool: string | number
   submission: string | number
   endIn: string
+  creatorCount: string | number
 }
 
 function StatsBar({
+  prizePool = '-',
   submission = '-',
   endIn = '-',
 }: {
+  prizePool?: string | number
   submission?: string | number
   endIn?: string
 }) {
@@ -371,7 +375,7 @@ function StatsBar({
           <Trophy className="w-5 h-5 text-yellow-400 shrink-0" />
           <span className="text-gray-400 text-sm font-semibold">Prize Pool</span>
         </div>
-        <span className="text-white font-extrabold text-2xl md:text-3xl tracking-tight relative z-10">IDR 1,000,000,000</span>
+        <span className="text-white font-extrabold text-2xl md:text-3xl tracking-tight relative z-10">{prizePool}</span>
       </div>
       <div className="flex items-center gap-3 bg-[#0b1d35] border border-white/10 rounded-xl px-5 py-5 lg:flex-1 w-full shrink-0">
         <FileText className="w-4 h-4 text-gray-400 shrink-0" />
@@ -418,7 +422,7 @@ function PrizeSidebar() {
               <Trophy className="w-4 h-4 text-yellow-400 shrink-0" />
               <span className="text-white text-sm font-bold">Prize Pool</span>
             </div>
-            <span className="text-white font-extrabold text-lg relative z-10">IDR 1,000,000,000</span>
+            <span className="text-white font-extrabold text-lg relative z-10">-</span>
           </div>
         </div>
         <div className="mx-3 mt-2 mb-3 border border-white/10 rounded-xl overflow-hidden">
@@ -504,7 +508,7 @@ interface AwardCategory {
 function DetailsContent({ stats }: { stats: AwardsStats }) {
   return (
     <div className="space-y-12 mt-2">
-      <StatsBar submission={stats.submission} endIn={stats.endIn} />
+      <StatsBar prizePool={stats.prizePool} submission={stats.submission} endIn={stats.endIn} />
 
       {/* ── Important Dates ── */}
       <div>
@@ -661,7 +665,7 @@ function LeaderboardContent({ stats }: { stats: AwardsStats }) {
 
   return (
     <div className="space-y-6 mt-2">
-      <StatsBar submission={stats.submission} endIn={stats.endIn} />
+      <StatsBar prizePool={stats.prizePool} submission={stats.submission} endIn={stats.endIn} />
 
       <div>
         <h3 className="text-white font-bold text-2xl">Real Time Leaderboard</h3>
@@ -780,7 +784,7 @@ function LeaderboardContent({ stats }: { stats: AwardsStats }) {
 function DirectionContent({ stats }: { stats: AwardsStats }) {
   return (
     <div className="space-y-8 mt-2">
-      <StatsBar submission={stats.submission} endIn={stats.endIn} />
+      <StatsBar prizePool={stats.prizePool} submission={stats.submission} endIn={stats.endIn} />
       <div>
         <h2 className="text-white font-bold text-2xl mb-2">Direct with the Power of AI</h2>
         <p className="text-gray-400 text-sm">Explore a new era of filmmaking where AI meets imagination</p>
@@ -828,7 +832,7 @@ function ScoringContent({ stats }: { stats: AwardsStats }) {
 
   return (
     <div className="space-y-6 mt-2">
-      <StatsBar submission={stats.submission} endIn={stats.endIn} />
+      <StatsBar prizePool={stats.prizePool} submission={stats.submission} endIn={stats.endIn} />
       <div>
         <h3 className="text-white font-bold text-2xl mb-2">Scoring Breakdown</h3>
         <p className="text-gray-400 text-sm leading-relaxed">
@@ -944,7 +948,7 @@ const RULES_CARDS = [
 function RulesContent({ stats }: { stats: AwardsStats }) {
   return (
     <div className="space-y-8 mt-2">
-      <StatsBar submission={stats.submission} endIn={stats.endIn} />
+      <StatsBar prizePool={stats.prizePool} submission={stats.submission} endIn={stats.endIn} />
       <div>
         <h3 className="text-white font-bold text-2xl mb-1">The Rules of the Reel</h3>
         <p className="text-gray-400 text-sm">From eligibility to judging make sure your masterpiece qualifies for the spotlight.</p>
@@ -980,7 +984,7 @@ function RulesContent({ stats }: { stats: AwardsStats }) {
 function FaqContent({ stats }: { stats: AwardsStats }) {
   return (
     <div className="space-y-8 mt-2">
-      <StatsBar submission={stats.submission} endIn={stats.endIn} />
+      <StatsBar prizePool={stats.prizePool} submission={stats.submission} endIn={stats.endIn} />
       <div>
         <h3 className="text-white font-bold text-2xl">Frequently Asked Questions</h3>
       </div>
@@ -1058,7 +1062,7 @@ function FilmsContent({ stats }: { stats: AwardsStats }) {
           setCategories([])
           return
         }
-        const response = await fetch('/api/award/category', {
+        const response = await fetch('/api/awards/category', {
           method: 'GET',
           headers: { Authorization: `Bearer ${token}` },
           signal: controller.signal
@@ -1284,7 +1288,7 @@ function FilmsContent({ stats }: { stats: AwardsStats }) {
       )}
 
       {/* ── Stats bar ── */}
-      <StatsBar submission={stats.submission} endIn={stats.endIn} />
+      <StatsBar prizePool={stats.prizePool} submission={stats.submission} endIn={stats.endIn} />
 
       {/* ── Submissions Grid ── */}
       <div>
@@ -1417,8 +1421,10 @@ function FilmsContent({ stats }: { stats: AwardsStats }) {
 export default function AwardsPage() {
   const [activeTab, setActiveTab] = useState('Films')
   const [stats, setStats] = useState<AwardsStats>({
+    prizePool: '-',
     submission: '-',
     endIn: '-',
+    creatorCount: '-',
   })
 
   useEffect(() => {
@@ -1432,11 +1438,19 @@ export default function AwardsPage() {
         })
         const data = await res.json()
         setStats({
+          prizePool:
+            data?.prize_pool !== undefined && data?.prize_pool !== null
+              ? data.prize_pool
+              : '-',
           submission:
             data?.submission !== undefined && data?.submission !== null
               ? data.submission
               : '-',
           endIn: formatEndInLabel(data?.end_in),
+          creatorCount:
+            data?.creator_count !== undefined && data?.creator_count !== null
+              ? data.creator_count
+              : '-',
         })
       } catch (error: any) {
         if (error.name !== 'AbortError') {
@@ -1467,7 +1481,9 @@ export default function AwardsPage() {
               ))}
               <div className="w-8 h-8 rounded-full border-2 border-[#050d1a] bg-[#1e3a5f] flex items-center justify-center text-[10px] font-bold text-white" style={{ zIndex: 0 }}>+3</div>
             </div>
-            <span className="text-gray-300 text-sm font-medium">Join 240+ others</span>
+            <span className="text-gray-300 text-sm font-medium">
+              Join {stats.creatorCount !== '-' ? `${stats.creatorCount}+` : '240+'} others
+            </span>
           </div>
           <div className="flex items-center gap-1.5 mb-5">
             <div className="flex items-center gap-1.5 border border-white/20 rounded-full px-3 py-1 w-fit bg-black/20 backdrop-blur-sm">

@@ -8,6 +8,7 @@ import { useRouter } from 'next/navigation'
 // import { useState, useEffect } from 'react'
 import { useState, useEffect, useRef } from 'react'
 import { ChevronRight, ChevronLeft, Calendar, Play } from 'lucide-react'
+import Image from 'next/image'
 
 const upcomingEvents = []
 
@@ -302,7 +303,15 @@ export default function EventPage() {
                   className="w-[220px] rounded-xl overflow-hidden border border-white/10 cursor-pointer"
                   onClick={() => openEventDetail(event.id)}
                 >
-                  <img src={event.image_url || event.image} className="w-full h-[280px] object-cover" />
+                  <div className="relative w-full h-[280px]">
+                    <Image
+                      src={event.image_url || event.image || '/placeholder.jpg'}
+                      alt={event.title}
+                      fill
+                      sizes="220px"
+                      className="object-cover"
+                    />
+                  </div>
 
                   <div className="p-4">
                     <h3 className="font-bold">{event.title}</h3>
@@ -354,7 +363,13 @@ export default function EventPage() {
                     onClick={() => openEventDetail(event.id)}
                   >
                     <div className="relative h-[420px] md:h-[280px]">
-                      <img src={event.image_url || event.image} className="w-full h-full object-cover" alt={event.title} />
+                      <Image
+                        src={event.image_url || event.image || '/placeholder.jpg'}
+                        alt={event.title}
+                        fill
+                        sizes="(max-width: 768px) 85vw, 220px"
+                        className="object-cover"
+                      />
 
                       <div className="absolute inset-0 flex items-center justify-center bg-black/10 hover:bg-black/20 transition-colors">
                         <Play className="text-white w-14 h-14 md:w-10 md:h-10 opacity-90 drop-shadow-lg" />
