@@ -111,6 +111,7 @@ function SeriesDetailContent() {
   const [activeVideoId, setActiveVideoId] = useState<string | null>(null)
   const [activeVideo, setActiveVideo] = useState<string | null>(null)
   const [activeVideoPoster, setActiveVideoPoster] = useState<string | null>(null)
+  const episodesScrollerRef = useRef<HTMLDivElement | null>(null)
 
   const fetchSeriesDetail = useCallback(async () => {
     if (!seriesId) return
@@ -435,6 +436,13 @@ function SeriesDetailContent() {
     }
   }
 
+  const scrollEpisodesByAmount = (dir: 'left' | 'right') => {
+    const el = episodesScrollerRef.current
+    if (!el) return
+    const amount = Math.round(el.clientWidth * 0.85)
+    el.scrollBy({ left: dir === 'right' ? amount : -amount, behavior: 'smooth' })
+  }
+
   if (loading) {
     return (
       <div className="min-h-screen bg-[#050B14] flex items-center justify-center">
@@ -544,20 +552,41 @@ function SeriesDetailContent() {
       <div className="max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-10 xl:px-14 pb-20">
         <div className="mb-14">
           <h2 className="text-xl md:text-2xl font-bold mb-6">Episodes</h2>
-          <div className="flex gap-4 md:gap-5 overflow-x-auto pb-2 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
-            {seriesData.groups?.map((ep) => (
-              <div 
-                key={ep.id} 
-                className={`snap-start shrink-0 w-[240px] cursor-pointer p-2 rounded-xl border transition-all ${activeVideoId === ep.id ? 'border-[#D4A84B] bg-white/5' : 'border-transparent'}`}
-                onClick={() => playEpisode(ep)}
-              >
-                <div className="relative aspect-video rounded-lg overflow-hidden mb-2">
-                  <Image src={ep.image_landscape_url || ep.image_url || '/placeholder-poster.png'} alt={ep.name} fill className="object-cover" />
-                  {activeVideoId === ep.id && <div className="absolute inset-0 bg-black/40 flex items-center justify-center"><Play className="text-[#D4A84B]" /></div>}
+          <div className="relative">
+            <div
+              ref={episodesScrollerRef}
+              className="flex gap-4 md:gap-5 overflow-x-auto pb-2 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]"
+            >
+              {seriesData.groups?.map((ep) => (
+                <div 
+                  key={ep.id} 
+                  className={`snap-start shrink-0 w-[240px] cursor-pointer p-2 rounded-xl border transition-all ${activeVideoId === ep.id ? 'border-[#D4A84B] bg-white/5' : 'border-transparent'}`}
+                  onClick={() => playEpisode(ep)}
+                >
+                  <div className="relative aspect-video rounded-lg overflow-hidden mb-2">
+                    <Image src={ep.image_landscape_url || ep.image_url || '/placeholder-poster.png'} alt={ep.name} fill className="object-cover" />
+                    {activeVideoId === ep.id && <div className="absolute inset-0 bg-black/40 flex items-center justify-center"><Play className="text-[#D4A84B]" /></div>}
+                  </div>
+                  <h4 className="font-bold text-sm truncate">{ep.name}</h4>
                 </div>
-                <h4 className="font-bold text-sm truncate">{ep.name}</h4>
-              </div>
-            ))}
+              ))}
+            </div>
+
+            <button
+              onClick={() => scrollEpisodesByAmount('left')}
+              className="absolute left-0 top-1/2 flex h-8 w-8 -translate-x-2 -translate-y-1/2 items-center justify-center rounded-lg bg-white/95 text-black shadow-md transition-colors hover:bg-white md:h-10 md:w-10 md:-translate-x-4 lg:-translate-x-6"
+              aria-label="Previous episode"
+            >
+              <span className="text-lg leading-none md:text-xl">‹</span>
+            </button>
+
+            <button
+              onClick={() => scrollEpisodesByAmount('right')}
+              className="absolute right-0 top-1/2 flex h-8 w-8 translate-x-2 -translate-y-1/2 items-center justify-center rounded-lg bg-white/95 text-black shadow-md transition-colors hover:bg-white md:h-10 md:w-10 md:translate-x-4 lg:translate-x-6"
+              aria-label="Next episode"
+            >
+              <span className="text-lg leading-none md:text-xl">›</span>
+            </button>
           </div>
         </div>
 
