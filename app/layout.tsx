@@ -8,9 +8,14 @@ const _geist = Geist({ subsets: ["latin"] })
 const _geistMono = Geist_Mono({ subsets: ["latin"] })
 
 export const metadata: Metadata = {
-  title: 'Dashboard',
+  title: 'Usky',
   description: '',
   generator: 'Next.js',
+  icons: {
+    icon: '/usky-logo.png',
+    shortcut: '/usky-logo.png',
+    apple: '/usky-logo.png',
+  },
 }
 
 export default function RootLayout({
