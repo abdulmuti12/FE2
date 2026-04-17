@@ -368,7 +368,36 @@ function MarqueeRow({ reverse = false }: { reverse?: boolean }) {
 // SHARED STATS BAR
 // ─────────────────────────────────────────────
 
-function StatsBar() {
+function formatEndInLabel(value: unknown): string {
+  if (typeof value !== 'string' || !value.trim()) return '30 Days'
+
+  const text = value.trim().toLowerCase()
+  const monthMatch = text.match(/^(\d+(?:\.\d+)?)\s*months?$/)
+  if (monthMatch) {
+    const monthCount = Number(monthMatch[1])
+    if (!Number.isNaN(monthCount)) {
+      return `${Math.round(monthCount * 30)} Days`
+    }
+  }
+
+  const dayMatch = text.match(/^(\d+(?:\.\d+)?)\s*days?$/)
+  if (dayMatch) {
+    const dayCount = Number(dayMatch[1])
+    if (!Number.isNaN(dayCount)) {
+      return `${Math.round(dayCount)} Days`
+    }
+  }
+
+  return String(value)
+}
+
+function StatsBar({
+  submission = 245,
+  endIn = ' Days',
+}: {
+  submission?: string | number
+  endIn?: string
+}) {
   return (
     <div className="flex flex-col lg:flex-row items-stretch gap-4 w-full">
       <div className="relative flex items-center justify-between overflow-hidden bg-[#0b1d35] border border-white/10 rounded-xl px-6 py-5 lg:flex-[2] w-full shrink-0">
@@ -386,14 +415,14 @@ function StatsBar() {
         <FileText className="w-4 h-4 text-gray-400 shrink-0" />
         <div>
           <p className="text-xs text-gray-400 leading-none mb-1.5">Submission</p>
-          <p className="text-white font-extrabold text-xl leading-none">245</p>
+          <p className="text-white font-extrabold text-xl leading-none">{submission}</p>
         </div>
       </div>
       <div className="flex items-center gap-3 bg-[#0b1d35] border border-white/10 rounded-xl px-5 py-5 lg:flex-1 w-full shrink-0">
         <Clock className="w-4 h-4 text-gray-400 shrink-0" />
         <div>
           <p className="text-xs text-gray-400 leading-none mb-1.5">Ends in</p>
-          <p className="text-white font-extrabold text-xl leading-none">30 Days</p>
+          <p className="text-white font-extrabold text-xl leading-none">{endIn}</p>
         </div>
       </div>
       <button className="flex items-center justify-center gap-2 bg-yellow-400 hover:bg-yellow-300 active:bg-yellow-500 transition-colors rounded-xl px-6 py-5 lg:flex-1 w-full shrink-0">
@@ -618,6 +647,8 @@ function num(v: string | number | undefined): number {
 function LeaderboardContent() {
   const [categories, setCategories] = useState<LeaderboardCategory[]>([])
   const [selectedCategoryId, setSelectedCategoryId] = useState<string>('')
+  const [submissionCount, setSubmissionCount] = useState<string | number>(245)
+  const [endInLabel, setEndInLabel] = useState<string>('30 Days')
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
@@ -628,12 +659,29 @@ function LeaderboardContent() {
         setLoading(true)
         setError(null)
 
-        const res = await fetchWithRetry('/api/awards/leaderboard', 2)
-        const data = await res.json()
+        const token =
+          typeof window !== 'undefined' ? localStorage.getItem('user_token') : null
 
-        if (data.status === true && Array.isArray(data.count) && data.count.length > 0) {
-          setCategories(data.count as LeaderboardCategory[])
-          setSelectedCategoryId(String(data.count[0].id))
+        const res = await fetchWithRetry(
+          '/api/awards/partdata',
+          2,
+          token ? { Authorization: `Bearer ${token}` } : undefined
+        )
+        const data = await res.json()
+        const categoriesData = Array.isArray(data?.list)
+          ? data.list
+          : Array.isArray(data?.count)
+          ? data.count
+          : []
+
+        if (data?.submission !== undefined && data?.submission !== null) {
+          setSubmissionCount(data.submission)
+        }
+        setEndInLabel(formatEndInLabel(data?.end_in))
+
+        if (data.status === true && categoriesData.length > 0) {
+          setCategories(categoriesData as LeaderboardCategory[])
+          setSelectedCategoryId(String(categoriesData[0].id))
         } else {
           setError(data.message ?? 'No data returned')
         }
@@ -657,7 +705,7 @@ function LeaderboardContent() {
 
   return (
     <div className="space-y-6 mt-2">
-      <StatsBar />
+      <StatsBar submission={submissionCount} endIn={endInLabel} />
 
       <div>
         <h3 className="text-white font-bold text-2xl">Real Time Leaderboard</h3>
@@ -1658,12 +1706,17 @@ export default function AwardsPage() {
   )
 }
 
-async function fetchWithRetry(url: string, retries = 2) {
+async function fetchWithRetry(
+  url: string,
+  retries = 2,
+  headers?: Record<string, string>
+) {
   for (let i = 0; i <= retries; i++) {
     try {
       const res = await fetch(url, {
         method: 'GET',
         credentials: 'include',
+        headers,
       })
       if (res.ok) return res
       if (i < retries) await new Promise(r => setTimeout(r, 1000 * (i + 1)))
