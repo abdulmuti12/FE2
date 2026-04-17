@@ -66,6 +66,15 @@ export default function SeriesPage() {
   const [currentPage, setCurrentPage] = useState(1)
   const [pagination, setPagination] = useState<PaginationMeta | null>(null)
 
+  useEffect(() => {
+    const previousTitle = document.title
+    document.title = 'Usky - Series'
+
+    return () => {
+      document.title = previousTitle
+    }
+  }, [])
+
   // 3. Tambahkan pengecekan token tersendiri (opsional tapi disarankan agar lebih cepat)
   useEffect(() => {
     const token = localStorage.getItem('user_token')

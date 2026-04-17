@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { buildFilmApiUrl } from '../_utils'
 
 export async function GET(request: NextRequest) {
   try {
@@ -14,7 +15,7 @@ export async function GET(request: NextRequest) {
 
     console.log('[v0] Fetching film categories from external API')
 
-    const response = await fetch('https://api.usky.ai/films/category', {
+    const response = await fetch(buildFilmApiUrl('/films/category'), {
       method: 'GET',
       headers: {
         Authorization: `Bearer ${token}`,

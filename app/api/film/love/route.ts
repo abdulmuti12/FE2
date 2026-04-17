@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import { buildFilmApiUrl } from '../_utils'
 
 export async function POST(request: Request) {
   try {
@@ -15,7 +16,7 @@ export async function POST(request: Request) {
     const formData = new FormData()
     formData.append('id', body.id)
 
-    const response = await fetch('https://api.usky.ai/films/favorit', {
+    const response = await fetch(buildFilmApiUrl('/films/favorit'), {
       method: 'POST',
       headers: {
         ...(authorization ? { Authorization: authorization } : {}),

@@ -99,6 +99,12 @@ const normalizeRating = (value: string | number | null | undefined): number => {
   return Math.min(5, Math.floor(parsed))
 }
 
+const formatDisplayRating = (value: string | number | null | undefined): string => {
+  const parsed = Number(value)
+  if (!Number.isFinite(parsed)) return '0'
+  return parsed.toString()
+}
+
 // ============================================================================
 // Component
 // ============================================================================
@@ -198,6 +204,17 @@ function DetailContent() {
       fetchComments()
     }
   }, [filmId])
+
+  useEffect(() => {
+    if (!filmData?.name) return
+
+    const previousTitle = document.title
+    document.title = `${filmData.name} | Usky`
+
+    return () => {
+      document.title = previousTitle
+    }
+  }, [filmData?.name])
 
   useEffect(() => {
     return () => {
@@ -457,7 +474,7 @@ function DetailContent() {
                   <span>★</span>
                   <span>★</span>
                   <span>★</span>
-                  <span className="text-white/70 ml-1">{filmData.rates || '0.0'}</span>
+                  <span className="text-white/70 ml-1">{formatDisplayRating(filmData.rates)}</span>
                 </div>
 
                 <span className="text-white/60">{filmData.years}</span>

@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import { buildFilmApiUrl } from '../_utils'
 
 export async function GET(request: Request) {
   // 1. Ambil parameter 'id' dari URL request internal
@@ -17,7 +18,7 @@ export async function GET(request: Request) {
 
   try {
     // 3. Hit ke endpoint uSky API dari SERVER (Bypass CORS)
-    const response = await fetch(`https://api.usky.ai/films/detail?id=${id}`, {
+    const response = await fetch(`${buildFilmApiUrl('/films/detail')}?id=${id}`, {
       method: 'GET',
       headers: {
         // Teruskan token ke server uSky

@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import { buildFilmApiUrl } from '../_utils'
 
 export async function GET(request: Request) {
   // Ambil query 'id' dari URL request frontend
@@ -14,7 +15,7 @@ export async function GET(request: Request) {
 
   try {
     // Lakukan fetch ke API eksternal dari sisi SERVER (Bebas CORS)
-    const response = await fetch(`https://api.usky.ai/films/comment?id=${id}`, {
+    const response = await fetch(`${buildFilmApiUrl('/films/comment')}?id=${id}`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
@@ -57,7 +58,7 @@ export async function POST(request: Request) {
     formData.append('comment', body.comment)
 
     // 4. Kirim ke backend uSky menggunakan FormData
-    const response = await fetch(`https://api.usky.ai/films/comment`, {
+    const response = await fetch(buildFilmApiUrl('/films/comment'), {
       method: 'POST',
       headers: {
         // CATATAN PENTING: Jangan set 'Content-Type' secara manual di sini!

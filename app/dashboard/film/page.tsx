@@ -119,6 +119,15 @@ export default function FilmPage() {
   const [loading, setLoading] = useState(true)
   const [page, setPage] = useState(1)
 
+  useEffect(() => {
+    const previousTitle = document.title
+    document.title = 'Usky - Film'
+
+    return () => {
+      document.title = previousTitle
+    }
+  }, [])
+
   // Effects - Fetch Films
   useEffect(() => {
     const fetchFilms = async () => {

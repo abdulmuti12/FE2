@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { buildFilmApiUrl } from '../_utils'
 
 export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams
@@ -19,7 +20,7 @@ export async function GET(request: NextRequest) {
     )
   }
 
-  const externalUrl = new URL('https://api.usky.ai/films/list')
+  const externalUrl = new URL(buildFilmApiUrl('/films/list'))
   externalUrl.searchParams.append('sort', sort)
   externalUrl.searchParams.append('id_category', id_category)
   externalUrl.searchParams.append('page', page)
