@@ -1,13 +1,17 @@
 import { cookies } from 'next/headers'
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
-    const cookieStore = await cookies()
-    const token = cookieStore.get('token')?.value || 
-                  cookieStore.get('auth_token')?.value ||
-                  cookieStore.get('access_token')?.value
+    const authHeader = request.headers.get('authorization')
+    const tokenFromHeader = authHeader?.replace(/^Bearer\s+/i, '').trim()
 
-    console.log('[awards/category] Fetching categories, token available:', !!token)
+    const cookieStore = await cookies()
+    const tokenFromCookie =
+      cookieStore.get('token')?.value ||
+      cookieStore.get('auth_token')?.value ||
+      cookieStore.get('access_token')?.value
+
+    const token = tokenFromHeader || tokenFromCookie || process.env.USKY_API_TOKEN || ''
 
     const headers: Record<string, string> = {
       'Content-Type': 'application/json',
@@ -23,10 +27,7 @@ export async function GET() {
       cache: 'no-store',
     })
 
-    console.log('[awards/category] Response status:', response.status)
-
     if (!response.ok) {
-      console.error('[awards/category] External API error:', response.status)
       return Response.json(
         { status: false, message: `External API error: ${response.status}` },
         { status: response.status }
@@ -34,7 +35,6 @@ export async function GET() {
     }
 
     const data = await response.json()
-    console.log('[awards/category] Success, received data:', data)
     return Response.json(data)
   } catch (error) {
     console.error('[awards/category] Fetch error:', error)

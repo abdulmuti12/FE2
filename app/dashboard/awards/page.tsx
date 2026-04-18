@@ -359,10 +359,12 @@ function StatsBar({
   prizePool = '-',
   submission = '-',
   endIn = '-',
+  isLoading = false,
 }: {
   prizePool?: string | number
   submission?: string | number
   endIn?: string
+  isLoading?: boolean
 }) {
   return (
     <div className="flex flex-col lg:flex-row items-stretch gap-4 w-full">
@@ -375,20 +377,32 @@ function StatsBar({
           <Trophy className="w-5 h-5 text-yellow-400 shrink-0" />
           <span className="text-gray-400 text-sm font-semibold">Prize Pool</span>
         </div>
-        <span className="text-white font-extrabold text-2xl md:text-3xl tracking-tight relative z-10">{prizePool}</span>
+        {isLoading ? (
+          <div className="h-8 md:h-9 w-28 md:w-36 rounded-md bg-white/10 animate-pulse relative z-10" />
+        ) : (
+          <span className="text-white font-extrabold text-2xl md:text-3xl tracking-tight relative z-10">{prizePool}</span>
+        )}
       </div>
       <div className="flex items-center gap-3 bg-[#0b1d35] border border-white/10 rounded-xl px-5 py-5 lg:flex-1 w-full shrink-0">
         <FileText className="w-4 h-4 text-gray-400 shrink-0" />
         <div>
           <p className="text-xs text-gray-400 leading-none mb-1.5">Submission</p>
-          <p className="text-white font-extrabold text-xl leading-none">{submission}</p>
+          {isLoading ? (
+            <div className="h-6 w-20 rounded-md bg-white/10 animate-pulse" />
+          ) : (
+            <p className="text-white font-extrabold text-xl leading-none">{submission}</p>
+          )}
         </div>
       </div>
       <div className="flex items-center gap-3 bg-[#0b1d35] border border-white/10 rounded-xl px-5 py-5 lg:flex-1 w-full shrink-0">
         <Clock className="w-4 h-4 text-gray-400 shrink-0" />
         <div>
           <p className="text-xs text-gray-400 leading-none mb-1.5">Ends in</p>
-          <p className="text-white font-extrabold text-xl leading-none">{endIn}</p>
+          {isLoading ? (
+            <div className="h-6 w-24 rounded-md bg-white/10 animate-pulse" />
+          ) : (
+            <p className="text-white font-extrabold text-xl leading-none">{endIn}</p>
+          )}
         </div>
       </div>
       <button className="flex items-center justify-center gap-2 bg-yellow-400 hover:bg-yellow-300 active:bg-yellow-500 transition-colors rounded-xl px-6 py-5 lg:flex-1 w-full shrink-0">
@@ -505,10 +519,10 @@ interface AwardCategory {
 // TAB: DETAILS (Timeline + Judges + Partners)
 // ─────────────────────────────────────────────
 
-function DetailsContent({ stats }: { stats: AwardsStats }) {
+function DetailsContent({ stats, statsLoading }: { stats: AwardsStats; statsLoading: boolean }) {
   return (
     <div className="space-y-12 mt-2">
-      <StatsBar prizePool={stats.prizePool} submission={stats.submission} endIn={stats.endIn} />
+      <StatsBar prizePool={stats.prizePool} submission={stats.submission} endIn={stats.endIn} isLoading={statsLoading} />
 
       {/* ── Important Dates ── */}
       <div>
@@ -609,7 +623,7 @@ function num(v: string | number | undefined): number {
   return Number(v ?? 0)
 }
 
-function LeaderboardContent({ stats }: { stats: AwardsStats }) {
+function LeaderboardContent({ stats, statsLoading }: { stats: AwardsStats; statsLoading: boolean }) {
   const [categories, setCategories] = useState<LeaderboardCategory[]>([])
   const [selectedCategoryId, setSelectedCategoryId] = useState<string>('')
   const [loading, setLoading] = useState(true)
@@ -665,7 +679,7 @@ function LeaderboardContent({ stats }: { stats: AwardsStats }) {
 
   return (
     <div className="space-y-6 mt-2">
-      <StatsBar prizePool={stats.prizePool} submission={stats.submission} endIn={stats.endIn} />
+      <StatsBar prizePool={stats.prizePool} submission={stats.submission} endIn={stats.endIn} isLoading={statsLoading} />
 
       <div>
         <h3 className="text-white font-bold text-2xl">Real Time Leaderboard</h3>
@@ -781,10 +795,10 @@ function LeaderboardContent({ stats }: { stats: AwardsStats }) {
 // TAB: DIRECTION
 // ─────────────────────────────────────────────
 
-function DirectionContent({ stats }: { stats: AwardsStats }) {
+function DirectionContent({ stats, statsLoading }: { stats: AwardsStats; statsLoading: boolean }) {
   return (
     <div className="space-y-8 mt-2">
-      <StatsBar prizePool={stats.prizePool} submission={stats.submission} endIn={stats.endIn} />
+      <StatsBar prizePool={stats.prizePool} submission={stats.submission} endIn={stats.endIn} isLoading={statsLoading} />
       <div>
         <h2 className="text-white font-bold text-2xl mb-2">Direct with the Power of AI</h2>
         <p className="text-gray-400 text-sm">Explore a new era of filmmaking where AI meets imagination</p>
@@ -820,7 +834,7 @@ function DirectionContent({ stats }: { stats: AwardsStats }) {
 // TAB: SCORING
 // ─────────────────────────────────────────────
 
-function ScoringContent({ stats }: { stats: AwardsStats }) {
+function ScoringContent({ stats, statsLoading }: { stats: AwardsStats; statsLoading: boolean }) {
   const JURY_CRITERIA = [
     { icon: '🤖', label: 'AI Integration',       desc: 'How creatively and effectively AI tools are used in the filmmaking process.',        weight: '25%' },
     { icon: '💫', label: 'Originality & Creativity', desc: 'Uniqueness of concept, storytelling, and visual execution.',                     weight: '20%' },
@@ -832,7 +846,7 @@ function ScoringContent({ stats }: { stats: AwardsStats }) {
 
   return (
     <div className="space-y-6 mt-2">
-      <StatsBar prizePool={stats.prizePool} submission={stats.submission} endIn={stats.endIn} />
+      <StatsBar prizePool={stats.prizePool} submission={stats.submission} endIn={stats.endIn} isLoading={statsLoading} />
       <div>
         <h3 className="text-white font-bold text-2xl mb-2">Scoring Breakdown</h3>
         <p className="text-gray-400 text-sm leading-relaxed">
@@ -945,10 +959,10 @@ const RULES_CARDS = [
 // TAB: RULES
 // ─────────────────────────────────────────────
 
-function RulesContent({ stats }: { stats: AwardsStats }) {
+function RulesContent({ stats, statsLoading }: { stats: AwardsStats; statsLoading: boolean }) {
   return (
     <div className="space-y-8 mt-2">
-      <StatsBar prizePool={stats.prizePool} submission={stats.submission} endIn={stats.endIn} />
+      <StatsBar prizePool={stats.prizePool} submission={stats.submission} endIn={stats.endIn} isLoading={statsLoading} />
       <div>
         <h3 className="text-white font-bold text-2xl mb-1">The Rules of the Reel</h3>
         <p className="text-gray-400 text-sm">From eligibility to judging make sure your masterpiece qualifies for the spotlight.</p>
@@ -981,10 +995,10 @@ function RulesContent({ stats }: { stats: AwardsStats }) {
 // TAB: FAQ
 // ─────────────────────────────────────────────
 
-function FaqContent({ stats }: { stats: AwardsStats }) {
+function FaqContent({ stats, statsLoading }: { stats: AwardsStats; statsLoading: boolean }) {
   return (
     <div className="space-y-8 mt-2">
-      <StatsBar prizePool={stats.prizePool} submission={stats.submission} endIn={stats.endIn} />
+      <StatsBar prizePool={stats.prizePool} submission={stats.submission} endIn={stats.endIn} isLoading={statsLoading} />
       <div>
         <h3 className="text-white font-bold text-2xl">Frequently Asked Questions</h3>
       </div>
@@ -1021,7 +1035,7 @@ interface Category {
   name: string
 }
 
-function FilmsContent({ stats }: { stats: AwardsStats }) {
+function FilmsContent({ stats, statsLoading }: { stats: AwardsStats; statsLoading: boolean }) {
   const [filterBy, setFilterBy] = useState('Latest')
   const [selectedCategory, setSelectedCategory] = useState('')
   const [searchQuery, setSearchQuery] = useState('')
@@ -1058,13 +1072,9 @@ function FilmsContent({ stats }: { stats: AwardsStats }) {
       try {
         setCategoriesLoading(true)
         const token = localStorage.getItem('user_token')
-        if (!token) {
-          setCategories([])
-          return
-        }
         const response = await fetch('/api/awards/category', {
           method: 'GET',
-          headers: { Authorization: `Bearer ${token}` },
+          headers: token ? { Authorization: `Bearer ${token}` } : undefined,
           signal: controller.signal
         })
         const data = await response.json()
@@ -1288,7 +1298,7 @@ function FilmsContent({ stats }: { stats: AwardsStats }) {
       )}
 
       {/* ── Stats bar ── */}
-      <StatsBar prizePool={stats.prizePool} submission={stats.submission} endIn={stats.endIn} />
+      <StatsBar prizePool={stats.prizePool} submission={stats.submission} endIn={stats.endIn} isLoading={statsLoading} />
 
       {/* ── Submissions Grid ── */}
       <div>
@@ -1420,6 +1430,7 @@ function FilmsContent({ stats }: { stats: AwardsStats }) {
 
 export default function AwardsPage() {
   const [activeTab, setActiveTab] = useState('Films')
+  const [statsLoading, setStatsLoading] = useState(true)
   const [stats, setStats] = useState<AwardsStats>({
     prizePool: '-',
     submission: '-',
@@ -1431,6 +1442,7 @@ export default function AwardsPage() {
     const controller = new AbortController()
     const fetchPartdata = async () => {
       try {
+        setStatsLoading(true)
         const token = typeof window !== 'undefined' ? localStorage.getItem('user_token') : null
         const res = await fetchWithRetry('/api/awards/partdata', 2, {
           headers: token ? { Authorization: `Bearer ${token}` } : undefined,
@@ -1456,6 +1468,8 @@ export default function AwardsPage() {
         if (error.name !== 'AbortError') {
           console.error('[awards] partdata error:', error)
         }
+      } finally {
+        if (!controller.signal.aborted) setStatsLoading(false)
       }
     }
     fetchPartdata()
@@ -1481,16 +1495,24 @@ export default function AwardsPage() {
               ))}
               <div className="w-8 h-8 rounded-full border-2 border-[#050d1a] bg-[#1e3a5f] flex items-center justify-center text-[10px] font-bold text-white" style={{ zIndex: 0 }}>+3</div>
             </div>
-            <span className="text-gray-300 text-sm font-medium">
-              Join {stats.creatorCount !== '-' ? `${stats.creatorCount}+` : '240+'} others
-            </span>
+            {statsLoading ? (
+              <span className="inline-block h-4 w-28 rounded bg-white/10 animate-pulse" />
+            ) : (
+              <span className="text-gray-300 text-sm font-medium">
+                Join {stats.creatorCount !== '-' ? `${stats.creatorCount}+` : '240+'} others
+              </span>
+            )}
           </div>
           <div className="flex items-center gap-1.5 mb-5">
             <div className="flex items-center gap-1.5 border border-white/20 rounded-full px-3 py-1 w-fit bg-black/20 backdrop-blur-sm">
               <Clock className="w-3.5 h-3.5 text-gray-300" />
-              <span className="text-gray-300 text-[11px] uppercase tracking-widest font-semibold">
-                Ends in {stats.endIn}
-              </span>
+              {statsLoading ? (
+                <span className="inline-block h-3 w-16 rounded bg-white/10 animate-pulse" />
+              ) : (
+                <span className="text-gray-300 text-[11px] uppercase tracking-widest font-semibold">
+                  Ends in {stats.endIn}
+                </span>
+              )}
             </div>
           </div>
           <h1 className="text-xl md:text-3xl lg:text-4xl font-extrabold leading-tight tracking-tight mb-3 text-white whitespace-nowrap">
@@ -1524,13 +1546,13 @@ export default function AwardsPage() {
 
       {/* ── TAB CONTENT ── */}
       <div className="px-6 md:px-8 pb-20 mt-6 space-y-6">
-        {activeTab === 'Films'       && <FilmsContent stats={stats} />}
-        {activeTab === 'Leaderboard' && <LeaderboardContent stats={stats} />}
-        {activeTab === 'Details'     && <DetailsContent stats={stats} />}
-        {activeTab === 'Direction'   && <DirectionContent stats={stats} />}
-        {activeTab === 'Scoring'     && <ScoringContent stats={stats} />}
-        {activeTab === 'Rules'       && <RulesContent stats={stats} />}
-        {activeTab === 'FAQ'         && <FaqContent stats={stats} />}
+        {activeTab === 'Films'       && <FilmsContent stats={stats} statsLoading={statsLoading} />}
+        {activeTab === 'Leaderboard' && <LeaderboardContent stats={stats} statsLoading={statsLoading} />}
+        {activeTab === 'Details'     && <DetailsContent stats={stats} statsLoading={statsLoading} />}
+        {activeTab === 'Direction'   && <DirectionContent stats={stats} statsLoading={statsLoading} />}
+        {activeTab === 'Scoring'     && <ScoringContent stats={stats} statsLoading={statsLoading} />}
+        {activeTab === 'Rules'       && <RulesContent stats={stats} statsLoading={statsLoading} />}
+        {activeTab === 'FAQ'         && <FaqContent stats={stats} statsLoading={statsLoading} />}
       </div>
 
       <Footer />
