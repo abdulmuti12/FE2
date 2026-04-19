@@ -128,7 +128,7 @@ export default function MyTicketPage() {
               return (
                 <Link
                   key={ticket.id}
-                  href="/dashboard/event/ticket/detail"
+                  href={`/dashboard/event/ticket/detail?id_claim=${ticket.id}`}
                   className="block py-6 hover:bg-white/[0.02] transition-colors group"
                 >
                   {/* MOBILE LAYOUT (Gambar Kanan - List Row Style) */}
