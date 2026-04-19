@@ -5,7 +5,7 @@ import { Header } from '@/components/header'
 import { Footer } from '@/components/footer'
 import { Clock, MapPin } from 'lucide-react'
 import Image from 'next/image'
-import { useEffect, useState } from 'react'
+import { Suspense, useEffect, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 
 type TicketDetailData = {
@@ -46,7 +46,7 @@ const getDayMonth = (dateString?: string) => {
   }
 }
 
-export default function TicketDetailPage() {
+function TicketDetailContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
 
@@ -255,5 +255,19 @@ export default function TicketDetailPage() {
 
       <Footer />
     </div>
+  )
+}
+
+export default function TicketDetailPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen bg-[#050B14] text-white font-sans flex items-center justify-center">
+          <div className="w-10 h-10 border-4 border-white/30 border-t-white rounded-full animate-spin" />
+        </div>
+      }
+    >
+      <TicketDetailContent />
+    </Suspense>
   )
 }
