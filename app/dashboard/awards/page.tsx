@@ -814,14 +814,14 @@ function DirectionContent({ stats, statsLoading }: { stats: AwardsStats; statsLo
             </div>
             <p className="text-gray-400 text-xs leading-relaxed flex-1">{cat.description}</p>
             <div>
-              <p className="text-gray-500 text-[10px] uppercase tracking-wider mb-2">Tools</p>
-              <div className="flex flex-wrap gap-1.5">
+              {/* <p className="text-gray-500 text-[10px] uppercase tracking-wider mb-2">Tools</p> */}
+              {/* <div className="flex flex-wrap gap-1.5">
                 {cat.tools.map((tool) => (
                   <span key={tool} className="border border-gray-300/40 bg-gray-300/30 text-transparent text-[10px] px-5 py-2 rounded-md">
                     {tool}
                   </span>
                 ))}
-              </div>
+              </div> */}
             </div>
           </div>
         ))}
@@ -1498,9 +1498,12 @@ export default function AwardsPage() {
             {statsLoading ? (
               <span className="inline-block h-4 w-28 rounded bg-white/10 animate-pulse" />
             ) : (
-              <span className="text-gray-300 text-sm font-medium">
+              <Link
+                href="/dashboard/awards/creator-award"
+                className="text-gray-300 text-sm font-medium hover:text-white transition-colors"
+              >
                 Join {stats.creatorCount !== '-' ? `${stats.creatorCount}+` : '240+'} others
-              </span>
+              </Link>
             )}
           </div>
           <div className="flex items-center gap-1.5 mb-5">
