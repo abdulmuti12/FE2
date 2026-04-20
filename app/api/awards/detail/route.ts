@@ -53,6 +53,18 @@ export async function GET(request: NextRequest) {
       )
     }
 
+    if (data?.list && typeof data.list === 'object' && !Array.isArray(data.list)) {
+      const list = data.list as Record<string, unknown>
+      const myRates = list.my_rates ?? list.rates ?? list.rate ?? null
+      data = {
+        ...data,
+        list: {
+          ...list,
+          my_rates: myRates,
+        },
+      }
+    }
+
     return NextResponse.json(data || { status: false, message: 'Invalid response from API' })
   } catch (error: any) {
     console.error('Awards detail proxy error:', error.message)

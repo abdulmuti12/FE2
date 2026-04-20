@@ -25,8 +25,12 @@ interface AwardDetailData {
   name: string
   dates?: string
   description?: string
+  creator_avatar?: string | null
+  creator_name?: string | null
   rates?: string | number | null
+  rate?: string | number | null
   type?: string
+  cats?: string
   run_time_format?: string
   watch?: string | number
   likes?: string | number
@@ -57,6 +61,20 @@ const normalizeRating = (value: string | number | null | undefined): number => {
   const parsed = Number(value)
   if (!Number.isFinite(parsed) || parsed <= 0) return 0
   return Math.min(5, Math.floor(parsed))
+}
+
+const formatRatesLabel = (value: string | number | null | undefined): string => {
+  const parsed = Number(value)
+  if (!Number.isFinite(parsed) || parsed <= 0) return '-'
+  if (Number.isInteger(parsed)) return String(parsed)
+  return parsed.toString().replace(/(\.\d*?[1-9])0+$/, '$1').replace(/\.0+$/, '')
+}
+
+const pickRatesValue = (data: AwardDetailData | null, ratingFallback: number): string | number | null => {
+  if (!data) return ratingFallback > 0 ? ratingFallback : null
+  if (data.rates !== undefined && data.rates !== null && String(data.rates).trim() !== '') return data.rates
+  if (data.rate !== undefined && data.rate !== null && String(data.rate).trim() !== '') return data.rate
+  return ratingFallback > 0 ? ratingFallback : null
 }
 
 function AwardsDetailContent() {
@@ -124,9 +142,13 @@ function AwardsDetailContent() {
           result = null
         }
 
-        if (response.ok && result?.status === true && result?.list) {
-          setAwardData(result.list)
-          setRating(normalizeRating(result.list.rates))
+        const detailData =
+          Array.isArray(result?.list) ? result.list[0]
+          : result?.list ?? result?.data ?? null
+
+        if (response.ok && result?.status === true && detailData) {
+          setAwardData(detailData)
+          setRating(normalizeRating(detailData.rates ?? detailData.rate))
         } else {
           setError(result?.message || raw || 'Gagal mengambil detail award')
         }
@@ -688,7 +710,7 @@ function AwardsDetailContent() {
               <h1 className="text-2xl md:text-4xl font-bold mb-3">{awardData.name}</h1>
               <div className="flex flex-wrap items-center gap-3 text-sm">
                 <span className="bg-white text-black font-semibold px-2 py-0.5 rounded text-xs">
-                  {awardData.type || 'Genre'}
+                  {awardData.cats || 'Genre'}
                 </span>
                 
                 {/* Stars */}
@@ -699,8 +721,28 @@ function AwardsDetailContent() {
                   <Star className="w-4 h-4 text-white/20 fill-current" />
                   <Star className="w-4 h-4 text-white/20 fill-current" />
                 </div>
-                <span className="text-white">8</span>
-                <span className="text-white/60 mx-1 flex items-center"><User className="w-4 h-4 mr-1"/></span>
+                <span className="text-white">{formatRatesLabel(pickRatesValue(awardData, rating))}</span>
+               <span className="text-white">|</span>
+                <span className="text-white/60 mx-1 flex items-center gap-2">
+                  <span className="relative w-6 h-6 rounded-full overflow-hidden bg-white/10 border border-white/20">
+                    {awardData.creator_avatar ? (
+                      <Image
+                        src={convertToSecureUrl(awardData.creator_avatar)}
+                        alt={awardData.creator_name || 'Creator'}
+                        fill
+                        sizes="24px"
+                        className="object-cover"
+                      />
+                    ) : (
+                      <span className="w-full h-full flex items-center justify-center">
+                        <User className="w-3.5 h-3.5 text-white/70" />
+                      </span>
+                    )}
+                  </span>
+                  <span className="text-white/80">
+                    {awardData.creator_name || 'Unknown Creator'}
+                  </span>
+                </span>
 
                 <span className="text-white/60">
                   {awardData.dates ? new Date(awardData.dates).getFullYear() : '2025'}

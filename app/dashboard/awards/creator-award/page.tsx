@@ -178,7 +178,7 @@ export default function CreatorAwardPage() {
                 return (
                   <div
                     key={creator.id}
-                    onClick={() => router.push(`/dashboard/creator/detail/${creator.id}`)}
+                    onClick={() => router.push(`/dashboard/awards/creator-award/detail/${creator.id}`)}
                     className="flex flex-col items-center group cursor-pointer"
                   >
                     <div
