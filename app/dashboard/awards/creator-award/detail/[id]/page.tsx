@@ -662,7 +662,7 @@ export default function CreatorDetailPage() {
         {/* List Clips */}
         <div className="mb-10">
           <div className="flex justify-between items-center mb-6">
-            <h2 className="text-lg font-bold text-white">List Clips</h2>
+            <h2 className="text-lg font-bold text-white">List </h2>
             <div className="flex gap-1">
               <span className="w-8 h-0.5 bg-gray-600 rounded-full" />
               <span className="w-4 h-0.5 bg-gray-800 rounded-full" />

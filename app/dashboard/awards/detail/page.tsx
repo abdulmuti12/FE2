@@ -25,6 +25,10 @@ interface AwardDetailData {
   name: string
   dates?: string
   description?: string
+  id_award_creator?: string | number | null
+  id_creator?: string | number | null
+  creator_id?: string | number | null
+  created_by?: string | number | null
   creator_avatar?: string | null
   creator_name?: string | null
   rates?: string | number | null
@@ -581,6 +585,20 @@ function AwardsDetailContent() {
     )
   }
 
+  const creatorIdRaw =
+    awardData.id_award_creator ??
+    awardData.id_creator ??
+    awardData.creator_id ??
+    awardData.created_by ??
+    null
+  const creatorId =
+    creatorIdRaw !== null &&
+    creatorIdRaw !== undefined &&
+    String(creatorIdRaw).trim() !== '' &&
+    String(creatorIdRaw).trim() !== '0'
+      ? String(creatorIdRaw).trim()
+      : null
+
   return (
     <>
       <Header />
@@ -723,26 +741,52 @@ function AwardsDetailContent() {
                 </div>
                 <span className="text-white">{formatRatesLabel(pickRatesValue(awardData, rating))}</span>
                <span className="text-white">|</span>
-                <span className="text-white/60 mx-1 flex items-center gap-2">
-                  <span className="relative w-6 h-6 rounded-full overflow-hidden bg-white/10 border border-white/20">
-                    {awardData.creator_avatar ? (
-                      <Image
-                        src={convertToSecureUrl(awardData.creator_avatar)}
-                        alt={awardData.creator_name || 'Creator'}
-                        fill
-                        sizes="24px"
-                        className="object-cover"
-                      />
-                    ) : (
-                      <span className="w-full h-full flex items-center justify-center">
-                        <User className="w-3.5 h-3.5 text-white/70" />
-                      </span>
-                    )}
+                {creatorId ? (
+                  <Link
+                    href={`/dashboard/awards/creator-award/detail/${creatorId}`}
+                    className="text-white/60 mx-1 flex items-center gap-2 hover:text-white transition-colors"
+                  >
+                    <span className="relative w-6 h-6 rounded-full overflow-hidden bg-white/10 border border-white/20">
+                      {awardData.creator_avatar ? (
+                        <Image
+                          src={convertToSecureUrl(awardData.creator_avatar)}
+                          alt={awardData.creator_name || 'Creator'}
+                          fill
+                          sizes="24px"
+                          className="object-cover"
+                        />
+                      ) : (
+                        <span className="w-full h-full flex items-center justify-center">
+                          <User className="w-3.5 h-3.5 text-white/70" />
+                        </span>
+                      )}
+                    </span>
+                    <span className="text-white/80">
+                      {awardData.creator_name || 'Unknown Creator'}
+                    </span>
+                  </Link>
+                ) : (
+                  <span className="text-white/60 mx-1 flex items-center gap-2">
+                    <span className="relative w-6 h-6 rounded-full overflow-hidden bg-white/10 border border-white/20">
+                      {awardData.creator_avatar ? (
+                        <Image
+                          src={convertToSecureUrl(awardData.creator_avatar)}
+                          alt={awardData.creator_name || 'Creator'}
+                          fill
+                          sizes="24px"
+                          className="object-cover"
+                        />
+                      ) : (
+                        <span className="w-full h-full flex items-center justify-center">
+                          <User className="w-3.5 h-3.5 text-white/70" />
+                        </span>
+                      )}
+                    </span>
+                    <span className="text-white/80">
+                      {awardData.creator_name || 'Unknown Creator'}
+                    </span>
                   </span>
-                  <span className="text-white/80">
-                    {awardData.creator_name || 'Unknown Creator'}
-                  </span>
-                </span>
+                )}
 
                 <span className="text-white/60">
                   {awardData.dates ? new Date(awardData.dates).getFullYear() : '2025'}

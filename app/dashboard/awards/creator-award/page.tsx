@@ -104,10 +104,10 @@ export default function CreatorAwardPage() {
       <Header />
 
       <div className="relative w-full h-[300px] md:h-[400px] overflow-hidden">
-        <div
+        {/* <div
           className="absolute inset-0 bg-cover bg-center"
           style={{ backgroundImage: 'url("/images/privacy-header.jpg")' }}
-        />
+        /> */}
         <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-[#020817]/60 to-[#020817]" />
 
         <div className="relative h-full flex flex-col justify-center items-center text-center px-4 pt-10">
