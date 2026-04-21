@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { buildApiUrl } from '@/app/api/_utils'
 
 export async function POST(request: Request) {
   try {
@@ -22,7 +23,7 @@ export async function POST(request: Request) {
     formData.append('tahun', String(tahun));
     formData.append('bulan', String(bulan));
 
-    const response = await fetch('https://api.usky.ai/award-creator/chart', {
+    const response = await fetch(buildApiUrl('/award-creator/chart'), {
       method: 'POST',
       headers: {
         Authorization: authHeader || '',

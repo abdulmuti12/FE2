@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { buildApiUrl } from '@/app/api/_utils'
 
 export async function GET(request: Request) {
   // 1. Ambil query parameter (id_category)
@@ -17,7 +18,7 @@ export async function GET(request: Request) {
 
   try {
     // 3. Fetch ke server asli dari sisi server Next.js (Bypass CORS)
-    const response = await fetch(`https://api.usky.ai/event/related?id_category=${id_category}`, {
+    const response = await fetch(buildApiUrl(`/event/related?id_category=${id_category}`), {
       method: 'GET',
       headers: {
         'Authorization': authHeader || '',

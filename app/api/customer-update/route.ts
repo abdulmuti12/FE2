@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { buildApiUrl } from '@/app/api/_utils'
 
 export async function POST(request: NextRequest) {
   try {
@@ -27,7 +28,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Forward the request to the external API
-    const response = await fetch('https://api.usky.ai/customer/update', {
+    const response = await fetch(buildApiUrl('/customer/update'), {
       method: 'POST',
       headers: {
         Authorization: `Bearer ${token}`,

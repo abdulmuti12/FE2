@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { buildApiUrl } from '@/app/api/_utils'
 
 type MyEventItem = {
   id?: string | number
@@ -23,7 +24,7 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    const backendResponse = await fetch('https://api.usky.ai/customer/my-event', {
+    const backendResponse = await fetch(buildApiUrl('/customer/my-event'), {
       method: 'GET',
       headers: {
         Authorization: `Bearer ${token}`,

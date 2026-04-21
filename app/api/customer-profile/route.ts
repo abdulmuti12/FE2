@@ -1,3 +1,4 @@
+import { buildApiUrl } from '@/app/api/_utils'
 export async function GET(request: Request) {
   try {
     const authHeader = request.headers.get('authorization')
@@ -9,7 +10,7 @@ export async function GET(request: Request) {
       return Response.json({ error: 'No authorization token provided' }, { status: 401 })
     }
 
-    const response = await fetch('https://api.usky.ai/customer/profile', {
+    const response = await fetch(buildApiUrl('/customer/profile'), {
       method: 'GET',
       headers: {
         Authorization: `Bearer ${token}`,

@@ -1,5 +1,6 @@
 // app/api/watchlist/route.ts
 import { NextResponse } from 'next/server'
+import { buildApiUrl } from '@/app/api/_utils'
 
 export async function POST(request: Request) {
   try {
@@ -16,7 +17,7 @@ export async function POST(request: Request) {
     formData.append('id', body.id) // Masukkan ID dari frontend
 
     // 3. Tembak API uSky menggunakan FormData
-    const response = await fetch('https://api.usky.ai/movie/watchlist', {
+    const response = await fetch(buildApiUrl('/movie/watchlist'), {
       method: 'POST',
       headers: {
         'Authorization': authHeader,

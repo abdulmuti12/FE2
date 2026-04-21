@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import { buildApiUrl } from '@/app/api/_utils'
 
 export async function POST(request: Request) {
   try {
@@ -15,7 +16,7 @@ export async function POST(request: Request) {
     formData.append('id_comment', body.id_comment)
 
     // 3. Forward ke API uSky
-    const response = await fetch('https://api.usky.ai/movie/comment-like', {
+    const response = await fetch(buildApiUrl('/movie/comment-like'), {
       method: 'POST',
       headers: {
         'Authorization': authHeader,

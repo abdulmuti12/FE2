@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { buildApiUrl } from '@/app/api/_utils'
 
 export async function GET(request: NextRequest) {
   try {
@@ -32,7 +33,7 @@ export async function GET(request: NextRequest) {
       params.append('id_category', id_category)
     }
 
-    const url = `https://api.usky.ai/award/list?${params.toString()}`
+    const url = buildApiUrl(`/award/list?${params.toString()}`)
 
     const upstreamResponse = await fetch(url, {
       method: 'GET',

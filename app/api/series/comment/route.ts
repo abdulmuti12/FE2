@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import { buildApiUrl } from '@/app/api/_utils'
 
 export async function GET(request: Request) {
   // Ambil query 'id' dari URL request frontend
@@ -14,7 +15,7 @@ export async function GET(request: Request) {
 
   try {
     // Lakukan fetch ke API eksternal dari sisi SERVER (Bebas CORS)
-    const response = await fetch(`https://api.usky.ai/series/comment?id=${id}`, {
+    const response = await fetch(buildApiUrl(`/series/comment?id=${id}`), {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',

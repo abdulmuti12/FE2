@@ -1,4 +1,5 @@
 import { cookies } from 'next/headers'
+import { buildApiUrl } from '@/app/api/_utils'
 
 export async function GET(request: Request) {
   try {
@@ -21,7 +22,7 @@ export async function GET(request: Request) {
       headers['Authorization'] = `Bearer ${token}`
     }
 
-    const response = await fetch('https://api.usky.ai/award/category', {
+    const response = await fetch(buildApiUrl('/award/category'), {
       method: 'GET',
       headers,
       cache: 'no-store',

@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import { buildApiUrl } from '@/app/api/_utils'
 
 export async function GET(request: Request) {
   // 1. Ambil parameter dari URL lokal (/api/creator-history?id=...&per_page=...)
@@ -15,7 +16,7 @@ export async function GET(request: Request) {
 
   try {
     // 3. Teruskan request (Proxy) ke server API asli
-    const response = await fetch(`https://api.usky.ai/creator/history?id=${id}&per_page=${per_page}`, {
+    const response = await fetch(buildApiUrl(`/creator/history?id=${id}&per_page=${per_page}`), {
       method: 'GET',
       headers: {
         'Authorization': authHeader || '', // Teruskan token Bearer

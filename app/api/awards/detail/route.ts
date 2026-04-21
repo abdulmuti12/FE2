@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { buildApiUrl } from '@/app/api/_utils'
 
 export async function GET(request: NextRequest) {
   try {
@@ -28,7 +29,7 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    const response = await fetch(`https://api.usky.ai/award/detail?id=${id}`, {
+    const response = await fetch(buildApiUrl(`/award/detail?id=${id}`), {
       method: 'GET',
       headers: {
         Authorization: `Bearer ${token}`,

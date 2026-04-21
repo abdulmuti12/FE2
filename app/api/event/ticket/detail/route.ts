@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { buildApiUrl } from '@/app/api/_utils'
 
 type ClaimResponse = {
   status?: boolean
@@ -52,7 +53,7 @@ export async function GET(request: NextRequest) {
     }
 
     const backendResponse = await fetch(
-      `https://api.usky.ai/event/claim?id_claim=${encodeURIComponent(idClaim)}`,
+      buildApiUrl(`/event/claim?id_claim=${encodeURIComponent(idClaim)}`),
       {
         method: 'GET',
         headers: {

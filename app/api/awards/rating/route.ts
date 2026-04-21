@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { buildApiUrl } from '@/app/api/_utils'
 
 export async function POST(request: NextRequest) {
   try {
@@ -40,7 +41,7 @@ export async function POST(request: NextRequest) {
     formData.append('id', String(id))
     formData.append('stars', String(stars))
 
-    const response = await fetch('https://api.usky.ai/award/rate', {
+    const response = await fetch(buildApiUrl('/award/rate'), {
       method: 'POST',
       headers: {
         Authorization: `Bearer ${token}`,

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
+import { buildApiUrl } from '@/app/api/_utils'
 
 const CATEGORY_ORDER = [
   'Long AI Film',
@@ -33,7 +34,7 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    const upstreamResponse = await fetch('https://api.usky.ai/award/leaderboard', {
+    const upstreamResponse = await fetch(buildApiUrl('/award/leaderboard'), {
       method: 'GET',
       headers: {
         Authorization: `Bearer ${token}`,

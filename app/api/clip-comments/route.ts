@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { buildApiUrl } from '@/app/api/_utils'
 
 export async function GET(request: NextRequest) {
   try {
@@ -22,7 +23,7 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    const url = new URL('https://api.usky.ai/movie/comment')
+    const url = new URL(buildApiUrl('/movie/comment'))
     url.searchParams.set('id', clipId)
 
     console.log('[v0] Fetching clip comments from:', url.toString())

@@ -1,3 +1,4 @@
+import { buildApiUrl } from '@/app/api/_utils'
 export async function GET(request: Request) {
   const token = request.headers.get('authorization')?.replace('Bearer ', '')
 
@@ -9,7 +10,7 @@ export async function GET(request: Request) {
   }
 
   try {
-    const response = await fetch('https://api.usky.ai/event/bycategory', {
+    const response = await fetch(buildApiUrl('/event/bycategory'), {
       method: 'GET',
       headers: {
         Authorization: `Bearer ${token}`,

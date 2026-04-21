@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { buildApiUrl } from '@/app/api/_utils'
 
 export async function POST(request: Request) {
   try {
@@ -21,7 +22,7 @@ export async function POST(request: Request) {
     formData.append('id', String(id)); 
 
     // 3. Hit ke backend USKY
-    const backendResponse = await fetch('https://api.usky.ai/event/claim', {
+    const backendResponse = await fetch(buildApiUrl('/event/claim'), {
       method: 'POST',
       headers: {
         'Authorization': authHeader,

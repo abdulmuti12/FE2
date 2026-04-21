@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { buildApiUrl } from '@/app/api/_utils'
 
 export async function GET(request: NextRequest) {
   try {
@@ -14,7 +15,7 @@ export async function GET(request: NextRequest) {
     }
 
     const response = await fetch(
-      `https://api.usky.ai/event/ongoing?id_category=${encodeURIComponent(idCategory)}&page=${page}`,
+      buildApiUrl(`/event/ongoing?id_category=${encodeURIComponent(idCategory)}&page=${page}`),
       {
         method: 'GET',
         headers: {

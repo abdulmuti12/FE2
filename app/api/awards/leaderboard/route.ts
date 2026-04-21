@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
+import { buildApiUrl } from '@/app/api/_utils'
 
 // Mock data dari API response - digunakan sebagai fallback saat API error
 const MOCK_LEADERBOARD = {
@@ -119,7 +120,7 @@ export async function GET(request: NextRequest) {
     const cookieStore = await cookies()
     const token = cookieStore.get('token')?.value ?? ''
 
-    const upstream = new URL('https://api.usky.ai/award/leaderboard')
+    const upstream = new URL(buildApiUrl('/award/leaderboard'))
     
     const headers: HeadersInit = {
       'Content-Type': 'application/json',

@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { buildApiUrl } from '@/app/api/_utils'
 
 export async function GET(request: NextRequest) {
   try {
@@ -12,7 +13,7 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    const url = 'https://api.usky.ai/home'
+    const url = buildApiUrl('/home')
 
     console.log('[v0] Proxy request →', url)
 

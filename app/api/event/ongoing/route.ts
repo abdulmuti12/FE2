@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { buildApiUrl } from '@/app/api/_utils'
 
 export async function GET(request: NextRequest) {
   try {
@@ -14,7 +15,7 @@ export async function GET(request: NextRequest) {
     const idCategory = request.nextUrl.searchParams.get('id_category') || ''
     const page = request.nextUrl.searchParams.get('page') || '1'
 
-    const url = new URL('https://api.usky.ai/event/ongoing')
+    const url = new URL(buildApiUrl('/event/ongoing'))
     url.searchParams.set('id_category', idCategory)
     url.searchParams.set('page', page)
 

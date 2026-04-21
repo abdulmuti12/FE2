@@ -1,5 +1,6 @@
 // app/api/share/route.ts
 import { NextResponse } from 'next/server'
+import { buildApiUrl } from '@/app/api/_utils'
 
 export async function POST(request: Request) {
   try {
@@ -15,7 +16,7 @@ export async function POST(request: Request) {
     formData.append('id', body.id) 
 
     // Tembak API uSky
-    const response = await fetch('https://api.usky.ai/movie/share', {
+    const response = await fetch(buildApiUrl('/movie/share'), {
       method: 'POST',
       headers: {
         'Authorization': authHeader,

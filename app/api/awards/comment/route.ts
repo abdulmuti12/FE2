@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { buildApiUrl } from '@/app/api/_utils'
 
 export async function GET(request: NextRequest) {
   try {
@@ -28,7 +29,7 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    const response = await fetch(`https://api.usky.ai/award/comment?id=${id}`, {
+    const response = await fetch(buildApiUrl(`/award/comment?id=${id}`), {
       method: 'GET',
       headers: {
         Authorization: `Bearer ${token}`,
@@ -96,7 +97,7 @@ export async function POST(request: NextRequest) {
     formData.append('id', String(id))
     formData.append('comment', String(comment))
 
-    const response = await fetch('https://api.usky.ai/award/comment', {
+    const response = await fetch(buildApiUrl('/award/comment'), {
       method: 'POST',
       headers: {
         Authorization: `Bearer ${token}`,

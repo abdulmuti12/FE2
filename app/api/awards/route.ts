@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
+import { buildApiUrl } from '@/app/api/_utils'
 
 export async function GET(request: NextRequest) {
   try {
@@ -14,7 +15,7 @@ export async function GET(request: NextRequest) {
                   cookieStore.get('auth_token')?.value ||
                   cookieStore.get('access_token')?.value || ''
 
-    const url = `https://api.usky.ai/award/list?sort=${sort}&id_category=${id_category}&id_creator=${id_creator}`
+    const url = buildApiUrl(`/award/list?sort=${sort}&id_category=${id_category}&id_creator=${id_creator}`)
 
     const response = await fetch(url, {
       method: 'GET',

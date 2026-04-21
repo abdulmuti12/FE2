@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { buildApiUrl } from '@/app/api/_utils'
 
 export async function GET(request: NextRequest) {
   try {
@@ -28,7 +29,7 @@ export async function GET(request: NextRequest) {
     }
 
     // MEMANGGIL ENDPOINT SESUAI PERMINTAAN: detail-group?id_group=...
-    const response = await fetch(`https://api.usky.ai/series/detail-group?id_group=${idGroup}`, {
+    const response = await fetch(buildApiUrl(`/series/detail-group?id_group=${idGroup}`), {
       method: 'GET',
       headers: {
         Authorization: `Bearer ${token}`,

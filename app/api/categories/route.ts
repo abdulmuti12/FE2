@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import { buildApiUrl } from '@/app/api/_utils'
 
 export async function GET(request: Request) {
   try {
@@ -7,7 +8,7 @@ export async function GET(request: Request) {
       return NextResponse.json({ status: false, message: 'Unauthorized' }, { status: 401 })
     }
 
-    const response = await fetch('https://api.usky.ai/category', {
+    const response = await fetch(buildApiUrl('/category'), {
       method: 'GET',
       headers: {
         'Authorization': authHeader,

@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { buildApiUrl } from '@/app/api/_utils'
 
 export async function GET(request: NextRequest) {
   try {
@@ -16,9 +17,9 @@ export async function GET(request: NextRequest) {
     }
 
     console.log('[v0] Token available:', !!token)
-    console.log('[v0] Making GET request to: https://api.usky.ai/series/category')
+    console.log(`[v0] Making GET request to: ${buildApiUrl('/series/category')}`)
 
-    const response = await fetch('https://api.usky.ai/series/category', {
+    const response = await fetch(buildApiUrl('/series/category'), {
       method: 'GET',
       headers: {
         Authorization: `Bearer ${token}`,

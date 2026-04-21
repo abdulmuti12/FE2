@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import { buildApiUrl } from '@/app/api/_utils'
 
 export async function POST(request: Request) {
   try {
@@ -12,7 +13,7 @@ export async function POST(request: Request) {
     formData.append('comment', body.comment)
 
     // 3. Kirim ke backend uSky menggunakan FormData
-    const response = await fetch(`https://api.usky.ai/series/comment`, {
+    const response = await fetch(buildApiUrl(`/series/comment`), {
       method: 'POST',
       headers: {
         // CATATAN PENTING: Jangan set 'Content-Type' secara manual di sini!

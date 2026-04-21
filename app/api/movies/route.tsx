@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { buildApiUrl } from '@/app/api/_utils'
 
 export async function GET(request: NextRequest) {
   try {
@@ -39,7 +40,7 @@ export async function GET(request: NextRequest) {
     })
 
     const response = await fetch(
-      `https://api.usky.ai/movie/list?${params.toString()}`,
+      buildApiUrl(`/movie/list?${params.toString()}`),
       {
         method: 'GET',
         headers: {

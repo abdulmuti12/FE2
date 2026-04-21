@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { buildApiUrl } from '@/app/api/_utils'
 
 export async function POST(request: NextRequest) {
   try {
@@ -24,7 +25,7 @@ export async function POST(request: NextRequest) {
 
     console.log('[v0] Posting comment to API - ID:', id, 'Comment:', comment)
 
-    const response = await fetch('https://api.usky.ai/movie/comment', {
+    const response = await fetch(buildApiUrl('/movie/comment'), {
       method: 'POST',
       headers: {
         Authorization: `Bearer ${token}`,

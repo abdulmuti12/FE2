@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { buildApiUrl } from '@/app/api/_utils'
 
 export async function GET(request: NextRequest) {
   try {
@@ -18,7 +19,7 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    const url = new URL('https://api.usky.ai/creator')
+    const url = new URL(buildApiUrl('/creator'))
 
     url.searchParams.set('page', page)
     url.searchParams.set('limit', limit)

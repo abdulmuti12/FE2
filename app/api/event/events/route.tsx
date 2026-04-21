@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { buildApiUrl } from '@/app/api/_utils'
 
 export async function GET(request: NextRequest) {
   try {
@@ -21,7 +22,7 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    const url = new URL('https://api.usky.ai/event/list')
+    const url = new URL(buildApiUrl('/event/list'))
 
     url.searchParams.set('sort', sort)
     url.searchParams.set('id_category', id_category)
