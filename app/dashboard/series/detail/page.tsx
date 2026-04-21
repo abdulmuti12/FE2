@@ -17,8 +17,12 @@ export async function generateMetadata(
   }
 
   try {
-    // Fetch API dari backend untuk meta
-    const apiUrl = `http://72.60.78.152:3001/api/series/series-detail?id_group=${id_group}`
+    // Fetch API dari backend untuk meta (base URL dari .env.local)
+    const appBaseUrl =
+      process.env.NEXT_PUBLIC_APP_URL ||
+      process.env.APP_URL ||
+      'http://localhost:3000'
+    const apiUrl = `${appBaseUrl.replace(/\/$/, '')}/api/series/series-detail?id_group=${id_group}`
     const response = await fetch(apiUrl, { cache: 'no-store' })
     const json = await response.json()
 
