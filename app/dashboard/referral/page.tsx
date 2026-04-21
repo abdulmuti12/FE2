@@ -2,25 +2,25 @@
 
 import { Header } from '@/components/header'
 import { Footer } from '@/components/footer'
-import { ChevronRight, Copy, ChevronLeft, ChevronDown } from 'lucide-react'
-import { useState } from 'react'
+import { ChevronRight, Copy, ChevronLeft } from 'lucide-react'
+import { useEffect, useState } from 'react'
 import Image from 'next/image'
-import { Button } from '@/components/ui/button'
+
+type ReferralItem = {
+  info?: string
+  rewards?: string | number
+  dates?: string
+}
 
 export default function ReferralPage() {
   const [currentPage, setCurrentPage] = useState(1)
   const [rowsPerPage, setRowsPerPage] = useState(5)
   const [copied, setCopied] = useState(false)
+  const [referralData, setReferralData] = useState<ReferralItem[]>([])
+  const [isLoadingReferral, setIsLoadingReferral] = useState(true)
+  const [referralError, setReferralError] = useState<string | null>(null)
 
-  // Mock referral data
-  const referralData = Array.from({ length: 47 }, (_, i) => ({
-    id: i + 1,
-    referral: `ASFA${String(i + 23).padStart(2, '0')}`,
-    reward: '5 USKY',
-    date: new Date(2025, Math.floor(Math.random() * 3), Math.floor(Math.random() * 28) + 1).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: '2-digit', hour: '2-digit', minute: '2-digit' })
-  }))
-
-  const totalPages = Math.ceil(referralData.length / rowsPerPage)
+  const totalPages = Math.max(1, Math.ceil(referralData.length / rowsPerPage))
   const startIndex = (currentPage - 1) * rowsPerPage
   const displayedData = referralData.slice(startIndex, startIndex + rowsPerPage)
 
@@ -29,6 +29,53 @@ export default function ReferralPage() {
     setCopied(true)
     setTimeout(() => setCopied(false), 2000)
   }
+
+  useEffect(() => {
+    const fetchReferral = async () => {
+      try {
+        setIsLoadingReferral(true)
+        setReferralError(null)
+
+        const token = localStorage.getItem('user_token') || ''
+        if (!token) {
+          setReferralData([])
+          setReferralError('Silakan login terlebih dahulu')
+          return
+        }
+
+        const response = await fetch('/api/referral', {
+          method: 'GET',
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+        })
+
+        const raw = await response.text()
+        let result: any = null
+        try {
+          result = raw ? JSON.parse(raw) : null
+        } catch {
+          result = null
+        }
+
+        if (response.ok && result?.status === true && Array.isArray(result?.list)) {
+          setReferralData(result.list)
+        } else {
+          setReferralData([])
+          setReferralError(result?.message || raw || 'Gagal mengambil data referral')
+        }
+      } catch (error) {
+        console.error('Error fetching referral:', error)
+        setReferralData([])
+        setReferralError('Terjadi kesalahan saat menghubungi server')
+      } finally {
+        setIsLoadingReferral(false)
+      }
+    }
+
+    fetchReferral()
+  }, [])
 
   return (
     <div className="min-h-screen bg-background text-foreground dark">
@@ -121,16 +168,33 @@ export default function ReferralPage() {
                 </tr>
               </thead>
               <tbody>
-                {displayedData.map((item, index) => (
-                  <tr 
-                    key={item.id} 
-                    className="border-b border-gray-700 hover:bg-gray-900/30 transition-colors"
-                  >
-                    <td className="px-6 py-4 text-sm text-gray-300 whitespace-nowrap">{item.referral}</td>
-                    <td className="px-6 py-4 text-sm text-gray-300 whitespace-nowrap">{item.reward}</td>
-                    <td className="px-6 py-4 text-sm text-gray-300 whitespace-nowrap">{item.date}</td>
+                {isLoadingReferral ? (
+                  <tr>
+                    <td colSpan={3} className="px-6 py-6 text-sm text-gray-400">
+                      Loading referral data...
+                    </td>
                   </tr>
-                ))}
+                ) : displayedData.length > 0 ? (
+                  displayedData.map((item, index) => (
+                    <tr
+                      key={`${item.info || 'ref'}-${index}`}
+                      className="border-b border-gray-700 hover:bg-gray-900/30 transition-colors"
+                    >
+                      <td
+                        className="px-6 py-4 text-sm text-gray-300 whitespace-nowrap"
+                        dangerouslySetInnerHTML={{ __html: item.info || '-' }}
+                      />
+                      <td className="px-6 py-4 text-sm text-gray-300 whitespace-nowrap">{item.rewards ?? '0'}</td>
+                      <td className="px-6 py-4 text-sm text-gray-300 whitespace-nowrap">{item.dates || '-'}</td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan={3} className="px-6 py-6 text-sm text-gray-400">
+                      {referralError || 'No referral data found.'}
+                    </td>
+                  </tr>
+                )}
               </tbody>
             </table>
           </div>

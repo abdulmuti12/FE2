@@ -333,9 +333,12 @@ export function Header() {
                     >
                       <Calendar className="w-5 h-5" /> My Event
                     </Link>
-                    <button className="w-full flex items-center gap-4 px-6 py-3 text-sm text-gray-300 hover:bg-white/5 transition-colors">
+                    <Link
+                      href="/dashboard/referral"
+                      className="w-full flex items-center gap-4 px-6 py-3 text-sm text-gray-300 hover:bg-white/5 transition-colors"
+                    >
                       <Ticket className="w-5 h-5" /> My Referral
-                    </button>
+                    </Link>
 
                     <Link
                       href="/dashboard/profile"
