@@ -2,14 +2,10 @@ const getApiBaseUrl = (): string => {
   const baseUrl =
     process.env.USKY_API_BASE_URL ||
     process.env.NEXT_PUBLIC_API_BASE_URL ||
-    ''
+    'https://api.usky.ai'
 
   const normalized = baseUrl.trim().replace(/\/+$/, '')
-  if (!normalized) {
-    throw new Error('USKY_API_BASE_URL is not configured')
-  }
-
-  return normalized
+  return normalized || 'https://api.usky.ai'
 }
 
 export const buildApiUrl = (pathOrUrl: string): string => {
