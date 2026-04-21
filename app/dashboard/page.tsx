@@ -354,11 +354,9 @@ export default function DashboardPage() {
         { currentTrailer?.description_text }
       </p>
       <div className="flex gap-4">
-        {/* =========================================
-            KONDISI TOMBOL WATCH NOW
-            Hanya muncul jika id_films memiliki isi (tidak null)
-            ========================================= */}
-        {currentTrailer?.id_films && (
+        {/* Tampilkan tombol hanya jika id_films valid dan bukan 0 */}
+        {currentTrailer?.id_films &&
+          String(currentTrailer.id_films).trim() !== '0' && (
           <Button 
             onClick={() => router.push(`/dashboard/film/detail?id=${currentTrailer.id_films}`)}
             className="bg-white text-black hover:bg-gray-200 px-8 py-6 rounded-md font-bold flex items-center gap-2"
