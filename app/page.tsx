@@ -117,9 +117,9 @@ export default function LoginPage() {
               width="320"
             />
 
-            {/* <Button onClick={handleDummyLogin} className="w-[320px]">
+            <Button onClick={handleDummyLogin} className="w-[320px]">
               Login Dummy
-            </Button> */}
+            </Button>
           </>
         )}
       </div>
