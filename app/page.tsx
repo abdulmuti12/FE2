@@ -14,7 +14,7 @@ export default function LoginPage() {
 
   const films = [
     {
-      title: '[Judul Film]',
+      title: '',
       description:
         'Watch groundbreaking films crafted by human creativity and artificial intelligence.',
       image: '/login-hero.jpg',
@@ -155,7 +155,7 @@ export default function LoginPage() {
         </div>
 
         <div className="relative overflow-hidden bg-black">
-          <Image src="/login-hero.jpg" alt="Film hero" fill className="object-cover" priority />
+          <Image src="/images/Poster.jpg" alt="Film hero" fill className="object-cover" priority />
           <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
           <div className="absolute right-0 top-0 max-w-sm p-12 text-right">
             <h3 className="mb-2 text-xl font-semibold text-[#EAB308]">

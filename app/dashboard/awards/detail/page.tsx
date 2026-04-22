@@ -379,11 +379,14 @@ function AwardsDetailContent() {
     const fallbackTitle = awardData?.name || 'Award'
     const fallbackDescription = 'Check out this award on USKY.'
     const fallbackUrl = window.location.href
+    const metalinkUrl = awardId
+      ? `https://api.usky.ai/award/metalink?id=${encodeURIComponent(awardId)}&return=${encodeURIComponent(fallbackUrl)}`
+      : fallbackUrl
 
     let shareMeta: AwardShareMeta = {
       title: fallbackTitle,
       description: fallbackDescription,
-      url: fallbackUrl,
+      url: metalinkUrl,
       image: '',
       video: '',
     }
@@ -419,11 +422,7 @@ function AwardsDetailContent() {
               metaMap['twitter:description'] ||
               metaMap['description'] ||
               fallbackDescription,
-            url:
-              metaMap['twitter:url'] ||
-              metaMap['og:video:secure_url'] ||
-              metaMap['og:video'] ||
-              fallbackUrl,
+            url: metalinkUrl,
             image: metaMap['og:image'] || metaMap['twitter:image'] || '',
             video: metaMap['og:video:secure_url'] || metaMap['og:video'] || '',
           }
