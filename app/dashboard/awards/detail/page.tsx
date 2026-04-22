@@ -81,6 +81,38 @@ const pickRatesValue = (data: AwardDetailData | null, ratingFallback: number): s
   return ratingFallback > 0 ? ratingFallback : null
 }
 
+type MetaEntry = {
+  attr: 'name' | 'property'
+  key: string
+  content: string
+}
+
+const decodeHtmlEntities = (text: string): string => {
+  if (typeof window === 'undefined') return text
+  const textarea = document.createElement('textarea')
+  textarea.innerHTML = text
+  return textarea.value
+}
+
+const parseMetaEntries = (metaBlob: string): MetaEntry[] => {
+  const normalized = metaBlob.replace(/\\\//g, '/').replace(/\\"/g, '"')
+  const regex = /<meta\s+(property|name)=["']([^"']+)["']\s+content=["']([^"']*)["'][^>]*>/gi
+  const entries: MetaEntry[] = []
+
+  let match: RegExpExecArray | null
+  while ((match = regex.exec(normalized)) !== null) {
+    const attrType = match[1]?.toLowerCase() as 'name' | 'property'
+    const key = match[2]?.trim()
+    const content = decodeHtmlEntities((match[3] || '').replace(/\s+/g, ' ').trim())
+
+    if (attrType && key && content) {
+      entries.push({ attr: attrType, key, content })
+    }
+  }
+
+  return entries
+}
+
 function AwardsDetailContent() {
   const searchParams = useSearchParams()
   const awardId = searchParams.get('id')
@@ -108,6 +140,7 @@ function AwardsDetailContent() {
   const [shareToastMessage, setShareToastMessage] = useState('Success share')
   const [shareToastType, setShareToastType] = useState<'success' | 'error'>('success')
   const shareToastTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const headMetaNodesRef = useRef<HTMLMetaElement[]>([])
 
   useEffect(() => {
     const fetchAwardDetail = async () => {
@@ -165,6 +198,64 @@ function AwardsDetailContent() {
     }
 
     fetchAwardDetail()
+  }, [awardId])
+
+  useEffect(() => {
+    const applyAwardMeta = async () => {
+      if (!awardId) return
+
+      try {
+        const token = localStorage.getItem('user_token') || ''
+        const url = new URL('/api/awards/meta', window.location.origin)
+        url.searchParams.set('id', awardId)
+
+        const response = await fetch(url.toString(), {
+          method: 'GET',
+          headers: token
+            ? {
+                Authorization: `Bearer ${token}`,
+                'Content-Type': 'application/json',
+              }
+            : undefined,
+        })
+
+        const result = await response.json()
+        if (!response.ok || result?.status !== true || typeof result?.data !== 'string') return
+
+        headMetaNodesRef.current.forEach((node) => node.remove())
+        headMetaNodesRef.current = []
+
+        const entries = parseMetaEntries(result.data)
+        const uniqueKeys = new Set<string>()
+
+        for (const entry of entries) {
+          const dedupeKey = `${entry.attr}:${entry.key.toLowerCase()}`
+          if (uniqueKeys.has(dedupeKey)) continue
+          uniqueKeys.add(dedupeKey)
+
+          const meta = document.createElement('meta')
+          meta.setAttribute(entry.attr, entry.key)
+          meta.setAttribute('content', entry.content)
+          meta.setAttribute('data-award-meta', '1')
+          document.head.appendChild(meta)
+          headMetaNodesRef.current.push(meta)
+        }
+
+        const ogTitle = entries.find((e) => e.attr === 'property' && e.key.toLowerCase() === 'og:title')?.content
+        if (ogTitle) {
+          document.title = ogTitle
+        }
+      } catch (error) {
+        console.error('Error applying award meta tags:', error)
+      }
+    }
+
+    applyAwardMeta()
+
+    return () => {
+      headMetaNodesRef.current.forEach((node) => node.remove())
+      headMetaNodesRef.current = []
+    }
   }, [awardId])
 
   const fetchComments = useCallback(async () => {
