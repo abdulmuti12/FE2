@@ -1101,7 +1101,7 @@ function FilmsContent({ stats, statsLoading }: { stats: AwardsStats; statsLoadin
     const fetchAwardDetail = async () => {
       try {
         setAwardDetailLoading(true)
-        const response = await fetch('/api/awards/detail?id=440', { signal: controller.signal })
+        const response = await fetch('/api/awards/detail?id=', { signal: controller.signal })
         const data = await response.json()
         if (data.list) {
           setAwardDetail(data.list)
