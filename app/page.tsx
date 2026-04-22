@@ -129,7 +129,7 @@ export default function LoginPage() {
                   theme="filled_black"
                   shape="rectangular"
                   text="continue_with"
-                  width="100%"
+                  width="384"
                 />
               </div>
             )}
