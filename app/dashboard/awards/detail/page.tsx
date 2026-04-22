@@ -87,6 +87,14 @@ type MetaEntry = {
   content: string
 }
 
+type AwardShareMeta = {
+  title: string
+  description: string
+  url: string
+  image: string
+  video: string
+}
+
 const decodeHtmlEntities = (text: string): string => {
   if (typeof window === 'undefined') return text
   const textarea = document.createElement('textarea')
@@ -208,6 +216,10 @@ function AwardsDetailContent() {
         const token = localStorage.getItem('user_token') || ''
         const url = new URL('/api/awards/meta', window.location.origin)
         url.searchParams.set('id', awardId)
+        console.log('[awards-meta-debug] fetching meta from client', {
+          awardId,
+          endpoint: url.toString(),
+        })
 
         const response = await fetch(url.toString(), {
           method: 'GET',
@@ -220,12 +232,30 @@ function AwardsDetailContent() {
         })
 
         const result = await response.json()
-        if (!response.ok || result?.status !== true || typeof result?.data !== 'string') return
+        console.log('[awards-meta-debug] meta response received', {
+          awardId,
+          statusCode: response.status,
+          status: result?.status,
+          hasData: typeof result?.data === 'string' && result.data.length > 0,
+        })
+
+        if (!response.ok || result?.status !== true || typeof result?.data !== 'string') {
+          console.warn('[awards-meta-debug] invalid meta response payload', {
+            awardId,
+            statusCode: response.status,
+            status: result?.status,
+          })
+          return
+        }
 
         headMetaNodesRef.current.forEach((node) => node.remove())
         headMetaNodesRef.current = []
 
         const entries = parseMetaEntries(result.data)
+        console.log('[awards-meta-debug] parsed meta entries', {
+          awardId,
+          totalEntries: entries.length,
+        })
         const uniqueKeys = new Set<string>()
 
         for (const entry of entries) {
@@ -247,6 +277,7 @@ function AwardsDetailContent() {
         }
       } catch (error) {
         console.error('Error applying award meta tags:', error)
+        console.error('[awards-meta-debug] apply meta failed', { awardId, error })
       }
     }
 
@@ -345,29 +376,100 @@ function AwardsDetailContent() {
       }, 2500)
     }
 
-    const url = window.location.href
-    const title = awardData?.name || 'Award'
-    const text = `Check out this award: ${title}`
+    const fallbackTitle = awardData?.name || 'Award'
+    const fallbackDescription = 'Check out this award on USKY.'
+    const fallbackUrl = window.location.href
+
+    let shareMeta: AwardShareMeta = {
+      title: fallbackTitle,
+      description: fallbackDescription,
+      url: fallbackUrl,
+      image: '',
+      video: '',
+    }
+
+    try {
+      if (awardId) {
+        const token = localStorage.getItem('user_token') || ''
+        const metaUrl = new URL('/api/awards/meta', window.location.origin)
+        metaUrl.searchParams.set('id', awardId)
+
+        const metaResponse = await fetch(metaUrl.toString(), {
+          method: 'GET',
+          headers: token
+            ? {
+                Authorization: `Bearer ${token}`,
+                'Content-Type': 'application/json',
+              }
+            : undefined,
+        })
+
+        const metaResult = await metaResponse.json()
+        if (metaResponse.ok && metaResult?.status === true && typeof metaResult?.data === 'string') {
+          const entries = parseMetaEntries(metaResult.data)
+          const metaMap: Record<string, string> = {}
+          for (const entry of entries) {
+            metaMap[entry.key.toLowerCase()] = entry.content
+          }
+
+          shareMeta = {
+            title: metaMap['og:title'] || metaMap['twitter:title'] || fallbackTitle,
+            description:
+              metaMap['og:description'] ||
+              metaMap['twitter:description'] ||
+              metaMap['description'] ||
+              fallbackDescription,
+            url:
+              metaMap['twitter:url'] ||
+              metaMap['og:video:secure_url'] ||
+              metaMap['og:video'] ||
+              fallbackUrl,
+            image: metaMap['og:image'] || metaMap['twitter:image'] || '',
+            video: metaMap['og:video:secure_url'] || metaMap['og:video'] || '',
+          }
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching award meta for share:', error)
+    }
+
+    const shareText = `${shareMeta.title} - ${shareMeta.description}`
 
     switch (platform) {
       case 'copy':
-        await navigator.clipboard.writeText(url)
-        showToast('Link copied to clipboard!', 'success')
+        await navigator.clipboard.writeText(
+          [
+            `Title: ${shareMeta.title}`,
+            `Description: ${shareMeta.description}`,
+            shareMeta.image ? `Image: ${shareMeta.image}` : '',
+            shareMeta.video ? `Video: ${shareMeta.video}` : '',
+            `URL: ${shareMeta.url}`,
+          ]
+            .filter(Boolean)
+            .join('\n')
+        )
+        showToast('Meta share copied to clipboard!', 'success')
         break
       case 'whatsapp':
-        window.open(`https://wa.me/?text=${encodeURIComponent(text + ' ' + url)}`, '_blank')
+        window.open(`https://wa.me/?text=${encodeURIComponent(`${shareText} ${shareMeta.url}`)}`, '_blank')
         break
       case 'facebook':
-        window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`, '_blank')
+        window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareMeta.url)}`, '_blank')
         break
       case 'x':
-        window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}`, '_blank')
+        window.open(
+          `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(shareMeta.url)}`,
+          '_blank'
+        )
         break
       case 'telegram':
-        window.open(`https://t.me/share/url?url=${encodeURIComponent(url)}&text=${encodeURIComponent(text)}`, '_blank')
+        window.open(
+          `https://t.me/share/url?url=${encodeURIComponent(shareMeta.url)}&text=${encodeURIComponent(shareText)}`,
+          '_blank'
+        )
         break
       case 'linkedin':
-        window.open(`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(url)}`, '_blank')
+        window.open(`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(shareMeta.url)}`, '_blank')
         break
       default:
         break

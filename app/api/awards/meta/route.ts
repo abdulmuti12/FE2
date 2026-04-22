@@ -8,11 +8,14 @@ export async function GET(request: Request) {
     const authorization = request.headers.get('authorization')
 
     if (!id) {
+      console.warn('[awards-meta-debug] missing id param')
       return NextResponse.json(
         { status: false, message: 'Parameter id diperlukan' },
         { status: 400 }
       )
     }
+
+    console.info('[awards-meta-debug] proxy request start', { id })
 
     const response = await fetch(buildApiUrl(`/award/meta?id=${id}`), {
       method: 'GET',
@@ -23,6 +26,12 @@ export async function GET(request: Request) {
     })
 
     const data = await response.json()
+    console.info('[awards-meta-debug] upstream response', {
+      id,
+      status: response.status,
+      ok: response.ok,
+      hasData: typeof data?.data === 'string' && data.data.length > 0,
+    })
     return NextResponse.json(data, { status: response.status })
   } catch (error) {
     console.error('Error fetching awards meta via proxy:', error)
