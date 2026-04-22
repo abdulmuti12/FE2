@@ -6,6 +6,7 @@ import {
   ChevronRight,
   Info,
   Menu,
+  Pause,
   Play,
   X,
   Volume2,
@@ -182,6 +183,7 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [isMuted, setIsMuted] = useState(false)
+  const [isPaused, setIsPaused] = useState(false)
 
   const [trailers, setTrailers] = useState<TrailerData[]>([])
   const [currentTrailerIndex, setCurrentTrailerIndex] = useState(0)
@@ -266,6 +268,22 @@ export default function DashboardPage() {
     }
   }
 
+  const togglePauseTrailer = async () => {
+    if (!videoRef.current) return
+
+    if (videoRef.current.paused) {
+      try {
+        await videoRef.current.play()
+        setIsPaused(false)
+      } catch {
+        setIsPaused(true)
+      }
+    } else {
+      videoRef.current.pause()
+      setIsPaused(true)
+    }
+  }
+
   const handleVideoEnded = () => {
     if (trailers.length > 1) {
       setCurrentTrailerIndex((prevIndex) => (prevIndex + 1) % trailers.length)
@@ -301,9 +319,12 @@ export default function DashboardPage() {
 
     const playPromise = videoRef.current.play()
     if (playPromise && typeof playPromise.then === 'function') {
-      playPromise.catch(() => {
-        // Ignore autoplay restrictions; video should continue when possible.
-      })
+      playPromise
+        .then(() => setIsPaused(false))
+        .catch(() => {
+          setIsPaused(true)
+          // Ignore autoplay restrictions; video should continue when possible.
+        })
     }
   }, [heroVideo])
 
@@ -324,14 +345,37 @@ export default function DashboardPage() {
         playsInline
         preload="auto" // Tambahkan ini agar buffering video lebih agresif/cepat
         onEnded={handleVideoEnded}
+        onPause={() => setIsPaused(true)}
+        onPlay={() => setIsPaused(false)}
+        onClick={togglePauseTrailer}
         loop={trailers.length <= 1}
-        className="w-full h-full object-cover"
+        className="w-full h-full object-cover cursor-pointer"
       >
         <source src={heroVideo} type="video/mp4" />
       </video>
-      
-      {/* Audio Toggle Button (Bottom Right) */}
-      <div className="absolute bottom-20 right-6 md:bottom-32 lg:right-12 z-30">
+
+      {/* Tombol play di tengah saat video pause */}
+      {isPaused && (
+        <div className="pointer-events-none absolute inset-0 z-30 flex items-center justify-center">
+          <button
+            onClick={togglePauseTrailer}
+            className="pointer-events-auto h-16 w-16 flex items-center justify-center rounded-full bg-black/45 backdrop-blur-md border border-white/20 text-white transition-all"
+            aria-label="Play trailer"
+          >
+            <Play className="h-8 w-8 fill-white text-white" />
+          </button>
+        </div>
+      )}
+
+      {/* Trailer Controls (Bottom Right) */}
+      <div className="absolute bottom-20 right-6 md:bottom-32 lg:right-12 z-30 flex gap-2">
+        <button
+          onClick={togglePauseTrailer}
+          className="h-10 w-10 flex items-center justify-center rounded-full bg-black/40 backdrop-blur-md border border-white/20 text-white transition-all"
+          aria-label={isPaused ? 'Play trailer' : 'Pause trailer'}
+        >
+          {isPaused ? <Play className="h-5 w-5 fill-white" /> : <Pause className="h-5 w-5" />}
+        </button>
         <button onClick={toggleMute} className="h-10 w-10 flex items-center justify-center rounded-full bg-black/40 backdrop-blur-md border border-white/20 text-white transition-all">
           {isMuted ? <VolumeX className="h-5 w-5" /> : <Volume2 className="h-5 w-5" />}
         </button>
