@@ -3,7 +3,7 @@
 import { Header } from '@/components/header'
 import { Footer } from '@/components/footer'
 import { Heart, Eye, Search, Plus, Clock, FileText, Trophy, Play } from 'lucide-react'
-import { useState, useMemo, useEffect } from 'react'
+import { useState, useMemo, useEffect, useRef } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 
@@ -1051,6 +1051,7 @@ function FilmsContent({ stats, statsLoading }: { stats: AwardsStats; statsLoadin
   const [awardDetail, setAwardDetail] = useState<any>(null)
   const [awardDetailLoading, setAwardDetailLoading] = useState(false)
   const [showAwardDetail, setShowAwardDetail] = useState(false)
+  const awardsCacheRef = useRef<Record<string, { submissions: AwardSubmission[]; totalPages: number; fetchedAt: number }>>({})
 
   const handleCardClick = (id: string | number) => {
     fetch(`https://api.usky.ai/award/view?id=${id}`, { keepalive: true }).catch(() => {})
@@ -1121,20 +1122,35 @@ function FilmsContent({ stats, statsLoading }: { stats: AwardsStats; statsLoadin
     const controller = new AbortController()
     const fetchAwards = async () => {
       try {
-        setLoading(true)
         const sort = getSortParam(filterBy)
         const token = localStorage.getItem('user_token')
+        const cacheKey = `${sort}|${selectedCategory || 'all'}|${currentPage}`
+        const cached = awardsCacheRef.current[cacheKey]
+        const now = Date.now()
+        const CACHE_TTL_MS = 60_000
+
+        if (cached) {
+          setSubmissions(cached.submissions)
+          setTotalPages(cached.totalPages)
+          setLoading(false)
+          if (now - cached.fetchedAt < CACHE_TTL_MS) {
+            return
+          }
+        } else {
+          setLoading(true)
+        }
 
         if (!token) {
           setSubmissions([])
           setTotalPages(1)
+          setLoading(false)
           return
         }
 
         const params = new URLSearchParams({
           sort,
           page: currentPage.toString(),
-          limit: '25',
+          limit: '20',
           view_type: 'potrait',
         })
         if (selectedCategory) params.append('id_category', selectedCategory)
@@ -1146,11 +1162,23 @@ function FilmsContent({ stats, statsLoading }: { stats: AwardsStats; statsLoadin
         })
         const data = await response.json()
         if (data.status === true && data.list && Array.isArray(data.list)) {
-          setSubmissions(data.list as AwardSubmission[])
-          if (data.meta) setTotalPages(data.meta.total_pages || 1)
+          const nextSubmissions = data.list as AwardSubmission[]
+          const nextTotalPages = data.meta ? (data.meta.total_pages || 1) : 1
+          setSubmissions(nextSubmissions)
+          setTotalPages(nextTotalPages)
+          awardsCacheRef.current[cacheKey] = {
+            submissions: nextSubmissions,
+            totalPages: nextTotalPages,
+            fetchedAt: now,
+          }
         } else {
           setSubmissions([])
           setTotalPages(1)
+          awardsCacheRef.current[cacheKey] = {
+            submissions: [],
+            totalPages: 1,
+            fetchedAt: now,
+          }
         }
       } catch (error: any) {
         if (error.name === 'AbortError') return
@@ -1258,6 +1286,7 @@ function FilmsContent({ stats, statsLoading }: { stats: AwardsStats; statsLoadin
                   <Link
                     key={related.id}
                     href={`/dashboard/awards/detail?id=${related.id}`}
+                    prefetch={false}
                     className="group relative overflow-hidden rounded-lg bg-[#1e293b] hover:shadow-lg transition-all duration-300 cursor-pointer"
                     onClick={() => handleCardClick(related.id)}
                   >
@@ -1329,7 +1358,7 @@ function FilmsContent({ stats, statsLoading }: { stats: AwardsStats; statsLoadin
           ))}
         </div>
 
-        {loading ? (
+        {loading && filteredSubmissions.length === 0 ? (
           <div className="flex items-center justify-center py-16">
             <div className="text-gray-400 animate-pulse">Loading awards...</div>
           </div>
@@ -1339,10 +1368,11 @@ function FilmsContent({ stats, statsLoading }: { stats: AwardsStats; statsLoadin
           </div>
         ) : (
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3 md:gap-4 transition-all duration-500 w-full">
-            {filteredSubmissions.map((submission) => (
+            {filteredSubmissions.map((submission, index) => (
               <Link
                 key={submission.id}
                 href={`/dashboard/awards/detail?id=${submission.id}`}
+                prefetch={false}
                 className="group relative overflow-hidden rounded-xl bg-[#0f172a] hover:shadow-lg transition-all duration-300 cursor-pointer w-full border border-white/8 hover:border-white/20"
                 onClick={() => handleCardClick(submission.id)}
               >
@@ -1352,6 +1382,7 @@ function FilmsContent({ stats, statsLoading }: { stats: AwardsStats; statsLoadin
                     alt={submission.name}
                     fill
                     sizes="(max-width: 640px) 50vw, (max-width: 768px) 33vw, 20vw"
+                    loading={index < 6 ? 'eager' : 'lazy'}
                     className="object-cover group-hover:scale-105 transition-transform duration-300"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent" />
