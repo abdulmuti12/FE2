@@ -2,7 +2,7 @@
 'use client'
 
 import React, { useState, useEffect, Suspense, useCallback, useRef } from 'react'
-import { useSearchParams } from 'next/navigation'
+import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import Image from 'next/image'
 import Link from 'next/link' 
 import { Header } from '@/components/header'
@@ -87,8 +87,10 @@ const normalizeRating = (value: string | number | null | undefined): number => {
 }
 
 function SeriesDetailContent() {
+  const router = useRouter()
+  const pathname = usePathname()
   const searchParams = useSearchParams()
-  const seriesId = searchParams.get('id_group')
+  const seriesId = searchParams.get('id_group') || searchParams.get('id')
 
   const [seriesData, setSeriesData] = useState<SeriesData | null>(null)
   const [loading, setLoading] = useState(true)
@@ -195,6 +197,21 @@ function SeriesDetailContent() {
   useEffect(() => {
     fetchComments()
   }, [fetchComments])
+
+  useEffect(() => {
+    if (!activeVideoId) return
+
+    const params = new URLSearchParams(searchParams.toString())
+    const currentId = params.get('id')
+    if (currentId === activeVideoId) return
+
+    params.set('id', activeVideoId)
+    if (!params.get('id_group') && seriesId) {
+      params.set('id_group', seriesId)
+    }
+
+    router.replace(`${pathname}?${params.toString()}`, { scroll: false })
+  }, [activeVideoId, pathname, router, searchParams, seriesId])
 
   useEffect(() => {
     return () => {
@@ -306,7 +323,9 @@ function SeriesDetailContent() {
   }
 
   const handlePlatformShare = async (platform: string) => {
-    const url = window.location.href
+    const shareUrl = new URL(window.location.href)
+    shareUrl.searchParams.delete('id')
+    const url = shareUrl.toString()
     const title = seriesData?.name || 'Series'
     const text = `Check out this series: ${title}`
 
@@ -714,7 +733,7 @@ function SeriesDetailContent() {
           <div className="w-full lg:w-[35%]">
             <h2 className="text-xl font-bold mb-6">Recommended</h2>
             {seriesData.recomen?.map((item) => (
-              <Link key={item.id} href={`/dashboard/series/detail?id_group=${item.id}`} className="flex gap-4 mb-4 group">
+              <Link key={item.id} href={`/dashboard/series/detail?id=${item.id}&id_group=${item.id}`} className="flex gap-4 mb-4 group">
                 <div className="relative w-32 aspect-video rounded-lg overflow-hidden shrink-0">
                   <Image src={item.image_url || '/placeholder-poster.png'} alt={item.name} fill className="object-cover" />
                 </div>

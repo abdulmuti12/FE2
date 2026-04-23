@@ -196,7 +196,7 @@ export default function SeriesPage() {
             {seriesData.map((series) => (
               <Link 
                 key={series.id}
-                href={`/dashboard/series/detail?id_group=${series.id}`}
+                href={`/dashboard/series/detail?id=${series.id}&id_group=${series.id}`}
                 className="group relative block rounded-2xl md:rounded-xl overflow-hidden bg-[#0a1628] border border-white/5 hover:border-[#D4A84B]/50 transition-all duration-300"
               >
                 {/* Image Container */}

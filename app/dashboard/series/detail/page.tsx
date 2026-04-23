@@ -51,9 +51,9 @@ export async function generateMetadata(
   _parent: ResolvingMetadata
 ): Promise<Metadata> {
   const resolvedSearchParams = await Promise.resolve(searchParams)
-  const idGroup = resolvedSearchParams?.id_group || resolvedSearchParams?.id
+  const idVideo = resolvedSearchParams?.id
 
-  if (!idGroup) {
+  if (!idVideo) {
     return { title: 'Series | USKY' }
   }
 
@@ -62,9 +62,18 @@ export async function generateMetadata(
       process.env.NEXT_PUBLIC_APP_URL ||
       process.env.APP_URL ||
       'http://localhost:3000'
-    const apiUrl = `${appBaseUrl.replace(/\/$/, '')}/api/series/meta?id=${encodeURIComponent(idGroup)}`
+    const apiUrl = `${appBaseUrl.replace(/\/$/, '')}/api/series/meta?id=${encodeURIComponent(idVideo)}`
+    console.log('[series/detail metadata] hit series/meta', { idVideo, apiUrl })
     const response = await fetch(apiUrl, { cache: 'no-store' })
     const json = await response.json()
+    console.log('[series/detail metadata] series/meta response', {
+      idVideo,
+      httpStatus: response.status,
+      status: json?.status,
+      message: json?.message,
+      hasData: typeof json?.data === 'string',
+      dataLength: typeof json?.data === 'string' ? json.data.length : 0,
+    })
 
     if (json?.status === true && typeof json?.data === 'string') {
       const meta = parseMetaContent(json.data)

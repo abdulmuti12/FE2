@@ -456,7 +456,7 @@ export default function DashboardPage() {
         seriesData.map((s) => (
           <Link 
             key={s.id} 
-            href={`/dashboard/series/detail?id_group=${s.id}`} 
+            href={`/dashboard/series/detail?id=${s.id}&id_group=${s.id}`} 
             className="w-[85vw] flex-shrink-0 snap-center group relative aspect-video rounded-2xl overflow-hidden block border border-white/5"
           >
             <Image 
@@ -493,7 +493,7 @@ export default function DashboardPage() {
       ========================================= */}
   <div className="hidden lg:grid lg:grid-cols-[1.5fr_1fr] gap-6">
     {loading ? <FeaturedSkeleton /> : seriesData[0] && (
-      <Link href={`/dashboard/series/detail?id_group=${seriesData[0].id}`} className="group relative aspect-video rounded-3xl overflow-hidden block">
+      <Link href={`/dashboard/series/detail?id=${seriesData[0].id}&id_group=${seriesData[0].id}`} className="group relative aspect-video rounded-3xl overflow-hidden block">
         <Image src={seriesData[0].image_landscape_url || seriesData[0].image_url || ''} alt={seriesData[0].name} fill className="object-cover transition-transform group-hover:scale-105" />
         <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent" />
         <div className="absolute bottom-6 left-6 right-6">
@@ -508,7 +508,7 @@ export default function DashboardPage() {
     
     <div className="flex flex-col gap-4">
       {seriesData.slice(1, 4).map(s => (
-        <Link key={s.id} href={`/dashboard/series/detail?id_group=${s.id}`} className="group relative h-32 rounded-2xl overflow-hidden flex items-center bg-white/5 border border-white/5 hover:bg-white/10 transition-colors">
+        <Link key={s.id} href={`/dashboard/series/detail?id=${s.id}&id_group=${s.id}`} className="group relative h-32 rounded-2xl overflow-hidden flex items-center bg-white/5 border border-white/5 hover:bg-white/10 transition-colors">
           <div className="relative h-full aspect-video">
             <Image src={s.image_landscape_url || s.image_url || ''} alt={s.name} fill className="object-cover" />
           </div>
