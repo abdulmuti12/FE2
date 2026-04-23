@@ -152,18 +152,22 @@ function LatestClipSection({ items = [] }: { items?: any[] }) {
         >
           {items.map((clip) => (
             <div key={clip.id} className="w-[200px] md:w-[280px] flex-shrink-0">
-              <div className="group relative aspect-[3/4] overflow-hidden rounded-2xl bg-black">
-                <Image src={clip.image || '/placeholder.svg'} alt={clip.title} fill className="object-cover transition-transform group-hover:scale-105" />
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <div className="h-10 w-10 flex items-center justify-center rounded-full bg-black/40 backdrop-blur-sm border border-white/20">
-                    <Play className="h-4 w-4 fill-white text-white" />
+              <Link href={`/dashboard/clip?id=${clip.id}`} className="block">
+                <div className="group relative aspect-[3/4] overflow-hidden rounded-2xl bg-black">
+                  <Image src={clip.image || '/placeholder.svg'} alt={clip.title} fill className="object-cover transition-transform group-hover:scale-105" />
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <div className="h-10 w-10 flex items-center justify-center rounded-full bg-black/40 backdrop-blur-sm border border-white/20">
+                      <Play className="h-4 w-4 fill-white text-white" />
+                    </div>
+                  </div>
+                  <div className="absolute inset-x-0 bottom-0 p-4 bg-gradient-to-t from-black via-black/60 to-transparent">
+                    <p className="font-semibold text-sm text-white line-clamp-1">{clip.title}</p>
+                    <p className="text-[11px] text-white/70 line-clamp-2 mt-1">
+                      {clip.description_text || clip.description}
+                    </p>
                   </div>
                 </div>
-                <div className="absolute inset-x-0 bottom-0 p-4 bg-gradient-to-t from-black via-black/60 to-transparent">
-                  <p className="font-semibold text-sm text-white line-clamp-1">{clip.title}</p>
-                  <p className="text-[11px] text-white/70 line-clamp-2 mt-1">{clip.description_text}</p>
-                </div>
-              </div>
+              </Link>
             </div>
           ))}
         </div>
@@ -533,7 +537,7 @@ export default function DashboardPage() {
           items={categoryApiData.map(c => ({ id: c.id, name: c.name, count: c.total_movie || '0', image: c.images_url || '/placeholder.svg' }))} 
         />
 
-        <MostWatchingFilm items={transformFilmData(mostWatchingFilms)} />
+        {/* <MostWatchingFilm items={transformFilmData(mostWatchingFilms)} /> */}
 
         {/* Creators */}
      <section className="px-4 py-12 lg:px-12 border-t border-white/10">

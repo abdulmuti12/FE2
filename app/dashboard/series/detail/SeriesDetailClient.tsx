@@ -107,6 +107,9 @@ function SeriesDetailContent() {
   const [ratingToastMessage, setRatingToastMessage] = useState('Thank You for your rating')
   const [ratingToastType, setRatingToastType] = useState<'success' | 'error'>('success')
   const ratingToastTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const [showShareToast, setShowShareToast] = useState(false)
+  const [shareToastMessage, setShareToastMessage] = useState('Link copied to clipboard!')
+  const shareToastTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const [activeVideoId, setActiveVideoId] = useState<string | null>(null)
   const [activeVideo, setActiveVideo] = useState<string | null>(null)
@@ -197,8 +200,24 @@ function SeriesDetailContent() {
       if (ratingToastTimerRef.current) {
         clearTimeout(ratingToastTimerRef.current)
       }
+      if (shareToastTimerRef.current) {
+        clearTimeout(shareToastTimerRef.current)
+      }
     }
   }, [])
+
+  const showShareToastCard = (message: string) => {
+    setShareToastMessage(message)
+    setShowShareToast(true)
+
+    if (shareToastTimerRef.current) {
+      clearTimeout(shareToastTimerRef.current)
+    }
+
+    shareToastTimerRef.current = setTimeout(() => {
+      setShowShareToast(false)
+    }, 2200)
+  }
 
   const handleSubmitComment = async () => {
     if (!newComment.trim() || !activeVideoId) {
@@ -268,8 +287,12 @@ function SeriesDetailContent() {
 
     switch (platform) {
       case 'copy':
-        await navigator.clipboard.writeText(url)
-        alert('Link copied to clipboard!')
+        try {
+          await navigator.clipboard.writeText(url)
+          showShareToastCard('Link copied to clipboard!')
+        } catch {
+          showShareToastCard('Gagal menyalin link')
+        }
         break
       case 'whatsapp':
         window.open(`https://wa.me/?text=${encodeURIComponent(text + ' ' + url)}`, '_blank')
@@ -684,6 +707,16 @@ function SeriesDetailContent() {
         onClose={() => setShowShare(false)}
         onPlatformShare={handlePlatformShare}
       />
+
+      <div
+        className={`fixed top-4 left-1/2 z-[120] -translate-x-1/2 rounded-xl border border-blue-300/40 bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow-lg transition-all duration-300 ${
+          showShareToast ? 'opacity-100 translate-y-0' : 'pointer-events-none opacity-0 -translate-y-2'
+        }`}
+        role="status"
+        aria-live="polite"
+      >
+        {shareToastMessage}
+      </div>
     </div>
   )
 }

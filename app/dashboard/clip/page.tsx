@@ -83,11 +83,14 @@ const VideoItem = ({
   
   const [showComments, setShowComments] = useState(false)
   const [showShare, setShowShare] = useState(false)
+  const [showShareToast, setShowShareToast] = useState(false)
+  const [shareToastMessage, setShareToastMessage] = useState('Link berhasil disalin!')
   const [comments, setComments] = useState<Comment[]>([])
   const [commentsLoading, setCommentsLoading] = useState(false)
   const [commentInput, setCommentInput] = useState('')
   const [isSubmittingComment, setIsSubmittingComment] = useState(false)
   const [showAllComments, setShowAllComments] = useState(false)
+  const shareToastTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   // --- STATE UNTUK WATCHLIST ---
   const [isAddingWatchlist, setIsAddingWatchlist] = useState(false)
@@ -160,6 +163,27 @@ const VideoItem = ({
       if (containerRef.current) observer.unobserve(containerRef.current)
     }
   }, [onActive, isNearEnd, onNearEnd])
+
+  useEffect(() => {
+    return () => {
+      if (shareToastTimerRef.current) {
+        clearTimeout(shareToastTimerRef.current)
+      }
+    }
+  }, [])
+
+  const showShareToastCard = (message: string) => {
+    setShareToastMessage(message)
+    setShowShareToast(true)
+
+    if (shareToastTimerRef.current) {
+      clearTimeout(shareToastTimerRef.current)
+    }
+
+    shareToastTimerRef.current = setTimeout(() => {
+      setShowShareToast(false)
+    }, 2200)
+  }
 
   const togglePlay = () => {
     const vids = [desktopVideoRef.current, mobileVideoRef.current].filter(Boolean) as HTMLVideoElement[]
@@ -441,8 +465,12 @@ const VideoItem = ({
 
       switch (platform) {
         case 'copy':
-          await navigator.clipboard.writeText(`${window.location.origin}/dashboard/clip?id=${clip.id}`)
-          alert('Link berhasil disalin!')
+          try {
+            await navigator.clipboard.writeText(`${window.location.origin}/dashboard/clip?id=${clip.id}`)
+            showShareToastCard('Link berhasil disalin!')
+          } catch {
+            showShareToastCard('Gagal menyalin link')
+          }
           break
         case 'whatsapp':
           window.open(`https://api.whatsapp.com/send?text=${shareText}%20${shareUrl}`, '_blank')
@@ -471,9 +499,7 @@ const VideoItem = ({
           },
           body: JSON.stringify({ id: clip.id })
         })
-        .then(res => res.json())
-        .then(data => console.log("[v0] Share tracked successfully:", data))
-        .catch(err => console.error("[v0] Error tracking share:", err))
+        .catch(() => {})
       }
 
       setShowShare(false)
@@ -772,6 +798,16 @@ const VideoItem = ({
         onClose={() => setShowShare(false)}
         onPlatformShare={handlePlatformShare}
       />
+
+      <div
+        className={`fixed top-4 left-1/2 z-[120] -translate-x-1/2 rounded-xl border border-blue-300/40 bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow-lg transition-all duration-300 ${
+          showShareToast ? 'opacity-100 translate-y-0' : 'pointer-events-none opacity-0 -translate-y-2'
+        }`}
+        role="status"
+        aria-live="polite"
+      >
+        {shareToastMessage}
+      </div>
     </div>
   )
 }

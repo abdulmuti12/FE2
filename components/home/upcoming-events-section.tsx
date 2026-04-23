@@ -3,6 +3,7 @@
 import { useRef } from 'react'
 import Image from 'next/image'
 import { Calendar } from 'lucide-react'
+import { useRouter } from 'next/navigation'
 
 interface EventData {
   id: string
@@ -16,10 +17,13 @@ interface UpcomingEventsSectionProps {
   items?: EventData[]
 }
 
+const EVENT_ID_STORAGE_KEY = 'selected_event_id'
+
 export function UpcomingEventsSection({
   title = 'Upcoming Events',
   items = [],
 }: UpcomingEventsSectionProps) {
+  const router = useRouter()
   const scrollerRef = useRef<HTMLDivElement | null>(null)
 
   const scrollByAmount = (dir: 'left' | 'right') => {
@@ -27,6 +31,11 @@ export function UpcomingEventsSection({
     if (!el) return
     const amount = Math.round(el.clientWidth * 0.85)
     el.scrollBy({ left: dir === 'right' ? amount : -amount, behavior: 'smooth' })
+  }
+
+  const openEventDetail = (eventId: string) => {
+    sessionStorage.setItem(EVENT_ID_STORAGE_KEY, eventId)
+    router.push('/dashboard/event/detail')
   }
 
   return (
@@ -46,7 +55,12 @@ export function UpcomingEventsSection({
           style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
         >
           {items.map((event) => (
-            <div key={event.id} className="flex flex-shrink-0 flex-col gap-3">
+            <button
+              key={event.id}
+              onClick={() => openEventDetail(event.id)}
+              className="flex flex-shrink-0 flex-col gap-3 text-left"
+              type="button"
+            >
               <div className="relative h-64 w-48 overflow-hidden rounded-lg md:h-72 md:w-56">
                 <Image
                   src={event.image_url || '/images/event/example.png'}
@@ -64,7 +78,7 @@ export function UpcomingEventsSection({
                   <span>{event.tgl_live || '-'}</span>
                 </div>
               </div>
-            </div>
+            </button>
           ))}
         </div>
 

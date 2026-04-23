@@ -127,6 +127,9 @@ function DetailContent() {
   const [ratingToastMessage, setRatingToastMessage] = useState('Thank You for your rating')
   const [ratingToastType, setRatingToastType] = useState<'success' | 'error'>('success')
   const ratingToastTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const [showShareToast, setShowShareToast] = useState(false)
+  const [shareToastMessage, setShareToastMessage] = useState('Link copied to clipboard!')
+  const shareToastTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   // Comment State
   const [comments, setComments] = useState<CommentItem[]>([])
@@ -221,8 +224,24 @@ function DetailContent() {
       if (ratingToastTimerRef.current) {
         clearTimeout(ratingToastTimerRef.current)
       }
+      if (shareToastTimerRef.current) {
+        clearTimeout(shareToastTimerRef.current)
+      }
     }
   }, [])
+
+  const showShareToastCard = (message: string) => {
+    setShareToastMessage(message)
+    setShowShareToast(true)
+
+    if (shareToastTimerRef.current) {
+      clearTimeout(shareToastTimerRef.current)
+    }
+
+    shareToastTimerRef.current = setTimeout(() => {
+      setShowShareToast(false)
+    }, 2200)
+  }
 
   // Comment Submission Handler
   const handleSubmitComment = async () => {
@@ -271,8 +290,12 @@ function DetailContent() {
 
     switch (platform) {
       case 'copy':
-        await navigator.clipboard.writeText(url)
-        alert('Link copied to clipboard!')
+        try {
+          await navigator.clipboard.writeText(url)
+          showShareToastCard('Link copied to clipboard!')
+        } catch {
+          showShareToastCard('Gagal menyalin link')
+        }
         break
       case 'whatsapp':
         window.open(`https://wa.me/?text=${encodeURIComponent(text + ' ' + url)}`, '_blank')
@@ -533,7 +556,7 @@ function DetailContent() {
         <section className="mt-8 md:mt-10 rounded-2xl bg-white/5 border border-white/10 overflow-hidden">
           {/* Review Header */}
           <div className="px-4 sm:px-6 py-4 sm:py-5 flex items-center justify-between gap-3 border-b border-white/10">
-            <h2 className="text-base sm:text-lg md:text-xl font-bold">Review</h2>
+            <h2 className="text-base sm:text-lg md:text-xl font-bold">Comment</h2>
 
             <div className="flex items-center gap-2 sm:gap-3">
               <button className="h-9 sm:h-10 px-3 sm:px-4 rounded-full bg-white/10 border border-white/15 hover:bg-white/15 transition-colors text-xs sm:text-sm inline-flex items-center gap-2">
@@ -624,7 +647,7 @@ function DetailContent() {
               {ratingToastMessage}
             </div>
 
-            <label className="text-xs sm:text-sm font-semibold mb-3 block">Your Review</label>
+            <label className="text-xs sm:text-sm font-semibold mb-3 block">Your Comment</label>
             <textarea
               value={reviewText}
               onChange={(e) => setReviewText(e.target.value)}
@@ -644,7 +667,7 @@ function DetailContent() {
                     Mengirim...
                   </>
                 ) : (
-                  'Submit Review'
+                  'Submit Comment'
                 )}
               </button>
             </div>
@@ -671,6 +694,16 @@ function DetailContent() {
         onClose={() => setShowShare(false)}
         onPlatformShare={handlePlatformShare}
       />
+
+      <div
+        className={`fixed top-4 left-1/2 z-[120] -translate-x-1/2 rounded-xl border border-blue-300/40 bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow-lg transition-all duration-300 ${
+          showShareToast ? 'opacity-100 translate-y-0' : 'pointer-events-none opacity-0 -translate-y-2'
+        }`}
+        role="status"
+        aria-live="polite"
+      >
+        {shareToastMessage}
+      </div>
     </>
   )
 }
