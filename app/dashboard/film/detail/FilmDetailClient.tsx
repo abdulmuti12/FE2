@@ -106,6 +106,14 @@ const formatDisplayRating = (value: string | number | null | undefined): string 
   return parsed.toString()
 }
 
+const stripHtml = (value: string): string =>
+  value.replace(/<[^>]+>/g, ' ').replace(/&nbsp;/gi, ' ').replace(/\s+/g, ' ').trim()
+
+const truncateText = (value: string, maxLength: number): string => {
+  if (value.length <= maxLength) return value
+  return `${value.slice(0, maxLength).trim()}...`
+}
+
 // ============================================================================
 // Component
 // ============================================================================
@@ -311,12 +319,16 @@ function DetailContent() {
   const handlePlatformShare = async (platform: string) => {
     const url = window.location.href
     const title = filmData?.name || 'Film'
-    const text = `Check out this film: ${title}`
+    const rawDescription = stripHtml(filmData?.description || '')
+    const shortDescription = truncateText(rawDescription, 180)
+    const text = shortDescription
+      ? `${title}\n${shortDescription}`
+      : `Check out this film: ${title}`
 
     switch (platform) {
       case 'copy':
         try {
-          await navigator.clipboard.writeText(url)
+          await navigator.clipboard.writeText(`${text}\n${url}`)
           showShareToastCard('Link copied to clipboard!')
         } catch {
           showShareToastCard('Gagal menyalin link')
@@ -326,7 +338,10 @@ function DetailContent() {
         window.open(`https://wa.me/?text=${encodeURIComponent(text + ' ' + url)}`, '_blank')
         break
       case 'facebook':
-        window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`, '_blank')
+        window.open(
+          `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}&quote=${encodeURIComponent(text)}`,
+          '_blank'
+        )
         break
       case 'x':
         window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}`, '_blank')
