@@ -63,11 +63,29 @@ export async function generateMetadata(
       'http://localhost:3000'
 
     const apiUrl = `${appBaseUrl.replace(/\/$/, '')}/api/movie/meta?id=${encodeURIComponent(id)}`
+    console.log('[clip/detail metadata] hit movie/meta', { id, apiUrl })
     const response = await fetch(apiUrl, { cache: 'no-store' })
     const json = await response.json()
+    console.log('[clip/detail metadata] movie/meta response', {
+      id,
+      httpStatus: response.status,
+      status: json?.status,
+      message: json?.message,
+      hasData: typeof json?.data === 'string',
+      dataLength: typeof json?.data === 'string' ? json.data.length : 0,
+    })
 
     if (json?.status === true && typeof json?.data === 'string') {
       const meta = parseMetaContent(json.data)
+      console.log('[clip/detail metadata] parsed fields', {
+        id,
+        ogTitle: meta['og:title'] || '',
+        hasOgDescription: Boolean(meta['og:description']),
+        hasOgImage: Boolean(meta['og:image']),
+        twitterTitle: meta['twitter:title'] || '',
+        hasTwitterDescription: Boolean(meta['twitter:description']),
+        hasTwitterImage: Boolean(meta['twitter:image']),
+      })
 
       const title = meta['og:title'] || meta['twitter:title'] || 'Clip | USKY'
       const description =
