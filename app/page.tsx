@@ -17,7 +17,7 @@ export default function LoginPage() {
       title: '',
       description:
         'Watch groundbreaking films crafted by human creativity and artificial intelligence.',
-      image: '/login-hero.jpg',
+      image: 'images/Poster.jpg',
     },
   ]
 
