@@ -1,7 +1,6 @@
 // app/dashboard/series/detail/page.tsx
 import { Metadata, ResolvingMetadata } from 'next'
 import SeriesDetailClient from './SeriesDetailClient'
-import { buildApiUrl } from '@/app/api/_utils'
 
 type Props = {
   searchParams: { id_group?: string; id?: string } | Promise<{ id_group?: string; id?: string }>
@@ -59,7 +58,11 @@ export async function generateMetadata(
   }
 
   try {
-    const apiUrl = `${buildApiUrl('/series/meta')}?id=${encodeURIComponent(idGroup)}`
+    const appBaseUrl =
+      process.env.NEXT_PUBLIC_APP_URL ||
+      process.env.APP_URL ||
+      'http://localhost:3000'
+    const apiUrl = `${appBaseUrl.replace(/\/$/, '')}/api/series/meta?id=${encodeURIComponent(idGroup)}`
     const response = await fetch(apiUrl, { cache: 'no-store' })
     const json = await response.json()
 
