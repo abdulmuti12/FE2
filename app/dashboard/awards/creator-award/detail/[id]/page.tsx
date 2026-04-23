@@ -696,7 +696,18 @@ export default function CreatorDetailPage() {
                     >
                       <td className="px-4 py-3 text-gray-200">{clip.id ?? '-'}</td>
                       <td className="px-4 py-3 text-white font-medium max-w-[320px] truncate">
-                        {clip.name || '-'}
+                        {clip.id ? (
+                          <button
+                            type="button"
+                            onClick={() => router.push(`/dashboard/awards/detail?id=${clip.id}`)}
+                            className="max-w-[320px] truncate text-left text-white hover:text-blue-400 hover:underline transition-colors"
+                            title={clip.name || '-'}
+                          >
+                            {clip.name || '-'}
+                          </button>
+                        ) : (
+                          clip.name || '-'
+                        )}
                       </td>
                       <td className="px-4 py-3 text-gray-300">{clip.dates || '-'}</td>
                       <td className="px-4 py-3 text-gray-300">
