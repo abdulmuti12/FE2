@@ -199,19 +199,12 @@ function SeriesDetailContent() {
   }, [fetchComments])
 
   useEffect(() => {
-    if (!activeVideoId) return
-
     const params = new URLSearchParams(searchParams.toString())
-    const currentId = params.get('id')
-    if (currentId === activeVideoId) return
+    if (!params.has('id')) return
 
-    params.set('id', activeVideoId)
-    if (!params.get('id_group') && seriesId) {
-      params.set('id_group', seriesId)
-    }
-
+    params.delete('id')
     router.replace(`${pathname}?${params.toString()}`, { scroll: false })
-  }, [activeVideoId, pathname, router, searchParams, seriesId])
+  }, [pathname, router, searchParams])
 
   useEffect(() => {
     return () => {
