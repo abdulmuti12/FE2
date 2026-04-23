@@ -150,7 +150,7 @@ export default function LoginPage() {
           </div>
 
           <div className="text-[10px] text-muted-foreground opacity-50">
-            © 2024 USKY. All rights reserved.
+            © 2026 USKY. All rights reserved.
           </div>
         </div>
 

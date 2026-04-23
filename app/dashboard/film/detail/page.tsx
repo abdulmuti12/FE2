@@ -66,6 +66,7 @@ interface CommentItem {
 const API = {
   ENDPOINTS: {
     FILM_DETAIL: '/api/film/detail',
+    FILM_PLAY: '/api/film/play',
     FILM_COMMENT: '/api/film/comment',
     FILM_RATING: '/api/film/rating',
   },
@@ -130,6 +131,7 @@ function DetailContent() {
   const [showShareToast, setShowShareToast] = useState(false)
   const [shareToastMessage, setShareToastMessage] = useState('Link copied to clipboard!')
   const shareToastTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const playedFilmIdsRef = useRef<Set<string>>(new Set())
 
   // Comment State
   const [comments, setComments] = useState<CommentItem[]>([])
@@ -176,6 +178,29 @@ function DetailContent() {
     }
 
     fetchFilmDetail()
+  }, [filmId])
+
+  useEffect(() => {
+    const sendFilmPlay = async () => {
+      if (!filmId || playedFilmIdsRef.current.has(filmId)) return
+
+      const token = localStorage.getItem(API.STORAGE_KEY)
+      if (!token) return
+
+      playedFilmIdsRef.current.add(filmId)
+
+      try {
+        await fetch(API.ENDPOINTS.FILM_PLAY, {
+          method: 'POST',
+          headers: getAuthHeaders(token),
+          body: JSON.stringify({ id: filmId }),
+        })
+      } catch (error) {
+        console.error('Error sending film play:', error)
+      }
+    }
+
+    sendFilmPlay()
   }, [filmId])
 
   // Effects - Fetch Comments

@@ -110,6 +110,7 @@ function SeriesDetailContent() {
   const [showShareToast, setShowShareToast] = useState(false)
   const [shareToastMessage, setShareToastMessage] = useState('Link copied to clipboard!')
   const shareToastTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const playedSeriesIdsRef = useRef<Set<string>>(new Set())
 
   const [activeVideoId, setActiveVideoId] = useState<string | null>(null)
   const [activeVideo, setActiveVideo] = useState<string | null>(null)
@@ -267,6 +268,30 @@ function SeriesDetailContent() {
     setIsInWatchlist(episode.watch_me === '1')
     setRating(normalizeRating(episode.rates))
     window.scrollTo({ top: 0, behavior: 'smooth' })
+  }
+
+  const handleSeriesPlay = async () => {
+    if (!activeVideoId || playedSeriesIdsRef.current.has(activeVideoId)) return
+
+    const token = localStorage.getItem('user_token')
+    if (!token) return
+
+    playedSeriesIdsRef.current.add(activeVideoId)
+
+    try {
+      await fetch('/api/series/play', {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          id: activeVideoId,
+        }),
+      })
+    } catch (error) {
+      console.error('Error sending series play:', error)
+    }
   }
 
   const handleVideoEnded = () => {
@@ -502,6 +527,7 @@ function SeriesDetailContent() {
                 poster={activeVideoPoster || '/placeholder-poster.png'}
                 controls
                 autoPlay
+                onPlay={handleSeriesPlay}
                 onEnded={handleVideoEnded} 
               >
                 <source src={activeVideo} type="video/mp4" />
