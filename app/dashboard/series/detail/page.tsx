@@ -70,6 +70,7 @@ export async function generateMetadata(
       const description =
         meta['og:description'] ||
         meta['twitter:description'] ||
+        meta['Description'] ||
         meta['description'] ||
         meta['keywords'] ||
         ''
@@ -88,6 +89,7 @@ export async function generateMetadata(
       return {
         title,
         description,
+        ...(description ? { other: { Description: description } } : {}),
         keywords,
         ...(author ? { authors: [{ name: author }] } : {}),
         openGraph: {
