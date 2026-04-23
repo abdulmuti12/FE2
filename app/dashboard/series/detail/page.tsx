@@ -4,9 +4,7 @@ import SeriesDetailClient from './SeriesDetailClient'
 import { buildApiUrl } from '@/app/api/_utils'
 
 type Props = {
-  searchParams:
-    | { id_group?: string; id?: string }
-    | Promise<{ id_group?: string; id?: string }>
+  searchParams: { id_group?: string; id?: string } | Promise<{ id_group?: string; id?: string }>
 }
 
 type MetaTagMap = Record<string, string>
@@ -49,11 +47,6 @@ function toSecureUrl(url?: string): string {
   return url.replace(/^http:\/\//i, 'https://')
 }
 
-function toPlainText(input?: string): string {
-  if (!input) return ''
-  return input.replace(/<[^>]+>/g, '').replace(/&nbsp;/gi, ' ').trim()
-}
-
 export async function generateMetadata(
   { searchParams }: Props,
   _parent: ResolvingMetadata
@@ -66,12 +59,6 @@ export async function generateMetadata(
   }
 
   try {
-    const appBaseUrl =
-      process.env.NEXT_PUBLIC_APP_URL ||
-      process.env.APP_URL ||
-      'http://localhost:3000'
-    const pageUrl = `${appBaseUrl.replace(/\/$/, '')}/dashboard/series/detail?id_group=${encodeURIComponent(idGroup)}`
-
     const apiUrl = `${buildApiUrl('/series/meta')}?id=${encodeURIComponent(idGroup)}`
     const response = await fetch(apiUrl, { cache: 'no-store' })
     const json = await response.json()
@@ -79,58 +66,34 @@ export async function generateMetadata(
     if (json?.status === true && typeof json?.data === 'string') {
       const meta = parseMetaContent(json.data)
 
-      let title = meta['og:title'] || meta['twitter:title'] || 'Series Detail | USKY'
-      let description =
+      const title = meta['og:title'] || meta['twitter:title'] || 'Series Detail | USKY'
+      const description =
         meta['og:description'] ||
         meta['twitter:description'] ||
         meta['Description'] ||
         meta['description'] ||
         meta['keywords'] ||
         ''
-      let image = toSecureUrl(meta['og:image'] || meta['twitter:image'] || '')
+      const image = toSecureUrl(meta['og:image'] || meta['twitter:image'] || '')
       const videoUrl = toSecureUrl(meta['og:video'] || meta['twitter:url'] || '')
       const secureVideoUrl = toSecureUrl(meta['og:video:secure_url'] || videoUrl)
       const videoType = meta['og:video:type'] || 'video/mp4'
       const videoWidth = toPositiveNumber(meta['og:video:width'])
       const videoHeight = toPositiveNumber(meta['og:video:height'])
       const author = meta['author']
-      let keywords = meta['keywords']
+      const keywords = meta['keywords']
       const twitterCard = image ? 'summary_large_image' : (meta['twitter:card'] || 'summary')
       const twitterSite = meta['twitter:site'] || '@usky'
       const siteName = meta['og:site_name'] || 'USKY'
-
-      // Fallback: jika endpoint /series/meta tidak lengkap, isi dari series detail.
-      if (!image || !description) {
-        const detailUrl = `${buildApiUrl('/series/detail-group')}?id_group=${encodeURIComponent(idGroup)}`
-        const detailResponse = await fetch(detailUrl, { cache: 'no-store' })
-        const detailJson = await detailResponse.json()
-
-        if (detailJson?.status === true && detailJson?.data) {
-          const detail = detailJson.data
-          title = title || detail.name || 'Series Detail | USKY'
-          description = description || toPlainText(detail.description)
-          keywords = keywords || toPlainText(detail.description)
-          image =
-            image ||
-            toSecureUrl(detail.image_landscape_url || detail.image_url || '')
-        }
-      }
-
-      description = toPlainText(description)
-      keywords = toPlainText(keywords || description)
 
       return {
         title,
         description,
         ...(description ? { other: { Description: description } } : {}),
         keywords,
-        alternates: {
-          canonical: pageUrl,
-        },
         ...(author ? { authors: [{ name: author }] } : {}),
         openGraph: {
           siteName,
-          url: pageUrl,
           title,
           description,
           ...(image ? { images: [{ url: image }] } : {}),
