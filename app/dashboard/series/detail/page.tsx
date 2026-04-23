@@ -1,77 +1,127 @@
 // app/dashboard/series/detail/page.tsx
 import { Metadata, ResolvingMetadata } from 'next'
 import SeriesDetailClient from './SeriesDetailClient'
+import { buildApiUrl } from '@/app/api/_utils'
 
 type Props = {
-  searchParams: { id_group?: string }
+  searchParams: { id_group?: string } | Promise<{ id_group?: string }>
+}
+
+type MetaTagMap = Record<string, string>
+
+function parseMetaContent(metaHtml: string): MetaTagMap {
+  const map: MetaTagMap = {}
+  const metaTagRegex = /<meta\s+([^>]*?)\/?\s*>/gi
+
+  let tagMatch: RegExpExecArray | null
+  while ((tagMatch = metaTagRegex.exec(metaHtml)) !== null) {
+    const attrs = tagMatch[1]
+    const attrMap: Record<string, string> = {}
+    const attrRegex = /([:\w-]+)\s*=\s*"([^"]*)"/g
+
+    let attrMatch: RegExpExecArray | null
+    while ((attrMatch = attrRegex.exec(attrs)) !== null) {
+      attrMap[attrMatch[1].toLowerCase()] = attrMatch[2]
+    }
+
+    const key = attrMap.property || attrMap.name
+    const value = attrMap.content
+
+    if (key && value) {
+      map[key] = value
+    }
+  }
+
+  return map
+}
+
+function toPositiveNumber(value?: string): number | undefined {
+  if (!value) return undefined
+  const parsed = Number(value)
+  if (!Number.isFinite(parsed) || parsed <= 0) return undefined
+  return parsed
+}
+
+function toSecureUrl(url?: string): string {
+  if (!url) return ''
+  return url.replace(/^http:\/\//i, 'https://')
 }
 
 export async function generateMetadata(
   { searchParams }: Props,
-  parent: ResolvingMetadata
+  _parent: ResolvingMetadata
 ): Promise<Metadata> {
-  const id_group = searchParams.id_group
+  const resolvedSearchParams = await Promise.resolve(searchParams)
+  const idGroup = resolvedSearchParams?.id_group
 
-  if (!id_group) {
+  if (!idGroup) {
     return { title: 'Series | USKY' }
   }
 
   try {
-    // Fetch API dari backend untuk meta (base URL dari .env.local)
-    const appBaseUrl =
-      process.env.NEXT_PUBLIC_APP_URL ||
-      process.env.APP_URL ||
-      'http://localhost:3000'
-    const apiUrl = `${appBaseUrl.replace(/\/$/, '')}/api/series/series-detail?id_group=${id_group}`
+    const apiUrl = `${buildApiUrl('/series/meta')}?id=${encodeURIComponent(idGroup)}`
     const response = await fetch(apiUrl, { cache: 'no-store' })
     const json = await response.json()
 
-    if (json.status === true && json.data) {
-      const data = json.data
-      
-      // Hilangkan tag HTML dari deskripsi
-      const plainDesc = data.description?.replace(/<[^>]+>/g, '').trim() || ''
-      const imageUrl = data.image_landscape_url || data.image_url || ''
-      const videoUrl = data.video_url || ''
+    if (json?.status === true && typeof json?.data === 'string') {
+      const meta = parseMetaContent(json.data)
+
+      const title = meta['og:title'] || meta['twitter:title'] || 'Series Detail | USKY'
+      const description =
+        meta['og:description'] ||
+        meta['twitter:description'] ||
+        meta['description'] ||
+        meta['keywords'] ||
+        ''
+      const image = toSecureUrl(meta['og:image'] || meta['twitter:image'] || '')
+      const videoUrl = toSecureUrl(meta['og:video'] || meta['twitter:url'] || '')
+      const secureVideoUrl = toSecureUrl(meta['og:video:secure_url'] || videoUrl)
+      const videoType = meta['og:video:type'] || 'video/mp4'
+      const videoWidth = toPositiveNumber(meta['og:video:width'])
+      const videoHeight = toPositiveNumber(meta['og:video:height'])
+      const author = meta['author']
+      const keywords = meta['keywords']
+      const twitterCard = image ? 'summary_large_image' : (meta['twitter:card'] || 'summary')
+      const twitterSite = meta['twitter:site'] || '@usky'
+      const siteName = meta['og:site_name'] || 'USKY'
 
       return {
-        title: data.name,
-        description: plainDesc,
-        keywords: plainDesc, 
-        authors: [{ name: 'USKY' }],
+        title,
+        description,
+        keywords,
+        ...(author ? { authors: [{ name: author }] } : {}),
         openGraph: {
-          siteName: 'USKY',
-          title: data.name,
-          description: plainDesc,
-          images: [
-            {
-              url: imageUrl,
-            },
-          ],
-          videos: [
-            {
-              url: videoUrl,
-              secureUrl: videoUrl,
-              type: 'video/mp4',
-              width: 500,
-              height: 280,
-            }
-          ]
+          siteName,
+          title,
+          description,
+          ...(image ? { images: [{ url: image }] } : {}),
+          ...(videoUrl
+            ? {
+                videos: [
+                  {
+                    url: videoUrl,
+                    secureUrl: secureVideoUrl,
+                    type: videoType,
+                    ...(videoWidth ? { width: videoWidth } : {}),
+                    ...(videoHeight ? { height: videoHeight } : {}),
+                  },
+                ],
+              }
+            : {}),
         },
         twitter: {
-          card: 'summary',
-          site: '@usky',
-          title: data.name,
-          description: plainDesc,
-          images: [imageUrl],
+          card: twitterCard as any,
+          site: twitterSite,
+          title,
+          description,
+          ...(image ? { images: [image] } : {}),
         },
       }
     }
   } catch (error) {
-    console.error("Gagal load metadata:", error)
+    console.error('Gagal load metadata series:', error)
   }
 
-  // Fallback jika API gagal
   return { title: 'Series Detail | USKY' }
 }
 
