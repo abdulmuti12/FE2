@@ -1,5 +1,6 @@
 // app/dashboard/series/detail/page.tsx
 import { Metadata, ResolvingMetadata } from 'next'
+import { headers } from 'next/headers'
 import SeriesDetailClient from './SeriesDetailClient'
 
 type Props = {
@@ -46,10 +47,30 @@ function toSecureUrl(url?: string): string {
   return url.replace(/^http:\/\//i, 'https://')
 }
 
+function toShareUrl(url?: string): string {
+  if (!url) return ''
+  const secureUrl = toSecureUrl(url).trim()
+  if (!secureUrl) return ''
+  try {
+    return encodeURI(secureUrl)
+  } catch {
+    return secureUrl
+  }
+}
+
 export async function generateMetadata(
   { searchParams }: Props,
   _parent: ResolvingMetadata
 ): Promise<Metadata> {
+  const requestHeaders = await headers()
+  const proto = requestHeaders.get('x-forwarded-proto') || 'https'
+  const hostHeader =
+    requestHeaders.get('x-forwarded-host') ||
+    requestHeaders.get('host') ||
+    'usky.ai'
+  const host = hostHeader.split(',')[0].trim() || 'usky.ai'
+  const requestOrigin = `${proto}://${host}`
+
   const resolvedSearchParams = await Promise.resolve(searchParams)
   const idVideo = resolvedSearchParams?.id
 
@@ -61,7 +82,7 @@ export async function generateMetadata(
     const appBaseUrl =
       process.env.NEXT_PUBLIC_APP_URL ||
       process.env.APP_URL ||
-      'http://localhost:3000'
+      requestOrigin
     const apiUrl = `${appBaseUrl.replace(/\/$/, '')}/api/series/meta?id=${encodeURIComponent(idVideo)}`
     console.log('[series/detail metadata] hit series/meta', { idVideo, apiUrl })
     const response = await fetch(apiUrl, { cache: 'no-store' })
@@ -86,9 +107,9 @@ export async function generateMetadata(
         meta['description'] ||
         meta['keywords'] ||
         ''
-      const image = toSecureUrl(meta['og:image'] || meta['twitter:image'] || '')
-      const videoUrl = toSecureUrl(meta['og:video'] || meta['twitter:url'] || '')
-      const secureVideoUrl = toSecureUrl(meta['og:video:secure_url'] || videoUrl)
+      const image = toShareUrl(meta['og:image'] || meta['twitter:image'] || '')
+      const videoUrl = toShareUrl(meta['og:video'] || meta['twitter:url'] || '')
+      const secureVideoUrl = toShareUrl(meta['og:video:secure_url'] || videoUrl)
       const videoType = meta['og:video:type'] || 'video/mp4'
       const videoWidth = toPositiveNumber(meta['og:video:width'])
       const videoHeight = toPositiveNumber(meta['og:video:height'])
@@ -97,15 +118,33 @@ export async function generateMetadata(
       const twitterCard = image ? 'summary_large_image' : (meta['twitter:card'] || 'summary')
       const twitterSite = meta['twitter:site'] || '@usky'
       const siteName = meta['og:site_name'] || 'USKY'
+      const idGroup = resolvedSearchParams?.id_group
+      const pageUrl = `${requestOrigin.replace(/\/$/, '')}/dashboard/series/detail?id_group=${encodeURIComponent(idGroup || '')}`
 
       return {
         title,
         description,
-        ...(description ? { other: { Description: description } } : {}),
+        ...(description || image
+          ? {
+              other: {
+                ...(description ? { Description: description } : {}),
+                ...(image
+                  ? {
+                      'og:image:secure_url': image,
+                      'og:image:type': 'image/jpeg',
+                      'og:image:width': '1200',
+                      'og:image:height': '630',
+                      'twitter:image:src': image,
+                    }
+                  : {}),
+              },
+            }
+          : {}),
         keywords,
         ...(author ? { authors: [{ name: author }] } : {}),
         openGraph: {
           siteName,
+          url: pageUrl,
           title,
           description,
           ...(image ? { images: [{ url: image }] } : {}),
