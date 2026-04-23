@@ -88,6 +88,17 @@ const toSecureUrl = (url?: string): string => {
   return url.replace(/^http:\/\//i, 'https://')
 }
 
+const toShareUrl = (url?: string): string => {
+  if (!url) return ''
+  const secureUrl = toSecureUrl(url).trim()
+  if (!secureUrl) return ''
+  try {
+    return encodeURI(secureUrl)
+  } catch {
+    return secureUrl
+  }
+}
+
 const upsertMetaTag = (attr: 'name' | 'property', key: string, content: string) => {
   const selector = `meta[${attr}="${key}"]`
   let tag = document.head.querySelector(selector) as HTMLMetaElement | null
@@ -110,9 +121,9 @@ const applyClipMetaToHead = (meta: MetaTagMap) => {
     meta['Description'] ||
     meta['keywords'] ||
     ''
-  const image = toSecureUrl(meta['og:image'] || meta['twitter:image'] || '')
-  const video = toSecureUrl(meta['og:video'] || meta['twitter:url'] || '')
-  const secureVideo = toSecureUrl(meta['og:video:secure_url'] || video)
+  const image = toShareUrl(meta['og:image'] || meta['twitter:image'] || '')
+  const video = toShareUrl(meta['og:video'] || meta['twitter:url'] || '')
+  const secureVideo = toShareUrl(meta['og:video:secure_url'] || video)
 
   document.title = title
 

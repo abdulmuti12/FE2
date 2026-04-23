@@ -45,6 +45,17 @@ function toSecureUrl(url?: string): string {
   return url.replace(/^http:\/\//i, 'https://')
 }
 
+function toShareUrl(url?: string): string {
+  if (!url) return ''
+  const secureUrl = toSecureUrl(url).trim()
+  if (!secureUrl) return ''
+  try {
+    return encodeURI(secureUrl)
+  } catch {
+    return secureUrl
+  }
+}
+
 export async function generateMetadata(
   { searchParams }: Props,
   _parent: ResolvingMetadata
@@ -95,9 +106,9 @@ export async function generateMetadata(
         meta['description'] ||
         meta['keywords'] ||
         ''
-      const image = toSecureUrl(meta['og:image'] || meta['twitter:image'] || '')
-      const videoUrl = toSecureUrl(meta['og:video'] || meta['twitter:url'] || '')
-      const secureVideoUrl = toSecureUrl(meta['og:video:secure_url'] || videoUrl)
+      const image = toShareUrl(meta['og:image'] || meta['twitter:image'] || '')
+      const videoUrl = toShareUrl(meta['og:video'] || meta['twitter:url'] || '')
+      const secureVideoUrl = toShareUrl(meta['og:video:secure_url'] || videoUrl)
       const videoType = meta['og:video:type'] || 'video/mp4'
       const videoWidth = toPositiveNumber(meta['og:video:width'])
       const videoHeight = toPositiveNumber(meta['og:video:height'])
@@ -106,6 +117,7 @@ export async function generateMetadata(
       const twitterCard = image ? 'summary_large_image' : (meta['twitter:card'] || 'summary')
       const twitterSite = meta['twitter:site'] || '@usky'
       const siteName = meta['og:site_name'] || 'USKY'
+      const pageUrl = `${appBaseUrl.replace(/\/$/, '')}/dashboard/clip?id=${encodeURIComponent(id)}`
 
       return {
         title,
@@ -115,6 +127,7 @@ export async function generateMetadata(
         ...(author ? { authors: [{ name: author }] } : {}),
         openGraph: {
           siteName,
+          url: pageUrl,
           title,
           description,
           ...(image ? { images: [{ url: image }] } : {}),
