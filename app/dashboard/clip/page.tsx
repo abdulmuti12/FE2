@@ -1,4 +1,5 @@
 import { Metadata, ResolvingMetadata } from 'next'
+import { headers } from 'next/headers'
 import ClipPageClient from './ClipPageClient'
 
 type Props = {
@@ -60,6 +61,15 @@ export async function generateMetadata(
   { searchParams }: Props,
   _parent: ResolvingMetadata
 ): Promise<Metadata> {
+  const requestHeaders = await headers()
+  const proto = requestHeaders.get('x-forwarded-proto') || 'https'
+  const hostHeader =
+    requestHeaders.get('x-forwarded-host') ||
+    requestHeaders.get('host') ||
+    'usky.ai'
+  const host = hostHeader.split(',')[0].trim() || 'usky.ai'
+  const requestOrigin = `${proto}://${host}`
+
   const resolvedSearchParams = await Promise.resolve(searchParams)
   const id = resolvedSearchParams?.id
 
@@ -71,7 +81,7 @@ export async function generateMetadata(
     const appBaseUrl =
       process.env.NEXT_PUBLIC_APP_URL ||
       process.env.APP_URL ||
-      'http://localhost:3000'
+      requestOrigin
 
     const apiUrl = `${appBaseUrl.replace(/\/$/, '')}/api/movie/meta?id=${encodeURIComponent(id)}`
     console.log('[clip/detail metadata] hit movie/meta', { id, apiUrl })
@@ -117,7 +127,7 @@ export async function generateMetadata(
       const twitterCard = image ? 'summary_large_image' : (meta['twitter:card'] || 'summary')
       const twitterSite = meta['twitter:site'] || '@usky'
       const siteName = meta['og:site_name'] || 'USKY'
-      const pageUrl = `${appBaseUrl.replace(/\/$/, '')}/dashboard/clip?id=${encodeURIComponent(id)}`
+      const pageUrl = `${requestOrigin.replace(/\/$/, '')}/dashboard/clip?id=${encodeURIComponent(id)}`
 
       return {
         title,
