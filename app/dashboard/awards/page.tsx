@@ -359,10 +359,15 @@ function StatsBar({
           )}
         </div>
       </div>
-      <button className="flex items-center justify-center gap-2 bg-yellow-400 hover:bg-yellow-300 active:bg-yellow-500 transition-colors rounded-xl px-6 py-5 lg:flex-1 w-full shrink-0">
+      <a
+        href="https://creatoraward.usky.ai/login"
+        target="_blank"
+        rel="noopener noreferrer"
+        className="flex items-center justify-center gap-2 bg-yellow-400 hover:bg-yellow-300 active:bg-yellow-500 transition-colors rounded-xl px-6 py-5 lg:flex-1 w-full shrink-0"
+      >
         <Plus className="w-5 h-5 text-black" />
         <span className="text-black font-bold text-sm">Submit Now</span>
-      </button>
+      </a>
     </div>
   )
 }
@@ -418,9 +423,14 @@ function PrizeSidebar() {
           <p className="text-white font-extrabold text-lg leading-none">-</p>
         </div>
       </div>
-      <button className="w-full bg-yellow-400 hover:bg-yellow-300 active:bg-yellow-500 text-black font-bold text-sm py-3 rounded-xl transition-colors">
+      <a
+        href="https://creatoraward.usky.ai/login"
+        target="_blank"
+        rel="noopener noreferrer"
+        className="block w-full bg-yellow-400 hover:bg-yellow-300 active:bg-yellow-500 text-black font-bold text-sm py-3 rounded-xl transition-colors text-center"
+      >
         Submit Now
-      </button>
+      </a>
     </div>
   )
 }
