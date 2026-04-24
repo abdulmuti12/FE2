@@ -252,9 +252,13 @@ function AwardsDetailContent() {
         headMetaNodesRef.current = []
 
         const entries = parseMetaEntries(result.data)
+        const apiOgImage = entries.find(
+          (e) => e.attr === 'property' && e.key.toLowerCase() === 'og:image'
+        )?.content
         console.log('[awards-meta-debug] parsed meta entries', {
           awardId,
           totalEntries: entries.length,
+          ogImageFromApi: apiOgImage || null,
         })
         const uniqueKeys = new Set<string>()
 
@@ -275,6 +279,15 @@ function AwardsDetailContent() {
         if (ogTitle) {
           document.title = ogTitle
         }
+
+        const appliedOgImage = Array.from(document.head.querySelectorAll('meta[property]'))
+          .find((node) => node.getAttribute('property')?.toLowerCase() === 'og:image')
+          ?.getAttribute('content')
+
+        console.log('[awards-meta-debug] applied og:image', {
+          awardId,
+          ogImageApplied: appliedOgImage || null,
+        })
       } catch (error) {
         console.error('Error applying award meta tags:', error)
         console.error('[awards-meta-debug] apply meta failed', { awardId, error })
@@ -381,6 +394,16 @@ function AwardsDetailContent() {
     const shortDescription = truncateText(rawDescription, 180)
     const text = shortDescription ? `${title} - ${shortDescription}` : title
     const url = window.location.href
+    const currentOgImage = Array.from(document.head.querySelectorAll('meta[property]'))
+      .find((node) => node.getAttribute('property')?.toLowerCase() === 'og:image')
+      ?.getAttribute('content')
+
+    console.log('[awards-share-debug] share clicked', {
+      awardId,
+      platform,
+      url,
+      ogImageInHead: currentOgImage || null,
+    })
 
     switch (platform) {
       case 'copy':
