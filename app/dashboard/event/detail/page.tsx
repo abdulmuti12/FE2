@@ -2,8 +2,9 @@
 
 import { Header } from '@/components/header'
 import { Footer } from '@/components/footer'
-import { MapPin, Clock, Play, Calendar as CalendarIcon } from 'lucide-react'
-import { useState, useEffect, Suspense } from 'react'
+import { ClipShare } from '@/components/clip/clip-share'
+import { MapPin, Clock, Play, Calendar as CalendarIcon, Share2 } from 'lucide-react'
+import { useState, useEffect, Suspense, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 
 interface EventDetailData {
@@ -33,18 +34,28 @@ interface EventCard {
   image: string
 }
 
+type MetaEntry = {
+  attr: 'name' | 'property'
+  key: string
+  content: string
+}
+
 const EVENT_ID_STORAGE_KEY = 'selected_event_id'
 
 function EventDetailContent() {
   const router = useRouter()
   const [eventId, setEventId] = useState<string | null>(null)
 
-  const [copied, setCopied] = useState(false)
   const [eventDetail, setEventDetail] = useState<EventDetailData | null>(null)
   const [ongoingEvents, setOngoingEvents] = useState<EventCard[]>([])
   const [relatedEvents, setRelatedEvents] = useState<EventCard[]>([])
   const [loading, setLoading] = useState(true)
-  
+  const [showShare, setShowShare] = useState(false)
+  const [showShareToast, setShowShareToast] = useState(false)
+  const [shareToastMessage, setShareToastMessage] = useState('Link copied to clipboard!')
+  const shareToastTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const headMetaNodesRef = useRef<HTMLMetaElement[]>([])
+
   const [isClaiming, setIsClaiming] = useState(false)
 
   useEffect(() => {
@@ -165,11 +176,161 @@ function EventDetailContent() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [eventId])
 
-  const handleCopyLink = () => {
-    navigator.clipboard.writeText(window.location.href)
-    setCopied(true)
-    setTimeout(() => setCopied(false), 2000)
+  useEffect(() => {
+    return () => {
+      if (shareToastTimerRef.current) {
+        clearTimeout(shareToastTimerRef.current)
+      }
+    }
+  }, [])
+
+  const stripHtml = (value: string): string =>
+    value.replace(/<[^>]+>/g, ' ').replace(/&nbsp;/gi, ' ').replace(/\s+/g, ' ').trim()
+
+  const decodeHtmlEntities = (text: string): string => {
+    const textarea = document.createElement('textarea')
+    textarea.innerHTML = text
+    return textarea.value
   }
+
+  const parseMetaEntries = (metaBlob: string): MetaEntry[] => {
+    const normalized = metaBlob.replace(/\\\//g, '/').replace(/\\"/g, '"')
+    const regex = /<meta\s+(property|name)=["']([^"']+)["']\s+content=["']([^"']*)["'][^>]*>/gi
+    const entries: MetaEntry[] = []
+
+    let match: RegExpExecArray | null
+    while ((match = regex.exec(normalized)) !== null) {
+      const attrType = match[1]?.toLowerCase() as 'name' | 'property'
+      const key = match[2]?.trim()
+      const content = decodeHtmlEntities((match[3] || '').replace(/\s+/g, ' ').trim())
+
+      if (attrType && key && content) {
+        entries.push({ attr: attrType, key, content })
+      }
+    }
+
+    return entries
+  }
+
+  const truncateText = (value: string, maxLength: number): string => {
+    if (value.length <= maxLength) return value
+    return `${value.slice(0, maxLength).trim()}...`
+  }
+
+  const showShareToastCard = (message: string) => {
+    setShareToastMessage(message)
+    setShowShareToast(true)
+
+    if (shareToastTimerRef.current) {
+      clearTimeout(shareToastTimerRef.current)
+    }
+
+    shareToastTimerRef.current = setTimeout(() => {
+      setShowShareToast(false)
+    }, 2200)
+  }
+
+  const handlePlatformShare = async (platform: string) => {
+    const url = window.location.href
+    const title = eventDetail?.title || 'Event'
+    const rawDescription = stripHtml(eventDetail?.description || '')
+    const shortDescription = truncateText(rawDescription, 180)
+    const text = shortDescription
+      ? `${title}\n${shortDescription}`
+      : `Check out this event: ${title}`
+
+    switch (platform) {
+      case 'copy':
+        try {
+          await navigator.clipboard.writeText(`${text}\n${url}`)
+          showShareToastCard('Link copied to clipboard!')
+        } catch {
+          showShareToastCard('Gagal menyalin link')
+        }
+        break
+      case 'whatsapp':
+        window.open(`https://wa.me/?text=${encodeURIComponent(text + ' ' + url)}`, '_blank')
+        break
+      case 'facebook':
+        window.open(
+          `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}&quote=${encodeURIComponent(text)}`,
+          '_blank'
+        )
+        break
+      case 'x':
+        window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}`, '_blank')
+        break
+      case 'telegram':
+        window.open(`https://t.me/share/url?url=${encodeURIComponent(url)}&text=${encodeURIComponent(text)}`, '_blank')
+        break
+      case 'linkedin':
+        window.open(`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(url)}`, '_blank')
+        break
+    }
+
+    setShowShare(false)
+  }
+
+  useEffect(() => {
+    const applyEventMeta = async () => {
+      if (!eventId) return
+
+      try {
+        const token = localStorage.getItem('user_token')
+        const url = new URL('/api/event/meta', window.location.origin)
+        url.searchParams.set('id', eventId)
+
+        const response = await fetch(url.toString(), {
+          method: 'GET',
+          headers: token
+            ? {
+                Authorization: `Bearer ${token}`,
+                'Content-Type': 'application/json',
+              }
+            : undefined,
+        })
+
+        const result = await response.json()
+        if (!response.ok || result?.status !== true || typeof result?.data !== 'string') {
+          return
+        }
+
+        headMetaNodesRef.current.forEach((node) => node.remove())
+        headMetaNodesRef.current = []
+
+        const entries = parseMetaEntries(result.data)
+        const uniqueKeys = new Set<string>()
+
+        for (const entry of entries) {
+          const dedupeKey = `${entry.attr}:${entry.key.toLowerCase()}`
+          if (uniqueKeys.has(dedupeKey)) continue
+          uniqueKeys.add(dedupeKey)
+
+          const meta = document.createElement('meta')
+          meta.setAttribute(entry.attr, entry.key)
+          meta.setAttribute('content', entry.content)
+          meta.setAttribute('data-event-meta', '1')
+          document.head.appendChild(meta)
+          headMetaNodesRef.current.push(meta)
+        }
+
+        const ogTitle = entries.find((e) => e.attr === 'property' && e.key.toLowerCase() === 'og:title')?.content
+        const twitterTitle = entries.find((e) => e.attr === 'name' && e.key.toLowerCase() === 'twitter:title')?.content
+        if (ogTitle || twitterTitle) {
+          document.title = ogTitle || twitterTitle || document.title
+        }
+      } catch (error) {
+        console.error('Error applying event meta tags:', error)
+      }
+    }
+
+    applyEventMeta()
+
+    return () => {
+      headMetaNodesRef.current.forEach((node) => node.remove())
+      headMetaNodesRef.current = []
+    }
+  }, [eventId])
 
 const handleClaimTicket = async () => {
     // 1. Pastikan data event sudah ada
@@ -357,16 +518,12 @@ const handleClaimTicket = async () => {
                         </button>
 
                         <button
-                          onClick={handleCopyLink}
-                          className={`flex-shrink-0 w-12 h-12 flex items-center justify-center bg-white hover:bg-gray-100 text-black rounded-full transition-colors border-2 ${copied ? 'border-green-500' : 'border-gray-300'}`}
+                          onClick={() => setShowShare(true)}
+                          className="h-12 w-12 rounded-full border border-white/15 bg-white/5 hover:bg-white/10 transition-colors flex items-center justify-center"
+                          title="Share"
+                          aria-label="Share event"
                         >
-                          {copied ? (
-                             <span className="text-xs font-bold text-green-600">Copied</span>
-                          ) : (
-                            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-                            </svg>
-                          )}
+                          <Share2 className="w-5 h-5" />
                         </button>
                       </div>
 
@@ -450,6 +607,24 @@ const handleClaimTicket = async () => {
       </div>
 
       <Footer />
+
+      <ClipShare
+        showShare={showShare}
+        clipId={eventDetail.id}
+        clipName={eventDetail.title}
+        onClose={() => setShowShare(false)}
+        onPlatformShare={handlePlatformShare}
+      />
+
+      <div
+        className={`fixed top-4 left-1/2 z-[120] -translate-x-1/2 rounded-xl border border-blue-300/40 bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow-lg transition-all duration-300 ${
+          showShareToast ? 'opacity-100 translate-y-0' : 'pointer-events-none opacity-0 -translate-y-2'
+        }`}
+        role="status"
+        aria-live="polite"
+      >
+        {shareToastMessage}
+      </div>
     </div>
   )
 }
