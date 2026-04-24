@@ -319,19 +319,16 @@ function EventDetailContent() {
         }
 
         const entries = parseMetaEntries(result.data)
-        const uniqueKeys = new Set<string>()
 
         if (previousTitleRef.current === null) {
           previousTitleRef.current = document.title
         }
 
         for (const entry of entries) {
-          const dedupeKey = `${entry.attr}:${entry.key.toLowerCase()}`
-          if (uniqueKeys.has(dedupeKey)) continue
-          uniqueKeys.add(dedupeKey)
-
-          const selector = `meta[${entry.attr}="${entry.key}"]`
-          const existing = document.head.querySelector(selector) as HTMLMetaElement | null
+          const existing = Array.from(document.head.querySelectorAll(`meta[${entry.attr}]`)).find((node) => {
+            const value = node.getAttribute(entry.attr)
+            return typeof value === 'string' && value.toLowerCase() === entry.key.toLowerCase()
+          }) as HTMLMetaElement | undefined
 
           if (existing) {
             const alreadyTracked = updatedMetaNodesRef.current.some((item) => item.element === existing)
