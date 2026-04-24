@@ -54,7 +54,9 @@ function EventDetailContent() {
   const [showShareToast, setShowShareToast] = useState(false)
   const [shareToastMessage, setShareToastMessage] = useState('Link copied to clipboard!')
   const shareToastTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
-  const headMetaNodesRef = useRef<HTMLMetaElement[]>([])
+  const createdMetaNodesRef = useRef<HTMLMetaElement[]>([])
+  const updatedMetaNodesRef = useRef<Array<{ element: HTMLMetaElement; previousContent: string | null }>>([])
+  const previousTitleRef = useRef<string | null>(null)
 
   const [isClaiming, setIsClaiming] = useState(false)
 
@@ -272,10 +274,31 @@ function EventDetailContent() {
   }
 
   useEffect(() => {
+    const cleanupAppliedMeta = () => {
+      createdMetaNodesRef.current.forEach((node) => node.remove())
+      createdMetaNodesRef.current = []
+
+      updatedMetaNodesRef.current.forEach(({ element, previousContent }) => {
+        if (previousContent === null) {
+          element.removeAttribute('content')
+        } else {
+          element.setAttribute('content', previousContent)
+        }
+      })
+      updatedMetaNodesRef.current = []
+
+      if (previousTitleRef.current !== null) {
+        document.title = previousTitleRef.current
+        previousTitleRef.current = null
+      }
+    }
+
     const applyEventMeta = async () => {
       if (!eventId) return
 
       try {
+        cleanupAppliedMeta()
+
         const token = localStorage.getItem('user_token')
         const url = new URL('/api/event/meta', window.location.origin)
         url.searchParams.set('id', eventId)
@@ -295,23 +318,38 @@ function EventDetailContent() {
           return
         }
 
-        headMetaNodesRef.current.forEach((node) => node.remove())
-        headMetaNodesRef.current = []
-
         const entries = parseMetaEntries(result.data)
         const uniqueKeys = new Set<string>()
+
+        if (previousTitleRef.current === null) {
+          previousTitleRef.current = document.title
+        }
 
         for (const entry of entries) {
           const dedupeKey = `${entry.attr}:${entry.key.toLowerCase()}`
           if (uniqueKeys.has(dedupeKey)) continue
           uniqueKeys.add(dedupeKey)
 
-          const meta = document.createElement('meta')
-          meta.setAttribute(entry.attr, entry.key)
-          meta.setAttribute('content', entry.content)
-          meta.setAttribute('data-event-meta', '1')
-          document.head.appendChild(meta)
-          headMetaNodesRef.current.push(meta)
+          const selector = `meta[${entry.attr}="${entry.key}"]`
+          const existing = document.head.querySelector(selector) as HTMLMetaElement | null
+
+          if (existing) {
+            const alreadyTracked = updatedMetaNodesRef.current.some((item) => item.element === existing)
+            if (!alreadyTracked) {
+              updatedMetaNodesRef.current.push({
+                element: existing,
+                previousContent: existing.getAttribute('content'),
+              })
+            }
+            existing.setAttribute('content', entry.content)
+          } else {
+            const meta = document.createElement('meta')
+            meta.setAttribute(entry.attr, entry.key)
+            meta.setAttribute('content', entry.content)
+            meta.setAttribute('data-event-meta', '1')
+            document.head.appendChild(meta)
+            createdMetaNodesRef.current.push(meta)
+          }
         }
 
         const ogTitle = entries.find((e) => e.attr === 'property' && e.key.toLowerCase() === 'og:title')?.content
@@ -327,8 +365,7 @@ function EventDetailContent() {
     applyEventMeta()
 
     return () => {
-      headMetaNodesRef.current.forEach((node) => node.remove())
-      headMetaNodesRef.current = []
+      cleanupAppliedMeta()
     }
   }, [eventId])
 
