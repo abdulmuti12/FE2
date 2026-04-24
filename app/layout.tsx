@@ -1,4 +1,4 @@
-import type { Metadata } from 'next'
+import type { Metadata, Viewport } from 'next'
 import { Geist, Geist_Mono } from 'next/font/google'
 import { Analytics } from '@vercel/analytics/next'
 import Providers from './providers'
@@ -8,14 +8,58 @@ const _geist = Geist({ subsets: ["latin"] })
 const _geistMono = Geist_Mono({ subsets: ["latin"] })
 
 export const metadata: Metadata = {
-  title: 'Usky',
-  description: '',
+  metadataBase: new URL('https://www.usky.ai'),
+  title: {
+    default: 'Usky.ai – AI Film Streaming Platform',
+    template: '%s',
+  },
+  description:
+    'Create, watch, and monetize AI-generated films on Usky.ai. A next-generation streaming platform empowering creators with ownership and fair revenue.',
+  keywords: [
+    'AI film platform',
+    'AI streaming',
+    'AI video creator',
+    'creator monetization',
+    'Web3 streaming',
+    'NFT film',
+    'AI movies',
+  ],
+  authors: [{ name: 'Usky.ai' }],
+  alternates: {
+    canonical: 'https://www.usky.ai',
+  },
   generator: 'Next.js',
+  openGraph: {
+    type: 'website',
+    url: 'https://www.usky.ai',
+    siteName: 'Usky.ai',
+    title: 'Create. Own. Monetize Your AI Films',
+    description:
+      'Join Usky.ai, the next-generation AI film platform where creators can publish, monetize, and own their content.',
+    images: [{ url: 'https://usky.ai/og-image.jpg' }],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    site: '@usky',
+    title: 'Usky.ai – AI Film Streaming Platform',
+    description:
+      'Publish and monetize AI-generated films with full ownership and transparency.',
+    images: ['https://usky.ai/og-image.jpg'],
+  },
+  other: {
+    title: 'Usky.ai – AI Film Streaming Platform',
+    'twitter:url': 'https://www.usky.ai',
+  },
   icons: {
     icon: '/usky-logo.png',
     shortcut: '/usky-logo.png',
     apple: '/usky-logo.png',
   },
+}
+
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
 }
 
 export default function RootLayout({
