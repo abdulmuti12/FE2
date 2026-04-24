@@ -36,7 +36,7 @@ export const metadata: Metadata = {
     title: 'Create. Own. Monetize Your AI Films',
     description:
       'Join Usky.ai, the next-generation AI film platform where creators can publish, monetize, and own their content.',
-    images: [{ url: 'https://usky.ai/og-image.jpg' }],
+    images: [{ url: 'https://usky.ai/usky-logo.png' }],
   },
   twitter: {
     card: 'summary_large_image',
@@ -44,7 +44,7 @@ export const metadata: Metadata = {
     title: 'Usky.ai – AI Film Streaming Platform',
     description:
       'Publish and monetize AI-generated films with full ownership and transparency.',
-    images: ['https://usky.ai/og-image.jpg'],
+    images: ['https://usky.ai/usky-logo.png'],
   },
   other: {
     title: 'Usky.ai – AI Film Streaming Platform',
