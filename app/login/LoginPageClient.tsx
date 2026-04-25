@@ -54,7 +54,7 @@ export default function LoginPage() {
     localStorage.setItem('user_token', result.token)
     localStorage.setItem('user_profile', JSON.stringify(result.data))
     localStorage.setItem('session_id', result.session_id)
-    router.push('/dashboard')
+    router.push('/home')
   }
 
   const handleSuccess = async (credentialResponse: any) => {

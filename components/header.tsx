@@ -82,7 +82,7 @@ export function Header() {
   const navItems = [
     { label: 'Films', href: '/film' },
     { label: 'Series', href: '/series' },
-    { label: 'Clips', href: '/dashboard/clip/list' },
+    { label: 'Clips', href: '/home/clip/list' },
     { label: 'Events', href: '/event' },
     { label: 'Awards', href: '/awards' },
   ]
@@ -148,7 +148,7 @@ export function Header() {
               </Link>
 
               <Link
-                href="/dashboard/profile"
+                href="/home/profile"
                 onClick={closeMobileMenu}
                 className="flex items-center gap-4 px-5 py-4 text-white/90 hover:bg-white/5 transition-colors"
               >
@@ -157,7 +157,7 @@ export function Header() {
               </Link>
 
               <Link
-                href="/dashboard/profile"
+                href="/home/profile"
                 onClick={closeMobileMenu}
                 className="flex items-center gap-4 px-5 py-4 text-white/90 hover:bg-white/5 transition-colors"
               >
@@ -166,7 +166,7 @@ export function Header() {
               </Link>
 
               <Link
-                href="/dashboard/changepass"
+                href="/home/changepass"
                 onClick={closeMobileMenu}
                 className="flex items-center gap-4 px-5 py-4 text-white/90 hover:bg-white/5 transition-colors"
               >
@@ -202,7 +202,7 @@ export function Header() {
         <div className="flex flex-col gap-4 md:hidden">
           {/* Row 1 */}
           <div className="flex items-center justify-between">
-            <Link href="/dashboard">
+            <Link href="/home">
               <Image
                 src="/usky-logo.png"
                 alt="USKY Logo"
@@ -280,7 +280,7 @@ export function Header() {
         <div className="hidden md:flex flex-col md:flex-row md:items-center justify-between gap-4">
           {/* LEFT */}
           <div className="flex items-center justify-between w-full md:w-auto">
-            <Link href="/dashboard">
+            <Link href="/home">
               <Image
                 src="/usky-logo.png"
                 alt="USKY Logo"
@@ -334,21 +334,21 @@ export function Header() {
                       <Calendar className="w-5 h-5" /> My Event
                     </Link>
                     <Link
-                      href="/dashboard/referral"
+                      href="/home/referral"
                       className="w-full flex items-center gap-4 px-6 py-3 text-sm text-gray-300 hover:bg-white/5 transition-colors"
                     >
                       <Ticket className="w-5 h-5" /> My Referral
                     </Link>
 
                     <Link
-                      href="/dashboard/profile"
+                      href="/home/profile"
                       className="w-full flex items-center gap-4 px-6 py-3 text-sm text-gray-300 hover:bg-white/5 transition-colors"
                     >
                       <CreditCard className="w-5 h-5" /> My Account
                     </Link>
 
                     <Link 
-                      href="/dashboard/changepass"
+                      href="/home/changepass"
                       className="w-full flex items-center gap-4 px-6 py-3 text-sm text-gray-300 hover:bg-white/5 transition-colors"
                     >
                       <Settings className="w-5 h-5" /> Change Password

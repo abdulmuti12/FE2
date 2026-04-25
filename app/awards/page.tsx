@@ -1,1 +1,1 @@
-export { default } from '../dashboard/awards/page'
+export { default } from '../home/awards/page'

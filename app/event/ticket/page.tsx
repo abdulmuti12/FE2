@@ -1,1 +1,1 @@
-export { default } from '../../dashboard/event/ticket/page'
+export { default } from '../../home/event/ticket/page'

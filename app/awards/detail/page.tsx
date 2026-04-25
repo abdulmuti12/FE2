@@ -1,1 +1,1 @@
-export { default, generateMetadata } from '../../dashboard/awards/detail/page'
+export { default, generateMetadata } from '../../home/awards/detail/page'

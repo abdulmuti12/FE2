@@ -1,1 +1,1 @@
-export { default } from '../dashboard/series/page'
+export { default } from '../home/series/page'

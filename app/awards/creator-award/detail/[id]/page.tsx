@@ -1,1 +1,1 @@
-export { default } from '../../../../dashboard/awards/creator-award/detail/[id]/page'
+export { default } from '../../../../home/awards/creator-award/detail/[id]/page'

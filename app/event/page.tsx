@@ -1,1 +1,1 @@
-export { default } from '../dashboard/event/page'
+export { default } from '../home/event/page'

@@ -11,28 +11,33 @@ const nextConfig = {
   async redirects() {
     return [
       {
-        source: '/dashboard/film',
-        destination: '/film',
+        source: '/dashboard',
+        destination: '/home',
         permanent: true,
       },
       {
-        source: '/dashboard/film/detail',
-        destination: '/film/detail',
+        source: '/dashboard/:path*',
+        destination: '/home/:path*',
         permanent: true,
       },
       {
-        source: '/dashboard/event/:path*',
-        destination: '/event/:path*',
+        source: '/film/:path*',
+        destination: '/home/film/:path*',
         permanent: true,
       },
       {
-        source: '/dashboard/series/:path*',
-        destination: '/series/:path*',
+        source: '/event/:path*',
+        destination: '/home/event/:path*',
         permanent: true,
       },
       {
-        source: '/dashboard/awards/:path*',
-        destination: '/awards/:path*',
+        source: '/series/:path*',
+        destination: '/home/series/:path*',
+        permanent: true,
+      },
+      {
+        source: '/awards/:path*',
+        destination: '/home/awards/:path*',
         permanent: true,
       },
     ]

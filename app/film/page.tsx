@@ -1,1 +1,1 @@
-export { default } from '../dashboard/film/page'
+export { default } from '../home/film/page'
