@@ -485,7 +485,7 @@ function DetailContent() {
       <div className="min-h-screen bg-[#020817] flex flex-col items-center justify-center text-white font-sans gap-4">
         <p className="text-xl font-bold">Oops!</p>
         <p className="text-gray-400">{error || 'Data film tidak ditemukan.'}</p>
-        <Link href="/dashboard/film" className="px-6 py-2 bg-blue-600 hover:bg-blue-700 rounded-full transition-colors">
+        <Link href="/film" className="px-6 py-2 bg-blue-600 hover:bg-blue-700 rounded-full transition-colors">
           Kembali ke List Film
         </Link>
       </div>

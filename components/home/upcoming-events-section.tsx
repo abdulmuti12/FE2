@@ -35,14 +35,14 @@ export function UpcomingEventsSection({
 
   const openEventDetail = (eventId: string) => {
     sessionStorage.setItem(EVENT_ID_STORAGE_KEY, eventId)
-    router.push('/dashboard/event/detail')
+    router.push('/event/detail')
   }
 
   return (
     <section className="px-4 py-8 md:px-6 md:py-10 lg:px-12">
       <div className="mb-8 flex items-center justify-between">
         <h2 className="text-2xl font-bold text-white md:text-3xl">{title}</h2>
-        <a href="/dashboard/event" className="inline-flex items-center gap-2 font-semibold text-white hover:text-white/80 transition-colors">
+        <a href="/event" className="inline-flex items-center gap-2 font-semibold text-white hover:text-white/80 transition-colors">
           <span className="text-xs md:text-base">View All</span>
           <span className="text-white/70">›</span>
         </a>

@@ -1,4 +1,4 @@
-// app/dashboard/series/detail/SeriesDetailClient.tsx
+// app/series/detail/SeriesDetailClient.tsx
 'use client'
 
 import React, { useState, useEffect, Suspense, useCallback, useRef } from 'react'
@@ -726,7 +726,7 @@ function SeriesDetailContent() {
           <div className="w-full lg:w-[35%]">
             <h2 className="text-xl font-bold mb-6">Recommended</h2>
             {seriesData.recomen?.map((item) => (
-              <Link key={item.id} href={`/dashboard/series/detail?id=${item.id}&id_group=${item.id}`} className="flex gap-4 mb-4 group">
+              <Link key={item.id} href={`/series/detail?id=${item.id}&id_group=${item.id}`} className="flex gap-4 mb-4 group">
                 <div className="relative w-32 aspect-video rounded-lg overflow-hidden shrink-0">
                   <Image src={item.image_url || '/placeholder-poster.png'} alt={item.name} fill className="object-cover" />
                 </div>

@@ -732,7 +732,7 @@ function AwardsDetailContent() {
       <div className="min-h-screen bg-[#050B14] flex flex-col items-center justify-center text-white font-sans gap-4">
         <p className="text-xl font-bold">Oops!</p>
         <p className="text-gray-400">{error || 'Data award tidak ditemukan.'}</p>
-        <Link href="/dashboard/awards" className="px-6 py-2 bg-blue-600 hover:bg-blue-700 rounded-full transition-colors">
+        <Link href="/awards" className="px-6 py-2 bg-blue-600 hover:bg-blue-700 rounded-full transition-colors">
           Kembali ke Awards
         </Link>
       </div>
@@ -897,7 +897,7 @@ function AwardsDetailContent() {
                <span className="text-white">|</span>
                 {creatorId ? (
                   <Link
-                    href={`/dashboard/awards/creator-award/detail/${creatorId}`}
+                    href={`/awards/creator-award/detail/${creatorId}`}
                     className="text-white/60 mx-1 flex items-center gap-2 hover:text-white transition-colors"
                   >
                     <span className="relative w-6 h-6 rounded-full overflow-hidden bg-white/10 border border-white/20">
@@ -1111,7 +1111,7 @@ function AwardsDetailContent() {
                  {awardData.relate.map((related) => (
                    <Link
                      key={related.id}
-                     href={`/dashboard/awards/detail?id=${related.id}`}
+                     href={`/awards/detail?id=${related.id}`}
                      className="snap-start shrink-0 w-[280px] md:w-[320px] aspect-[16/9] relative rounded-xl overflow-hidden group/card block cursor-pointer bg-gray-800"
                    >
                      {/* Image */}

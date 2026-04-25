@@ -85,7 +85,7 @@ export default function MyTicketPage() {
         <div className="absolute inset-0 flex flex-col justify-center items-center">
           <h1 className="text-4xl md:text-5xl font-bold text-white mb-4 text-center">My Ticket</h1>
           <div className="flex items-center gap-2 text-sm md:text-base text-gray-300">
-            <Link href="/dashboard/event" className="hover:text-white transition">Event</Link>
+            <Link href="/event" className="hover:text-white transition">Event</Link>
             <span className="text-gray-400">›</span>
             <span className="text-white">My Ticket</span>
           </div>
@@ -128,7 +128,7 @@ export default function MyTicketPage() {
               return (
                 <Link
                   key={ticket.id}
-                  href={`/dashboard/event/ticket/detail?id_claim=${ticket.id}`}
+                  href={`/event/ticket/detail?id_claim=${ticket.id}`}
                   className="block py-6 hover:bg-white/[0.02] transition-colors group"
                 >
                   {/* MOBILE LAYOUT (Gambar Kanan - List Row Style) */}

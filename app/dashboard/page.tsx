@@ -238,7 +238,7 @@ export default function DashboardPage() {
         const token = localStorage.getItem('user_token')
         if (!token) { router.push('/'); return }
 
-        const res = await fetch('/api/home', {
+        const res = await fetch('/api/dashboard', {
           headers: { Authorization: `Bearer ${token}` },
           cache: 'no-store'
         })
@@ -406,7 +406,7 @@ export default function DashboardPage() {
         {currentTrailer?.id_films &&
           String(currentTrailer.id_films).trim() !== '0' && (
           <Button 
-            onClick={() => router.push(`/dashboard/film/detail?id=${currentTrailer.id_films}`)}
+            onClick={() => router.push(`/film/detail?id=${currentTrailer.id_films}`)}
             className="bg-white text-black hover:bg-gray-200 px-8 py-6 rounded-md font-bold flex items-center gap-2"
           >
             <Play className="h-5 w-5 fill-black" /> Watch Now
@@ -425,7 +425,7 @@ export default function DashboardPage() {
       <section className="px-4 py-10 md:px-12 border-t border-white/10">
   <div className="flex justify-between items-center mb-6">
     <h2 className="text-xl font-bold text-white">Latest Series</h2>
-    <Link href="/dashboard/series" className="bg-white/10 px-4 py-1.5 rounded-full text-xs text-white hover:bg-white/20 transition-colors">
+    <Link href="/series" className="bg-white/10 px-4 py-1.5 rounded-full text-xs text-white hover:bg-white/20 transition-colors">
       View All
     </Link>
   </div>
@@ -456,7 +456,7 @@ export default function DashboardPage() {
         seriesData.map((s) => (
           <Link 
             key={s.id} 
-            href={`/dashboard/series/detail?id=${s.id}&id_group=${s.id}`} 
+            href={`/series/detail?id=${s.id}&id_group=${s.id}`} 
             className="w-[85vw] flex-shrink-0 snap-center group relative aspect-video rounded-2xl overflow-hidden block border border-white/5"
           >
             <Image 
@@ -493,7 +493,7 @@ export default function DashboardPage() {
       ========================================= */}
   <div className="hidden lg:grid lg:grid-cols-[1.5fr_1fr] gap-6">
     {loading ? <FeaturedSkeleton /> : seriesData[0] && (
-      <Link href={`/dashboard/series/detail?id=${seriesData[0].id}&id_group=${seriesData[0].id}`} className="group relative aspect-video rounded-3xl overflow-hidden block">
+      <Link href={`/series/detail?id=${seriesData[0].id}&id_group=${seriesData[0].id}`} className="group relative aspect-video rounded-3xl overflow-hidden block">
         <Image src={seriesData[0].image_landscape_url || seriesData[0].image_url || ''} alt={seriesData[0].name} fill className="object-cover transition-transform group-hover:scale-105" />
         <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent" />
         <div className="absolute bottom-6 left-6 right-6">
@@ -508,7 +508,7 @@ export default function DashboardPage() {
     
     <div className="flex flex-col gap-4">
       {seriesData.slice(1, 4).map(s => (
-        <Link key={s.id} href={`/dashboard/series/detail?id=${s.id}&id_group=${s.id}`} className="group relative h-32 rounded-2xl overflow-hidden flex items-center bg-white/5 border border-white/5 hover:bg-white/10 transition-colors">
+        <Link key={s.id} href={`/series/detail?id=${s.id}&id_group=${s.id}`} className="group relative h-32 rounded-2xl overflow-hidden flex items-center bg-white/5 border border-white/5 hover:bg-white/10 transition-colors">
           <div className="relative h-full aspect-video">
             <Image src={s.image_landscape_url || s.image_url || ''} alt={s.name} fill className="object-cover" />
           </div>

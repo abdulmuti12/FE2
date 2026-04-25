@@ -270,7 +270,7 @@ export default function FilmPage() {
                     onMouseEnter={() => setHoveredFilmId(film.id)}
                     onMouseLeave={() => setHoveredFilmId(null)}
                   >
-                    <Link href={`/dashboard/film/detail?id=${film.id}`} className="block">
+                    <Link href={`/film/detail?id=${film.id}`} className="block">
                       <div
                         className="relative rounded-xl overflow-hidden bg-[#0f172a] transition-all duration-300 ease-out w-full aspect-[2/3]"
                       >
@@ -366,7 +366,7 @@ export default function FilmPage() {
                               onMouseEnter={() => setHoveredFilmId(film.id)}
                               onMouseLeave={() => setHoveredFilmId(null)}
                             >
-                              <Link href={`/dashboard/film/detail?id=${film.id}`} className="block">
+                              <Link href={`/film/detail?id=${film.id}`} className="block">
                                 <div
                                   className="relative rounded-xl overflow-hidden bg-[#0f172a] transition-all duration-300 ease-out w-full aspect-[2/3]"
                                 >

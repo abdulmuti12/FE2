@@ -1214,7 +1214,7 @@ function FilmsContent({ stats, statsLoading }: { stats: AwardsStats; statsLoadin
                 {awardDetail.relate.map((related: any) => (
                   <Link
                     key={related.id}
-                    href={`/dashboard/awards/detail?id=${related.id}`}
+                    href={`/awards/detail?id=${related.id}`}
                     prefetch={false}
                     className="group relative overflow-hidden rounded-lg bg-[#1e293b] hover:shadow-lg transition-all duration-300 cursor-pointer"
                     onClick={() => handleCardClick(related.id)}
@@ -1300,7 +1300,7 @@ function FilmsContent({ stats, statsLoading }: { stats: AwardsStats; statsLoadin
             {filteredSubmissions.map((submission, index) => (
               <Link
                 key={submission.id}
-                href={`/dashboard/awards/detail?id=${submission.id}`}
+                href={`/awards/detail?id=${submission.id}`}
                 prefetch={false}
                 className="group relative overflow-hidden rounded-xl bg-[#0f172a] hover:shadow-lg transition-all duration-300 cursor-pointer w-full border border-white/8 hover:border-white/20"
                 onClick={() => handleCardClick(submission.id)}
@@ -1459,7 +1459,7 @@ export default function AwardsPage() {
               <span className="inline-block h-4 w-28 rounded bg-white/10 animate-pulse" />
             ) : (
               <Link
-                href="/dashboard/awards/creator-award"
+                href="/awards/creator-award"
                 className="text-gray-300 text-sm font-medium hover:text-white transition-colors"
               >
                 Join {stats.creatorCount !== '-' ? `${stats.creatorCount}+` : '240+'} others

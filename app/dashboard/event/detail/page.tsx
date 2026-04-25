@@ -95,7 +95,7 @@ export async function generateMetadata(
       const twitterCard = image ? 'summary_large_image' : (meta['twitter:card'] || 'summary')
       const twitterSite = meta['twitter:site'] || '@usky'
       const siteName = meta['og:site_name'] || 'USKY'
-      const pageUrl = `${requestOrigin.replace(/\/$/, '')}/dashboard/event/detail?id=${encodeURIComponent(id)}`
+      const pageUrl = `${requestOrigin.replace(/\/$/, '')}/event/detail?id=${encodeURIComponent(id)}`
 
       return {
         title,

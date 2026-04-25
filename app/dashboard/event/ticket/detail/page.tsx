@@ -158,9 +158,9 @@ function TicketDetailContent() {
         <div className="absolute inset-0 flex flex-col justify-center items-center">
           <h1 className="text-4xl md:text-5xl font-bold text-white mb-4">My Ticket</h1>
           <div className="flex items-center gap-2 text-sm text-gray-300">
-            <Link href="/dashboard/event" className="hover:text-white transition">Event</Link>
+            <Link href="/event" className="hover:text-white transition">Event</Link>
             <span className="text-gray-500">›</span>
-            <Link href="/dashboard/event/ticket" className="hover:text-white transition">My Ticket</Link>
+            <Link href="/event/ticket" className="hover:text-white transition">My Ticket</Link>
             <span className="text-gray-500">›</span>
             <span className="text-white">{title}</span>
           </div>
@@ -175,9 +175,9 @@ function TicketDetailContent() {
         <div className="absolute inset-0 flex flex-col justify-center items-center pt-8">
           <h1 className="text-3xl font-bold text-white mb-2">My Ticket</h1>
           <div className="flex items-center gap-2 text-xs text-gray-300">
-            <Link href="/dashboard/event">Event</Link>
+            <Link href="/event">Event</Link>
             <span className="text-gray-500">›</span>
-            <Link href="/dashboard/event/ticket">My Ticket</Link>
+            <Link href="/event/ticket">My Ticket</Link>
             <span className="text-gray-500">›</span>
             <span className="text-white truncate max-w-[100px]">{title}</span>
           </div>

@@ -1,4 +1,4 @@
-// app/dashboard/series/detail/page.tsx
+// app/series/detail/page.tsx
 import { Metadata, ResolvingMetadata } from 'next'
 import { headers } from 'next/headers'
 import SeriesDetailClient from './SeriesDetailClient'
@@ -119,7 +119,7 @@ export async function generateMetadata(
       const twitterSite = meta['twitter:site'] || '@usky'
       const siteName = meta['og:site_name'] || 'USKY'
       const idGroup = resolvedSearchParams?.id_group
-      const pageUrl = `${requestOrigin.replace(/\/$/, '')}/dashboard/series/detail?id_group=${encodeURIComponent(idGroup || '')}`
+      const pageUrl = `${requestOrigin.replace(/\/$/, '')}/series/detail?id_group=${encodeURIComponent(idGroup || '')}`
 
       return {
         title,

@@ -80,11 +80,11 @@ export function Header() {
   }, [mobileUserMenuOpen])
 
   const navItems = [
-    { label: 'Films', href: '/dashboard/film' },
-    { label: 'Series', href: '/dashboard/series' },
+    { label: 'Films', href: '/film' },
+    { label: 'Series', href: '/series' },
     { label: 'Clips', href: '/dashboard/clip/list' },
-    { label: 'Events', href: '/dashboard/event' },
-    { label: 'Awards', href: '/dashboard/awards' },
+    { label: 'Events', href: '/event' },
+    { label: 'Awards', href: '/awards' },
   ]
 
   const isActive = (href: string) => {
@@ -130,7 +130,7 @@ export function Header() {
             {/* menu items */}
             <div className="py-2">
               <Link
-                href="/dashboard/event/ticket"
+                href="/event/ticket"
                 onClick={closeMobileMenu}
                 className="flex items-center gap-4 px-5 py-4 text-white/90 hover:bg-white/5 transition-colors"
               >
@@ -328,7 +328,7 @@ export function Header() {
 
                   <div className="py-2">
                     <Link
-                      href="/dashboard/event/ticket"
+                      href="/event/ticket"
                       className="w-full flex items-center gap-4 px-6 py-3 text-sm text-gray-300 hover:bg-white/5 transition-colors"
                     >
                       <Calendar className="w-5 h-5" /> My Event

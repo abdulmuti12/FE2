@@ -117,7 +117,7 @@ export default function CreatorAwardPage() {
               Home
             </a>
             <ChevronRight className="w-4 h-4" />
-            <a href="/dashboard/awards" className="hover:text-white transition-colors">
+            <a href="/awards" className="hover:text-white transition-colors">
               Awards
             </a>
             <ChevronRight className="w-4 h-4" />
@@ -178,7 +178,7 @@ export default function CreatorAwardPage() {
                 return (
                   <div
                     key={creator.id}
-                    onClick={() => router.push(`/dashboard/awards/creator-award/detail/${creator.id}`)}
+                    onClick={() => router.push(`/awards/creator-award/detail/${creator.id}`)}
                     className="flex flex-col items-center group cursor-pointer"
                   >
                     <div

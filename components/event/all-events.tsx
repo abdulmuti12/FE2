@@ -99,7 +99,7 @@ export function AllEvents({
 
   const openEventDetail = (eventId: string) => {
     sessionStorage.setItem(EVENT_ID_STORAGE_KEY, eventId)
-    router.push(`/dashboard/event/detail?id=${encodeURIComponent(eventId)}`)
+    router.push(`/event/detail?id=${encodeURIComponent(eventId)}`)
   }
 
   return (

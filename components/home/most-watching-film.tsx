@@ -38,7 +38,7 @@ export function MostWatchingFilm({ items = [] }: MostWatchingFilmProps) {
       <div className="mb-8 flex items-center justify-between">
         <h2 className="text-2xl font-bold text-white md:text-3xl">Most Watching Film</h2>
         <Link
-          href="/dashboard/film"
+          href="/film"
           className="inline-flex items-center gap-2 font-semibold text-white hover:text-white/80 transition-colors"
         >
           <span className="text-xs md:text-base">View All</span>
@@ -55,7 +55,7 @@ export function MostWatchingFilm({ items = [] }: MostWatchingFilmProps) {
           {items.map((film) => (
             <Link
               key={film.id}
-              href={`/dashboard/film/detail?id=${film.id}`}
+              href={`/film/detail?id=${film.id}`}
               className="flex flex-shrink-0 flex-col gap-3"
             >
               <div className="relative h-64 w-48 overflow-hidden rounded-lg md:h-72 md:w-56">

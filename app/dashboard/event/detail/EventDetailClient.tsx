@@ -76,14 +76,14 @@ function EventDetailContent() {
     if (!eventId) return
     const currentIdInQuery = searchParams.get('id')
     if (currentIdInQuery === eventId) return
-    router.replace(`/dashboard/event/detail?id=${encodeURIComponent(eventId)}`)
+    router.replace(`/event/detail?id=${encodeURIComponent(eventId)}`)
   }, [eventId, router, searchParams])
 
   const openEventDetail = (id: string | number) => {
     const nextId = String(id)
     sessionStorage.setItem(EVENT_ID_STORAGE_KEY, nextId)
     setEventId(nextId)
-    router.push(`/dashboard/event/detail?id=${encodeURIComponent(nextId)}`)
+    router.push(`/event/detail?id=${encodeURIComponent(nextId)}`)
   }
 
   // Fungsi untuk memanggil ulang data detail (berguna setelah berhasil claim)
