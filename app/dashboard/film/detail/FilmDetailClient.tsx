@@ -328,7 +328,7 @@ function DetailContent() {
     switch (platform) {
       case 'copy':
         try {
-          await navigator.clipboard.writeText(`${text}\n${url}`)
+          await navigator.clipboard.writeText(url)
           showShareToastCard('Link copied to clipboard!')
         } catch {
           showShareToastCard('Gagal menyalin link')

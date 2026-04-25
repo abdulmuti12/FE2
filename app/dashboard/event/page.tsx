@@ -46,13 +46,9 @@ interface UpcomingEvent {
 interface CompletedEvent {
   id: string
   title: string
-  image?: string
-  image_url?: string
-  from_dates?: string
-  to_dates?: string
-  event_category?: {
-    name: string
-  }
+  video_url?: string
+  start_date?: string
+  end_date?: string
 }
 
 const EVENT_ID_STORAGE_KEY = 'selected_event_id'
@@ -90,9 +86,22 @@ export default function EventPage() {
 
   const LIMIT = 20
 
+  const formatRecapDateTime = (value?: string) => {
+    if (!value) return 'N/A'
+
+    const isoLike = value.includes('T') ? value : value.replace(' ', 'T')
+    const date = new Date(isoLike)
+    if (Number.isNaN(date.getTime())) return value
+
+    const day = String(date.getDate()).padStart(2, '0')
+    const month = String(date.getMonth() + 1).padStart(2, '0')
+    const year = String(date.getFullYear())
+    return `${year}-${month}-${day}`
+  }
+
   const openEventDetail = (eventId: string) => {
     sessionStorage.setItem(EVENT_ID_STORAGE_KEY, eventId)
-    router.push('/dashboard/event/detail')
+    router.push(`/dashboard/event/detail?id=${encodeURIComponent(eventId)}`)
   }
 
   useEffect(() => {
@@ -166,11 +175,14 @@ export default function EventPage() {
     try {
       setCompletedLoading(true)
       const params = new URLSearchParams({
+        sort: 'latest',
         id_category: '',
-        page: '0',
+        id_partner: '',
+        page: '1',
+        limit: '15',
       })
 
-      const response = await fetch(`/api/completed-events?${params.toString()}`, {
+      const response = await fetch(`/api/event/recap?${params.toString()}`, {
         method: 'GET',
         headers: {
           Authorization: `Bearer ${token}`,
@@ -181,7 +193,14 @@ export default function EventPage() {
       const data = await response.json()
 
       if (data.status && data.list && Array.isArray(data.list)) {
-        setCompletedEventsList(data.list.slice(0, 3))
+        const recaps = data.list.map((item: any) => ({
+          id: String(item.id || ''),
+          title: item.title || '',
+          video_url: item.video_url || '',
+          start_date: item.start_date || '',
+          end_date: item.end_date || '',
+        }))
+        setCompletedEventsList(recaps)
       }
     } catch (error) {
       console.error('[v0] Error fetching completed events:', error)
@@ -362,14 +381,19 @@ export default function EventPage() {
                     className="w-[85vw] md:w-[220px] flex-shrink-0 snap-center md:snap-align-none rounded-xl overflow-hidden border border-white/10 cursor-pointer relative bg-[#0a1424]"
                     onClick={() => openEventDetail(event.id)}
                   >
-                    <div className="relative h-[420px] md:h-[280px]">
-                      <Image
-                        src={event.image_url || event.image || '/placeholder.jpg'}
-                        alt={event.title}
-                        fill
-                        sizes="(max-width: 768px) 85vw, 220px"
-                        className="object-cover"
-                      />
+                    <div className="relative h-[420px] md:h-[280px] bg-black">
+                      {event.video_url ? (
+                        <video
+                          src={event.video_url}
+                          className="h-full w-full object-cover"
+                          muted
+                          loop
+                          playsInline
+                          preload="metadata"
+                        />
+                      ) : (
+                        <div className="h-full w-full bg-[#0b1222]" />
+                      )}
 
                       <div className="absolute inset-0 flex items-center justify-center bg-black/10 hover:bg-black/20 transition-colors">
                         <Play className="text-white w-14 h-14 md:w-10 md:h-10 opacity-90 drop-shadow-lg" />
@@ -381,7 +405,7 @@ export default function EventPage() {
 
                       <div className="flex items-center text-sm md:text-xs text-gray-400 mt-3 md:mt-2">
                         <Calendar className="w-4 h-4 md:w-3 md:h-3 mr-2 md:mr-1" />
-                        {event.from_dates}
+                        {formatRecapDateTime(event.start_date)}
                       </div>
                     </div>
                   </div>
