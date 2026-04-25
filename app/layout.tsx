@@ -8,7 +8,7 @@ const _geist = Geist({ subsets: ["latin"] })
 const _geistMono = Geist_Mono({ subsets: ["latin"] })
 
 export const metadata: Metadata = {
-  metadataBase: new URL('https://www.usky.ai'),
+  metadataBase: new URL('https://usky.ai'),
   title: {
     default: 'Usky.ai – AI Film Streaming Platform',
     template: '%s',
@@ -26,18 +26,18 @@ export const metadata: Metadata = {
   ],
   authors: [{ name: 'Usky.ai' }],
   alternates: {
-    canonical: 'https://www.usky.ai',
+    canonical: 'https://usky.ai',
   },
   generator: 'Next.js',
   openGraph: {
     type: 'website',
-    url: 'https://www.usky.ai',
+    url: 'https://usky.ai',
     siteName: 'Usky.ai',
     title: 'Create. Own. Monetize Your AI Films',
     description:
       'Join Usky.ai, the next-generation AI film platform where creators can publish, monetize, and own their content.',
-    images: [{ 
-      url: '/uploads/Cover2.jpg', 
+    images: [{
+      url: 'https://usky.ai/uploads/Cover2.jpg',
       width: 1920, 
       height: 1080, 
       type: 'image/jpeg',
@@ -50,7 +50,7 @@ export const metadata: Metadata = {
     title: 'Usky.ai – AI Film Streaming Platform',
     description:
       'Publish and monetize AI-generated films with full ownership and transparency.',
-    images: ['/uploads/Cover2.jpg'],
+    images: ['https://usky.ai/uploads/Cover2.jpg'],
   },
   other: {
     title: 'Usky.ai – AI Film Streaming Platform',
