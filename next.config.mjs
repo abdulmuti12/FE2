@@ -21,23 +21,88 @@ const nextConfig = {
         permanent: true,
       },
       {
-        source: '/film/:path*',
-        destination: '/home/film/:path*',
+        source: '/home/event/:path*',
+        destination: '/event/:path*',
         permanent: true,
       },
       {
-        source: '/event/:path*',
-        destination: '/home/event/:path*',
+        source: '/home/series/:path*',
+        destination: '/series/:path*',
         permanent: true,
       },
       {
-        source: '/series/:path*',
-        destination: '/home/series/:path*',
+        source: '/home/awards/:path*',
+        destination: '/awards/:path*',
         permanent: true,
       },
       {
-        source: '/awards/:path*',
-        destination: '/home/awards/:path*',
+        source: '/home/about',
+        destination: '/about',
+        permanent: true,
+      },
+      {
+        source: '/home/clip/:path*',
+        destination: '/clip/:path*',
+        permanent: true,
+      },
+      {
+        source: '/home/clip',
+        destination: '/clip',
+        permanent: true,
+      },
+      {
+        source: '/home/film/:path*',
+        destination: '/film/:path*',
+        permanent: true,
+      },
+      {
+        source: '/home/film',
+        destination: '/film',
+        permanent: true,
+      },
+      {
+        source: '/home/privacy',
+        destination: '/privacy',
+        permanent: true,
+      },
+      {
+        source: '/home/term',
+        destination: '/term',
+        permanent: true,
+      },
+      {
+        source: '/home/referral',
+        destination: '/referral',
+        permanent: true,
+      },
+      {
+        source: '/home/profile',
+        destination: '/profile',
+        permanent: true,
+      },
+      {
+        source: '/home/contact',
+        destination: '/contact',
+        permanent: true,
+      },
+      {
+        source: '/home/myaccount',
+        destination: '/myaccount',
+        permanent: true,
+      },
+      {
+        source: '/home/changepass',
+        destination: '/changepass',
+        permanent: true,
+      },
+      {
+        source: '/home/creator/:path*',
+        destination: '/creator/:path*',
+        permanent: true,
+      },
+      {
+        source: '/home/creator',
+        destination: '/creator',
         permanent: true,
       },
     ]

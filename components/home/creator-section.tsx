@@ -29,7 +29,7 @@ const DUMMY_CREATORS: Creator[] = Array(12).fill(null).map((_, i) => ({
 export function CreatorSection({ 
   creators = [], 
   title = 'Creator',
-  viewAllLink = '/home/creator'
+  viewAllLink = '/creator'
 }: CreatorSectionProps) {
   
   const activeData = creators.length > 0 ? creators : DUMMY_CREATORS
@@ -72,7 +72,7 @@ export function CreatorSection({
                 className="flex-shrink-0 w-1/3 sm:w-1/4 md:w-1/6" 
               >
                 <Link
-                  href={`/home/creator?id=${creator.id}`}
+                  href={`/creator?id=${creator.id}`}
                   className="group flex w-full cursor-pointer flex-col items-center"
                 >
                   {/* Avatar Circle */}

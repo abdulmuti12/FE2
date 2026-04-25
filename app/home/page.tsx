@@ -138,7 +138,7 @@ function LatestClipSection({ items = [] }: { items?: any[] }) {
     <section className="border-t border-white/10 px-4 py-8 md:px-6 md:py-10 lg:px-12">
       <div className="mb-8 flex items-center justify-between">
         <h2 className="text-2xl font-bold text-white md:text-3xl">Latest Clip</h2>
-        <Link href="/home/clip/list" className="inline-flex items-center gap-2 font-semibold text-white hover:text-white/80 transition-colors">
+        <Link href="/clip/list" className="inline-flex items-center gap-2 font-semibold text-white hover:text-white/80 transition-colors">
           <span className="text-xs md:text-base">View All</span>
           <span className="text-white/70">›</span>
         </Link>
@@ -152,7 +152,7 @@ function LatestClipSection({ items = [] }: { items?: any[] }) {
         >
           {items.map((clip) => (
             <div key={clip.id} className="w-[200px] md:w-[280px] flex-shrink-0">
-              <Link href={`/home/clip?id=${clip.id}`} className="block">
+              <Link href={`/clip?id=${clip.id}`} className="block">
                 <div className="group relative aspect-[3/4] overflow-hidden rounded-2xl bg-black">
                   <Image src={clip.image || '/placeholder.svg'} alt={clip.title} fill className="object-cover transition-transform group-hover:scale-105" />
                   <div className="absolute inset-0 flex items-center justify-center">
@@ -597,7 +597,7 @@ export default function DashboardPage() {
 
       {/* ===== VIEW ALL BUTTON ===== */}
       <div className="mt-8 flex justify-center">
-        <Link href="/home/creator" className="inline-block">
+        <Link href="/creator" className="inline-block">
           <button className="px-6 py-2 rounded-md border border-white/20 bg-transparent text-white hover:bg-white/10 transition-colors">
             View All Creators
           </button>

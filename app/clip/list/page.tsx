@@ -288,7 +288,7 @@ export default function ClipListPage() {
                           if (activeCategoryId) {
                             params.set('category', activeCategoryId)
                           }
-                          router.push(`/home/clip?${params.toString()}`)
+                          router.push(`/clip?${params.toString()}`)
                         }}
                       >
                         <div className="relative rounded-xl overflow-hidden bg-[#0f172a] w-full aspect-[2/3]">

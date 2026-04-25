@@ -561,13 +561,13 @@ const VideoItem = ({
   const handlePlatformShare = async (platform: string) => {
     try {
       const token = localStorage.getItem('user_token')
-      const shareUrl = encodeURIComponent(`${window.location.origin}/home/clip?id=${clip.id}`)
+      const shareUrl = encodeURIComponent(`${window.location.origin}/clip?id=${clip.id}`)
       const shareText = encodeURIComponent(`Tonton video keren ini: ${clip.name}`)
 
       switch (platform) {
         case 'copy':
           try {
-            await navigator.clipboard.writeText(`${window.location.origin}/home/clip?id=${clip.id}`)
+            await navigator.clipboard.writeText(`${window.location.origin}/clip?id=${clip.id}`)
             showShareToastCard('Link berhasil disalin!')
           } catch {
             showShareToastCard('Gagal menyalin link')

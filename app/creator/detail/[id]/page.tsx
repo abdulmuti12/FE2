@@ -343,7 +343,7 @@ export default function CreatorDetailPage() {
           </button>
           <ChevronRight className="w-3 h-3" />
           <button
-            onClick={() => router.push('/home/creator')}
+            onClick={() => router.push('/creator')}
             className="hover:text-white"
           >
             Creators

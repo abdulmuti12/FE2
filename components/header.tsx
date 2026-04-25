@@ -82,7 +82,7 @@ export function Header() {
   const navItems = [
     { label: 'Films', href: '/film' },
     { label: 'Series', href: '/series' },
-    { label: 'Clips', href: '/home/clip/list' },
+    { label: 'Clips', href: '/clip/list' },
     { label: 'Events', href: '/event' },
     { label: 'Awards', href: '/awards' },
   ]
@@ -148,7 +148,7 @@ export function Header() {
               </Link>
 
               <Link
-                href="/home/profile"
+                href="/profile"
                 onClick={closeMobileMenu}
                 className="flex items-center gap-4 px-5 py-4 text-white/90 hover:bg-white/5 transition-colors"
               >
@@ -157,7 +157,7 @@ export function Header() {
               </Link>
 
               <Link
-                href="/home/profile"
+                href="/profile"
                 onClick={closeMobileMenu}
                 className="flex items-center gap-4 px-5 py-4 text-white/90 hover:bg-white/5 transition-colors"
               >
@@ -166,7 +166,7 @@ export function Header() {
               </Link>
 
               <Link
-                href="/home/changepass"
+                href="/changepass"
                 onClick={closeMobileMenu}
                 className="flex items-center gap-4 px-5 py-4 text-white/90 hover:bg-white/5 transition-colors"
               >
@@ -334,21 +334,21 @@ export function Header() {
                       <Calendar className="w-5 h-5" /> My Event
                     </Link>
                     <Link
-                      href="/home/referral"
+                      href="/referral"
                       className="w-full flex items-center gap-4 px-6 py-3 text-sm text-gray-300 hover:bg-white/5 transition-colors"
                     >
                       <Ticket className="w-5 h-5" /> My Referral
                     </Link>
 
                     <Link
-                      href="/home/profile"
+                      href="/profile"
                       className="w-full flex items-center gap-4 px-6 py-3 text-sm text-gray-300 hover:bg-white/5 transition-colors"
                     >
                       <CreditCard className="w-5 h-5" /> My Account
                     </Link>
 
                     <Link 
-                      href="/home/changepass"
+                      href="/changepass"
                       className="w-full flex items-center gap-4 px-6 py-3 text-sm text-gray-300 hover:bg-white/5 transition-colors"
                     >
                       <Settings className="w-5 h-5" /> Change Password

@@ -103,7 +103,7 @@ export default function ProfilePage() {
       } else if (data.status === true || data.message === 'success') {
         setSuccess(true)
         if (fileInputRef.current) fileInputRef.current.value = ''
-        setTimeout(() => { router.push('/home/myaccount') }, 1500)
+        setTimeout(() => { router.push('/myaccount') }, 1500)
       } else {
         setError('Unexpected response from server')
       }
@@ -116,7 +116,7 @@ export default function ProfilePage() {
   }
 
   const handleCancel = () => {
-    router.push('/home/myaccount')
+    router.push('/myaccount')
   }
 
   if (fetchLoading) {

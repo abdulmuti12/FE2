@@ -718,7 +718,7 @@ function SeriesDetailContent() {
                 disabled={isSubmittingComment || !newComment.trim()}
                 className="bg-white text-black px-8 py-2 rounded-full font-bold disabled:opacity-50"
               >
-                {isSubmittingComment ? 'Posting...' : 'Post Review'}
+                {isSubmittingComment ? 'Posting...' : 'Post Comment'}
               </button>
             </div>
           </div>
