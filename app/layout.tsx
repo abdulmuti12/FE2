@@ -6,6 +6,7 @@ import './globals.css'
 
 const _geist = Geist({ subsets: ["latin"] })
 const _geistMono = Geist_Mono({ subsets: ["latin"] })
+const SHARE_IMAGE_URL = 'https://usky.ai/login-hero.jpg?v=20260426'
 
 export const metadata: Metadata = {
   metadataBase: new URL('https://usky.ai'),
@@ -37,11 +38,11 @@ export const metadata: Metadata = {
     description:
       'Join Usky.ai, the next-generation AI film platform where creators can publish, monetize, and own their content.',
     images: [{
-      url: 'https://usky.ai/usky-logo.png',
-      width: 512,
-      height: 512,
-      type: 'image/png',
-      alt: 'Usky.ai Logo'
+      url: SHARE_IMAGE_URL,
+      width: 1456,
+      height: 816,
+      type: 'image/jpeg',
+      alt: 'Usky.ai Share Image'
     }],
   },
   twitter: {
@@ -50,10 +51,12 @@ export const metadata: Metadata = {
     title: 'Usky.ai – AI Film Streaming Platform',
     description:
       'Publish and monetize AI-generated films with full ownership and transparency.',
-    images: ['https://usky.ai/usky-logo.png'],
+    images: [SHARE_IMAGE_URL],
   },
   other: {
     title: 'Usky.ai – AI Film Streaming Platform',
+    'og:image:secure_url': SHARE_IMAGE_URL,
+    'twitter:image:src': SHARE_IMAGE_URL,
   },
   icons: {
     icon: '/usky-logo.png',
