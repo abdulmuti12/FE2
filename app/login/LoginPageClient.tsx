@@ -205,16 +205,16 @@ export default function LoginPage() {
               <span className="text-sm">Processing...</span>
             </div>
           ) : (
-            <div className="w-full max-w-xs overflow-hidden rounded-md border border-white/10 bg-[#1a1a1a] p-1">
-              <GoogleLogin
-                onSuccess={handleSuccess}
-                onError={handleError}
-                theme="filled_black"
-                shape="rectangular"
-                text="continue_with"
-                width="100%"
-              />
-            </div>
+          <div className="flex w-full max-w-xs items-center justify-center overflow-hidden rounded-md border border-white/10 bg-[#1a1a1a] p-1">
+  <GoogleLogin
+    onSuccess={handleSuccess}
+    onError={handleError}
+    theme="filled_black"
+    shape="rectangular"
+    text="continue_with"
+    width="310" 
+  />
+</div>
           )}
 
           <p className="text-[11px] text-gray-500">
