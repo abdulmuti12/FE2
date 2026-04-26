@@ -209,6 +209,25 @@ function AwardsDetailContent() {
   }, [awardId])
 
   useEffect(() => {
+    if (!awardId) return
+
+    const token = localStorage.getItem('user_token') || ''
+    if (!token) return
+
+    fetch('/api/awards/play', {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ id: awardId }),
+      keepalive: true,
+    }).catch((error) => {
+      console.error('Error submitting award play:', error)
+    })
+  }, [awardId])
+
+  useEffect(() => {
     const applyAwardMeta = async () => {
       if (!awardId) return
 
