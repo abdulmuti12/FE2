@@ -148,7 +148,7 @@ export function Header() {
               </Link>
 
               <Link
-                href="/profile"
+                href="/myaccount"
                 onClick={closeMobileMenu}
                 className="flex items-center gap-4 px-5 py-4 text-white/90 hover:bg-white/5 transition-colors"
               >
@@ -341,7 +341,7 @@ export function Header() {
                     </Link>
 
                     <Link
-                      href="/profile"
+                      href="/myaccount"
                       className="w-full flex items-center gap-4 px-6 py-3 text-sm text-gray-300 hover:bg-white/5 transition-colors"
                     >
                       <CreditCard className="w-5 h-5" /> My Account
