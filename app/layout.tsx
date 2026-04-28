@@ -6,10 +6,11 @@ import './globals.css'
 
 const _geist = Geist({ subsets: ["latin"] })
 const _geistMono = Geist_Mono({ subsets: ["latin"] })
-const SHARE_IMAGE_URL = 'https://usky.ai/login-hero.jpg?v=20260426'
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'
+const SHARE_IMAGE_URL = new URL('/og-image.png', SITE_URL).toString()
 
 export const metadata: Metadata = {
-  metadataBase: new URL('https://usky.ai'),
+  metadataBase: new URL(SITE_URL),
   title: {
     default: 'Usky.ai – AI Film Streaming Platform',
     template: '%s',
@@ -27,21 +28,19 @@ export const metadata: Metadata = {
   ],
   authors: [{ name: 'Usky.ai' }],
   alternates: {
-    canonical: 'https://usky.ai',
+    canonical: SITE_URL,
   },
   generator: 'Next.js',
   openGraph: {
     type: 'website',
-    url: 'https://usky.ai',
+    url: SITE_URL,
     siteName: 'Usky.ai',
     title: 'Create. Own. Monetize Your AI Films',
     description:
       'Join Usky.ai, the next-generation AI film platform where creators can publish, monetize, and own their content.',
     images: [{
       url: SHARE_IMAGE_URL,
-      width: 1456,
-      height: 816,
-      type: 'image/jpeg',
+      type: 'image/png',
       alt: 'Usky.ai Share Image'
     }],
   },
