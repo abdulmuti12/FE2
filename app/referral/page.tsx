@@ -18,6 +18,7 @@ type ReferralProfile = {
   email?: string
   avatar?: string
   balance?: string | number
+  refferal_code?: string
 }
 
 type ReferralMeta = {
@@ -38,6 +39,12 @@ const toAvatarUrl = (avatar?: string) => {
   return `https://usky.ai/uploads/${src}`
 }
 
+const buildReferralLink = (code?: string) => {
+  const referralCode = String(code || '').trim()
+  if (!referralCode) return 'https://usky.ai/login'
+  return `https://usky.ai/login?ref=${referralCode}`
+}
+
 export default function ReferralPage() {
   const [currentPage, setCurrentPage] = useState(1)
   const [rowsPerPage, setRowsPerPage] = useState(5)
@@ -46,6 +53,7 @@ export default function ReferralPage() {
   const [creatorEmail, setCreatorEmail] = useState('-')
   const [creatorBalance, setCreatorBalance] = useState<string | number>('0')
   const [creatorAvatar, setCreatorAvatar] = useState(DEFAULT_AVATAR)
+  const [referralLink, setReferralLink] = useState('https://usky.ai/login')
   const [referralData, setReferralData] = useState<ReferralItem[]>([])
   const [referralMeta, setReferralMeta] = useState<ReferralMeta>({
     prev_page: 1,
@@ -81,7 +89,7 @@ export default function ReferralPage() {
   const canGoNext = currentPage < totalPages
 
   const handleCopyLink = () => {
-    navigator.clipboard.writeText('[Link Referral Creator]')
+    navigator.clipboard.writeText(referralLink)
     setCopied(true)
     setTimeout(() => setCopied(false), 2000)
   }
@@ -99,9 +107,11 @@ export default function ReferralPage() {
             const rawName = String(profile?.name || '').trim()
             const rawUsername = String(profile?.username || '').trim()
             const rawEmail = String(profile?.email || '').trim()
+            const rawReferralCode = String(profile?.refferal_code || '').trim()
 
             setCreatorName(rawName || rawUsername || 'Creator')
             setCreatorEmail(rawEmail || '-')
+            setReferralLink(buildReferralLink(rawReferralCode))
           } catch (error) {
             console.error('Failed to parse user_profile:', error)
           }
@@ -146,11 +156,13 @@ export default function ReferralPage() {
             const rawEmail = String(profile.email || '').trim()
             const rawBalance = profile.balance ?? '0'
             const rawAvatar = String(profile.avatar || '').trim()
+            const rawReferralCode = String(profile.refferal_code || '').trim()
 
             if (rawName) setCreatorName(rawName)
             if (rawEmail) setCreatorEmail(rawEmail)
             setCreatorBalance(rawBalance)
             setCreatorAvatar(toAvatarUrl(rawAvatar))
+            setReferralLink(buildReferralLink(rawReferralCode))
           }
 
           if (meta) {
@@ -260,7 +272,7 @@ export default function ReferralPage() {
                   <div className="flex gap-2">
                     <input 
                       type="text" 
-                      value="[Link Referral Creator]" 
+                      value={referralLink}
                       readOnly
                       className="flex-1 bg-gray-900 border border-gray-600 rounded px-3 py-2 text-gray-300 text-sm focus:outline-none focus:border-cyan-500"
                     />
