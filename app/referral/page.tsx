@@ -16,6 +16,8 @@ export default function ReferralPage() {
   const [currentPage, setCurrentPage] = useState(1)
   const [rowsPerPage, setRowsPerPage] = useState(5)
   const [copied, setCopied] = useState(false)
+  const [creatorName, setCreatorName] = useState('Creator')
+  const [creatorEmail, setCreatorEmail] = useState('-')
   const [referralData, setReferralData] = useState<ReferralItem[]>([])
   const [isLoadingReferral, setIsLoadingReferral] = useState(true)
   const [referralError, setReferralError] = useState<string | null>(null)
@@ -35,6 +37,21 @@ export default function ReferralPage() {
       try {
         setIsLoadingReferral(true)
         setReferralError(null)
+
+        const rawProfile = localStorage.getItem('user_profile')
+        if (rawProfile) {
+          try {
+            const profile = JSON.parse(rawProfile)
+            const rawName = String(profile?.name || '').trim()
+            const rawUsername = String(profile?.username || '').trim()
+            const rawEmail = String(profile?.email || '').trim()
+
+            setCreatorName(rawName || rawUsername || 'Creator')
+            setCreatorEmail(rawEmail || '-')
+          } catch (error) {
+            console.error('Failed to parse user_profile:', error)
+          }
+        }
 
         const token = localStorage.getItem('user_token') || ''
         if (!token) {
@@ -119,8 +136,8 @@ export default function ReferralPage() {
 
             {/* Creator Info */}
             <div className="flex-1">
-              <h2 className="text-2xl md:text-3xl font-bold text-white mb-1">[Nama Creator]</h2>
-              <p className="text-gray-400 mb-6">[E-Mail Creator]</p>
+              <h2 className="text-2xl md:text-3xl font-bold text-white mb-1">{creatorName}</h2>
+              <p className="text-gray-400 mb-6">{creatorEmail}</p>
 
               {/* Info Cards */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
