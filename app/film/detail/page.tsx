@@ -151,6 +151,9 @@ export async function generateMetadata(
       return {
         title,
         description,
+        alternates: {
+          canonical: pageUrl,
+        },
         ...(description || image
           ? {
               other: {
