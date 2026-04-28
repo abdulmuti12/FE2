@@ -12,19 +12,73 @@ type ReferralItem = {
   dates?: string
 }
 
+type ReferralProfile = {
+  id?: string
+  name?: string
+  email?: string
+  avatar?: string
+  balance?: string | number
+}
+
+type ReferralMeta = {
+  prev_page?: number
+  next_page?: number
+  total_rows?: number
+  per_page?: number
+  current_page?: number
+  total_pages?: number
+}
+
+const DEFAULT_AVATAR = '/images/pngs.png'
+
+const toAvatarUrl = (avatar?: string) => {
+  const src = String(avatar || '').trim()
+  if (!src) return DEFAULT_AVATAR
+  if (src.startsWith('http://') || src.startsWith('https://')) return src
+  return `https://usky.ai/uploads/${src}`
+}
+
 export default function ReferralPage() {
   const [currentPage, setCurrentPage] = useState(1)
   const [rowsPerPage, setRowsPerPage] = useState(5)
   const [copied, setCopied] = useState(false)
   const [creatorName, setCreatorName] = useState('Creator')
   const [creatorEmail, setCreatorEmail] = useState('-')
+  const [creatorBalance, setCreatorBalance] = useState<string | number>('0')
+  const [creatorAvatar, setCreatorAvatar] = useState(DEFAULT_AVATAR)
   const [referralData, setReferralData] = useState<ReferralItem[]>([])
+  const [referralMeta, setReferralMeta] = useState<ReferralMeta>({
+    prev_page: 1,
+    next_page: 1,
+    total_rows: 0,
+    per_page: 5,
+    current_page: 1,
+    total_pages: 1,
+  })
   const [isLoadingReferral, setIsLoadingReferral] = useState(true)
   const [referralError, setReferralError] = useState<string | null>(null)
 
-  const totalPages = Math.max(1, Math.ceil(referralData.length / rowsPerPage))
-  const startIndex = (currentPage - 1) * rowsPerPage
-  const displayedData = referralData.slice(startIndex, startIndex + rowsPerPage)
+  const totalPages = Math.max(1, Number(referralMeta.total_pages || 1))
+  const displayedData = referralData
+
+  const resolvePrevPage = () => {
+    const metaPrev = Number(referralMeta.prev_page)
+    if (Number.isFinite(metaPrev) && metaPrev >= 1 && metaPrev < currentPage) {
+      return metaPrev
+    }
+    return Math.max(1, currentPage - 1)
+  }
+
+  const resolveNextPage = () => {
+    const metaNext = Number(referralMeta.next_page)
+    if (Number.isFinite(metaNext) && metaNext > currentPage && metaNext <= totalPages) {
+      return metaNext
+    }
+    return Math.min(totalPages, currentPage + 1)
+  }
+
+  const canGoPrev = currentPage > 1
+  const canGoNext = currentPage < totalPages
 
   const handleCopyLink = () => {
     navigator.clipboard.writeText('[Link Referral Creator]')
@@ -60,7 +114,12 @@ export default function ReferralPage() {
           return
         }
 
-        const response = await fetch('/api/referral', {
+        const params = new URLSearchParams({
+          page: String(currentPage),
+          per_page: String(rowsPerPage),
+        })
+
+        const response = await fetch(`/api/referral?${params.toString()}`, {
           method: 'GET',
           headers: {
             Authorization: `Bearer ${token}`,
@@ -76,8 +135,55 @@ export default function ReferralPage() {
           result = null
         }
 
-        if (response.ok && result?.status === true && Array.isArray(result?.list)) {
-          setReferralData(result.list)
+        if (response.ok && result?.status === true) {
+          const profile: ReferralProfile | null =
+            result?.data && typeof result.data === 'object' ? result.data : null
+          const meta: ReferralMeta | null =
+            result?.meta && typeof result.meta === 'object' ? result.meta : null
+
+          if (profile) {
+            const rawName = String(profile.name || '').trim()
+            const rawEmail = String(profile.email || '').trim()
+            const rawBalance = profile.balance ?? '0'
+            const rawAvatar = String(profile.avatar || '').trim()
+
+            if (rawName) setCreatorName(rawName)
+            if (rawEmail) setCreatorEmail(rawEmail)
+            setCreatorBalance(rawBalance)
+            setCreatorAvatar(toAvatarUrl(rawAvatar))
+          }
+
+          if (meta) {
+            const incomingCurrent = Number(meta.current_page)
+            const normalizedCurrent = Number.isFinite(incomingCurrent)
+              ? Math.max(1, incomingCurrent)
+              : currentPage
+            const incomingPerPage = Number(meta.per_page)
+            const normalizedTotalPages = Math.max(1, Number(meta.total_pages) || 1)
+
+            setReferralMeta({
+              prev_page: Number(meta.prev_page) || 1,
+              next_page: Number(meta.next_page) || normalizedCurrent,
+              total_rows: Number(meta.total_rows) || 0,
+              per_page: Number.isFinite(incomingPerPage) && incomingPerPage > 0 ? incomingPerPage : rowsPerPage,
+              current_page: normalizedCurrent,
+              total_pages: normalizedTotalPages,
+            })
+
+            if (currentPage > normalizedTotalPages) {
+              setCurrentPage(normalizedTotalPages)
+            }
+          } else {
+            setReferralMeta((prev) => ({
+              ...prev,
+              current_page: currentPage,
+              per_page: rowsPerPage,
+              total_rows: Array.isArray(result?.list) ? result.list.length : 0,
+              total_pages: 1,
+            }))
+          }
+
+          setReferralData(Array.isArray(result?.list) ? result.list : [])
         } else {
           setReferralData([])
           setReferralError(result?.message || raw || 'Gagal mengambil data referral')
@@ -92,7 +198,7 @@ export default function ReferralPage() {
     }
 
     fetchReferral()
-  }, [])
+  }, [currentPage, rowsPerPage])
 
   return (
     <div className="min-h-screen bg-background text-foreground dark">
@@ -126,10 +232,11 @@ export default function ReferralPage() {
             <div className="w-32 h-32 md:w-40 md:h-40 flex-shrink-0 rounded-lg overflow-hidden flex items-center justify-center">
               <div className="w-full h-full relative">
                 <Image 
-                  src="/images/pngs.png" 
+                  src={creatorAvatar}
                   alt="Creator Avatar" 
                   fill 
                   className="object-cover"
+                  onError={() => setCreatorAvatar(DEFAULT_AVATAR)}
                 />
               </div>
             </div>
@@ -144,7 +251,7 @@ export default function ReferralPage() {
                 {/* My Reward Card */}
                 <div className="bg-gradient-to-br from-gray-800 to-gray-900 border border-gray-700 rounded-lg p-4 md:p-6">
                   <p className="text-gray-400 text-sm mb-2">My Reward</p>
-                  <p className="text-2xl md:text-3xl font-bold text-white">200 USKY</p>
+                  <p className="text-2xl md:text-3xl font-bold text-white">{creatorBalance} USKY</p>
                 </div>
 
                 {/* Label Card */}
@@ -221,7 +328,7 @@ export default function ReferralPage() {
         <div className="mt-4 space-y-3 text-sm text-gray-400">
           {/* First Row: Selected count and Rows per page */}
           <div className="flex items-center justify-between">
-            <p>0 of {referralData.length} row(s) selected.</p>
+            <p>0 of {referralMeta.total_rows || 0} row(s) selected.</p>
             
             <div className="flex items-center gap-2">
               <span>Rows</span>
@@ -249,28 +356,28 @@ export default function ReferralPage() {
             <div className="flex gap-2">
               <button 
                 onClick={() => setCurrentPage(1)}
-                disabled={currentPage === 1}
+                disabled={!canGoPrev}
                 className="p-2 rounded border border-gray-700 bg-gray-900 hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               >
                 <span className="text-gray-300">«</span>
               </button>
               <button 
-                onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
-                disabled={currentPage === 1}
+                onClick={() => setCurrentPage(resolvePrevPage())}
+                disabled={!canGoPrev}
                 className="p-2 rounded border border-gray-700 bg-gray-900 hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               >
                 <ChevronLeft className="w-4 h-4" />
               </button>
               <button 
-                onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
-                disabled={currentPage === totalPages}
+                onClick={() => setCurrentPage(resolveNextPage())}
+                disabled={!canGoNext}
                 className="p-2 rounded border border-gray-700 bg-gray-900 hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               >
                 <ChevronRight className="w-4 h-4" />
               </button>
               <button 
                 onClick={() => setCurrentPage(totalPages)}
-                disabled={currentPage === totalPages}
+                disabled={!canGoNext}
                 className="p-2 rounded border border-gray-700 bg-gray-900 hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               >
                 <span className="text-gray-300">»</span>

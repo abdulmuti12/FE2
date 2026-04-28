@@ -3,6 +3,8 @@ import { buildApiUrl } from '@/app/api/_utils'
 
 export async function GET(request: NextRequest) {
   try {
+    const page = request.nextUrl.searchParams.get('page')
+    const perPage = request.nextUrl.searchParams.get('per_page')
     const authHeader = request.headers.get('authorization')
     const tokenFromHeader = authHeader?.replace(/^Bearer\s+/i, '').trim()
     const token =
@@ -19,7 +21,11 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    const response = await fetch(buildApiUrl('/customer/refferal'), {
+    const upstreamUrl = new URL(buildApiUrl('/customer/refferal'))
+    if (page) upstreamUrl.searchParams.set('page', page)
+    if (perPage) upstreamUrl.searchParams.set('per_page', perPage)
+
+    const response = await fetch(upstreamUrl.toString(), {
       method: 'GET',
       headers: {
         Authorization: `Bearer ${token}`,
