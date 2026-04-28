@@ -58,6 +58,13 @@ function toShareUrl(url?: string): string {
   }
 }
 
+function toMetaDescription(value?: string): string {
+  const plain = String(value || '').replace(/\s+/g, ' ').trim()
+  if (!plain) return ''
+  if (plain.length <= 100) return plain
+  return `${plain.slice(0, 97).trimEnd()}...`
+}
+
 function toCrawlerSafeImageUrl(url?: string, version?: string): string {
   const strictEncode = (value: string) =>
     encodeURIComponent(value).replace(/[!'()*]/g, (char) =>
@@ -120,13 +127,14 @@ export async function generateMetadata(
       const meta = parseMetaContent(json.data)
 
       const title = meta['og:title'] || meta['twitter:title'] || 'Film Detail | USKY'
-      const description =
+      const description = toMetaDescription(
         meta['og:description'] ||
-        meta['twitter:description'] ||
-        meta['Description'] ||
-        meta['description'] ||
-        meta['keywords'] ||
-        ''
+          meta['twitter:description'] ||
+          meta['Description'] ||
+          meta['description'] ||
+          meta['keywords'] ||
+          ''
+      )
       const image = toCrawlerSafeImageUrl(meta['og:image'] || meta['twitter:image'] || '', id)
       const videoUrl = toShareUrl(meta['og:video'] || meta['twitter:url'] || '')
       const secureVideoUrl = toShareUrl(meta['og:video:secure_url'] || videoUrl)
