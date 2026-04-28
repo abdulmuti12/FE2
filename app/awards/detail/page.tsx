@@ -90,6 +90,15 @@ function toCrawlerSafeImageUrl(url?: string, version?: string): string {
   }
 }
 
+function detectImageMimeType(url?: string): string {
+  const normalized = String(url || '').toLowerCase()
+  if (normalized.includes('.png')) return 'image/png'
+  if (normalized.includes('.webp')) return 'image/webp'
+  if (normalized.includes('.gif')) return 'image/gif'
+  if (normalized.includes('.svg')) return 'image/svg+xml'
+  return 'image/jpeg'
+}
+
 export async function generateMetadata(
   { searchParams }: Props,
   _parent: ResolvingMetadata
@@ -153,10 +162,14 @@ export async function generateMetadata(
       const twitterSite = meta['twitter:site'] || '@usky'
       const siteName = meta['og:site_name'] || 'USKY'
       const pageUrl = `${requestOrigin.replace(/\/$/, '')}/awards/detail?id=${encodeURIComponent(id)}`
+      const imageType = detectImageMimeType(image)
 
       return {
         title,
         description,
+        alternates: {
+          canonical: pageUrl,
+        },
         ...(description || image
           ? {
               other: {
@@ -164,7 +177,7 @@ export async function generateMetadata(
                 ...(image
                   ? {
                       'og:image:secure_url': image,
-                      'og:image:type': 'image/jpeg',
+                      'og:image:type': imageType,
                       'og:image:width': '1200',
                       'og:image:height': '630',
                       'twitter:image:src': image,
@@ -176,11 +189,12 @@ export async function generateMetadata(
         keywords,
         ...(author ? { authors: [{ name: author }] } : {}),
         openGraph: {
+          type: 'website',
           siteName,
           url: pageUrl,
           title,
           description,
-          ...(image ? { images: [{ url: image }] } : {}),
+          ...(image ? { images: [{ url: image, width: 1200, height: 630, type: imageType }] } : {}),
           ...(videoUrl
             ? {
                 videos: [
