@@ -51,6 +51,39 @@ function toShareUrl(url?: string): string {
   }
 }
 
+function toCrawlerSafeImageUrl(url?: string, version?: string): string {
+  const strictEncode = (value: string) =>
+    encodeURIComponent(value).replace(/[!'()*]/g, (char) =>
+      `%${char.charCodeAt(0).toString(16).toUpperCase()}`
+    )
+
+  if (!url) return ''
+  try {
+    const parsed = new URL(toSecureUrl(url))
+    const encodedPath = parsed.pathname
+      .split('/')
+      .map((segment) => {
+        if (!segment) return segment
+        try {
+          return strictEncode(decodeURIComponent(segment))
+        } catch {
+          return strictEncode(segment)
+        }
+      })
+      .join('/')
+
+    parsed.pathname = encodedPath
+
+    if (version) {
+      parsed.searchParams.set('v', version)
+    }
+
+    return parsed.toString()
+  } catch {
+    return toShareUrl(url)
+  }
+}
+
 export async function generateMetadata(
   { searchParams }: Props,
   _parent: ResolvingMetadata
@@ -91,7 +124,10 @@ export async function generateMetadata(
         meta['description'] ||
         meta['keywords'] ||
         ''
-      const image = toShareUrl(meta['og:image'] || meta['twitter:image'] || '')
+      const fallbackImage = `${requestOrigin.replace(/\/$/, '')}/og-image.png`
+      const image =
+        toCrawlerSafeImageUrl(meta['og:image'] || meta['twitter:image'] || '', id) ||
+        fallbackImage
       const twitterCard = image ? 'summary_large_image' : (meta['twitter:card'] || 'summary')
       const twitterSite = meta['twitter:site'] || '@usky'
       const siteName = meta['og:site_name'] || 'USKY'
