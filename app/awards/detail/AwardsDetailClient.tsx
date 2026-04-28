@@ -114,13 +114,6 @@ const parseMetaEntries = (metaBlob: string): MetaEntry[] => {
   return entries
 }
 
-const stripHtml = (value: string): string => value.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim()
-
-const truncateText = (value: string, maxLength: number): string => {
-  if (value.length <= maxLength) return value
-  return `${value.slice(0, maxLength).trim()}...`
-}
-
 function AwardsDetailContent() {
   const searchParams = useSearchParams()
   const awardId = searchParams.get('id')
@@ -408,10 +401,6 @@ function AwardsDetailContent() {
       }, 2500)
     }
 
-    const title = awardData?.name || 'Award'
-    const rawDescription = awardData?.description ? stripHtml(awardData.description) : 'Check out this award on USKY.'
-    const shortDescription = truncateText(rawDescription, 180)
-    const text = shortDescription ? `${title} - ${shortDescription}` : title
     const url = window.location.href
     const currentOgImage = Array.from(document.head.querySelectorAll('meta[property]'))
       .find((node) => node.getAttribute('property')?.toLowerCase() === 'og:image')
@@ -427,26 +416,23 @@ function AwardsDetailContent() {
     switch (platform) {
       case 'copy':
         try {
-          await navigator.clipboard.writeText(`${text}\n${url}`)
+          await navigator.clipboard.writeText(url)
           showToast('Link copied to clipboard!', 'success')
         } catch {
           showToast('Gagal menyalin link', 'error')
         }
         break
       case 'whatsapp':
-        window.open(`https://wa.me/?text=${encodeURIComponent(text + ' ' + url)}`, '_blank')
+        window.open(`https://wa.me/?text=${encodeURIComponent(url)}`, '_blank')
         break
       case 'facebook':
-        window.open(
-          `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}&quote=${encodeURIComponent(text)}`,
-          '_blank'
-        )
+        window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`, '_blank')
         break
       case 'x':
-        window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}`, '_blank')
+        window.open(`https://twitter.com/intent/tweet?url=${encodeURIComponent(url)}`, '_blank')
         break
       case 'telegram':
-        window.open(`https://t.me/share/url?url=${encodeURIComponent(url)}&text=${encodeURIComponent(text)}`, '_blank')
+        window.open(`https://t.me/share/url?url=${encodeURIComponent(url)}`, '_blank')
         break
       case 'linkedin':
         window.open(`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(url)}`, '_blank')
