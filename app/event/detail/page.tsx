@@ -1,4 +1,3 @@
-import { Suspense } from 'react'
 import { Metadata, ResolvingMetadata } from 'next'
 import { headers } from 'next/headers'
 import EventDetailClient from './EventDetailClient'
@@ -192,9 +191,5 @@ export async function generateMetadata(
 }
 
 export default function Page() {
-  return (
-    <Suspense fallback={<div className="min-h-screen bg-[#050B14] flex items-center justify-center"><div className="animate-pulse text-white">Loading...</div></div>}>
-      <EventDetailClient />
-    </Suspense>
-  )
+  return <EventDetailClient />
 }
