@@ -1,5 +1,7 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // Disable metadata streaming so OG tags are available immediately for all crawlers.
+  htmlLimitedBots: /.*/i,
   typescript: {
     ignoreBuildErrors: true,
   },
