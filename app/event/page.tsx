@@ -46,6 +46,7 @@ interface UpcomingEvent {
 interface CompletedEvent {
   id: string
   title: string
+  image_url?: string
   video_url?: string
   start_date?: string
   end_date?: string
@@ -102,6 +103,11 @@ export default function EventPage() {
   const openEventDetail = (eventId: string) => {
     sessionStorage.setItem(EVENT_ID_STORAGE_KEY, eventId)
     router.push(`/event/detail?id=${encodeURIComponent(eventId)}`)
+  }
+
+  const openEventRecapDetail = (eventId: string) => {
+    sessionStorage.setItem(EVENT_ID_STORAGE_KEY, eventId)
+    router.push(`/event/detail-recap?id=${encodeURIComponent(eventId)}`)
   }
 
   useEffect(() => {
@@ -196,6 +202,7 @@ export default function EventPage() {
         const recaps = data.list.map((item: any) => ({
           id: String(item.id || ''),
           title: item.title || '',
+          image_url: item.image_url || '',
           video_url: item.video_url || '',
           start_date: item.start_date || '',
           end_date: item.end_date || '',
@@ -379,7 +386,7 @@ export default function EventPage() {
                   <div
                     key={event.id}
                     className="w-[85vw] md:w-[220px] flex-shrink-0 snap-center md:snap-align-none rounded-xl overflow-hidden border border-white/10 cursor-pointer relative bg-[#0a1424]"
-                    onClick={() => openEventDetail(event.id)}
+                    onClick={() => openEventRecapDetail(event.id)}
                   >
                     <div className="relative h-[420px] md:h-[280px] bg-black">
                       {event.video_url ? (
