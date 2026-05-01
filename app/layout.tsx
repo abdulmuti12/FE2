@@ -58,9 +58,9 @@ export const metadata: Metadata = {
     'twitter:image:src': SHARE_IMAGE_URL,
   },
   icons: {
-    icon: '/usky-logo.png',
-    shortcut: '/usky-logo.png',
-    apple: '/usky-logo.png',
+    icon: '/tabs.png',
+    shortcut: '/tabs.png',
+    apple: '/tabs.png',
   },
 }
 
