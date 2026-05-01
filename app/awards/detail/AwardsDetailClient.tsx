@@ -155,20 +155,17 @@ function AwardsDetailContent() {
         setIsLoading(true)
         const token = localStorage.getItem('user_token') || ''
 
-        if (!token) {
-          setError('Silakan login terlebih dahulu')
-          return
-        }
-
         const url = new URL('/api/awards/detail', window.location.origin)
         url.searchParams.set('id', awardId)
 
         const response = await fetch(url.toString(), {
           method: 'GET',
-          headers: {
-            Authorization: `Bearer ${token}`,
-            'Content-Type': 'application/json',
-          },
+          headers: token
+            ? {
+                Authorization: `Bearer ${token}`,
+                'Content-Type': 'application/json',
+              }
+            : undefined,
         })
 
         const raw = await response.text()
