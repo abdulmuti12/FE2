@@ -86,7 +86,6 @@ function EventDetailContent() {
     router.push(`/event/detail?id=${encodeURIComponent(nextId)}`)
   }
 
-  // Fungsi untuk memanggil ulang data detail (berguna setelah berhasil claim)
   const fetchEventDetail = async () => {
     if (!eventId) {
       setLoading(false)
@@ -109,8 +108,6 @@ function EventDetailContent() {
       
       if (result.status && result.data) {
         setEventDetail(result.data)
-
-        // Fetch Related Events based on event category ID
         await fetchRelatedEvents(result.data.event_category?.id);
       } else {
         console.error("API Error:", result.message)
@@ -307,6 +304,8 @@ function EventDetailContent() {
       }
     }
 
+    // Injeksi manual di client ini tetap dibiarkan agar saat user pindah-pindah halaman secara SPA,
+    // title browser dan meta-nya tetap berubah secara dinamis.
     const applyEventMeta = async () => {
       if (!eventId) return
 
@@ -333,13 +332,6 @@ function EventDetailContent() {
         }
 
         const entries = parseMetaEntries(result.data)
-        const apiOgImage = entries.find(
-          (e) => e.attr === 'property' && e.key.toLowerCase() === 'og:image'
-        )?.content
-        console.log('[event-meta] API og:image', {
-          eventId,
-          ogImage: apiOgImage || null,
-        })
 
         if (previousTitleRef.current === null) {
           previousTitleRef.current = document.title
@@ -375,18 +367,6 @@ function EventDetailContent() {
         if (ogTitle || twitterTitle) {
           document.title = ogTitle || twitterTitle || document.title
         }
-
-        const appliedOgImage = Array.from(document.head.querySelectorAll('meta[property]'))
-          .find((node) => {
-            const key = node.getAttribute('property')
-            return typeof key === 'string' && key.toLowerCase() === 'og:image'
-          })
-          ?.getAttribute('content')
-
-        console.log('[event-meta] Applied og:image', {
-          eventId,
-          ogImage: appliedOgImage || null,
-        })
       } catch (error) {
         console.error('Error applying event meta tags:', error)
       }
@@ -399,8 +379,7 @@ function EventDetailContent() {
     }
   }, [eventId])
 
-const handleClaimTicket = async () => {
-    // 1. Pastikan data event sudah ada
+  const handleClaimTicket = async () => {
     if (!eventDetail || !eventDetail.id) {
        alert("Data event belum siap atau tidak ditemukan!");
        return;
@@ -415,32 +394,22 @@ const handleClaimTicket = async () => {
     setIsClaiming(true)
 
     try {
-      // 2. Buat FormData persis seperti endpoint /detail yang sudah sukses
       const formData = new FormData()
-      
-      // 3. Masukkan key 'id_event' (karena server minta ini) dan 'id' (buat jaga-jaga)
       formData.append('id_event', eventDetail.id)
       formData.append('id', eventDetail.id)
 
-      // Log untuk memastikan di inspect element browser bahwa ID benar-benar ada isinya
-      console.log("Mencoba Claim Tiket untuk Event ID:", eventDetail.id)
-
-      // 4. Hit langsung ke API Usky dari client
       const response = await fetch('https://api.usky.ai/event/claim', {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`
-          // PENTING: Jangan tambahkan 'Content-Type' di sini. Biarkan browser yang mengaturnya otomatis untuk FormData.
         },
         body: formData,
       })
 
       const result = await response.json()
-      console.log("Respons dari Server:", result) // Cek balasan asli dari server di console
       
       if (result.status) {
         alert("Berhasil claim tiket!")
-        // Refetch detail event agar tombol otomatis berubah jadi "Claimed"
         fetchEventDetail() 
       } else {
         alert(result.message || "Gagal melakukan claim tiket.")
@@ -452,6 +421,7 @@ const handleClaimTicket = async () => {
       setIsClaiming(false)
     }
   }
+
   if (loading) {
     return (
       <div className="min-h-screen bg-[#050B14] flex items-center justify-center text-white">
@@ -475,7 +445,6 @@ const handleClaimTicket = async () => {
     <div className="min-h-screen bg-[#050B14] text-white font-sans selection:bg-yellow-500 selection:text-black">
       <Header />
 
-      {/* Hero Banner */}
       <div className="relative w-full min-h-screen overflow-visible">
         <div
           className="absolute inset-0 bg-cover bg-center"
@@ -488,7 +457,6 @@ const handleClaimTicket = async () => {
         <div className="relative min-h-screen flex items-center py-12">
           <div className="max-w-7xl mx-auto w-full px-6 md:px-12">
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start lg:items-center">
-              {/* Left Content */}
               <div className="lg:col-span-2 space-y-6 pr-8">
                 <div className="flex items-center gap-2">
                   <span className="px-3 py-1 bg-red-600 text-white text-xs font-bold rounded-full uppercase">
@@ -522,7 +490,6 @@ const handleClaimTicket = async () => {
                 </div>
               </div>
 
-              {/* Right Sidebar Card */}
               <div className="lg:col-span-1">
                 <div className="sticky top-24 max-w-sm mx-auto lg:ml-auto w-full">
                   <div className="border-2 border-red-600 rounded-2xl p-1 backdrop-blur shadow-2xl shadow-red-900/20">
@@ -557,16 +524,15 @@ const handleClaimTicket = async () => {
                       </button>
 
                       <div className="flex items-center gap-3">
-                        {/* Tombol Claim yang sudah dicek eventDetail.close */}
                         <button 
                           onClick={handleClaimTicket}
                           disabled={isClaiming || eventDetail.close}
                           className={`flex-1 ${
                             eventDetail.close 
-                              ? 'bg-green-600 text-white cursor-not-allowed' // Tampilan kalau tiket sudah di-claim
+                              ? 'bg-green-600 text-white cursor-not-allowed'
                               : isClaiming 
-                                ? 'bg-gray-400 text-black cursor-not-allowed' // Tampilan saat proses API
-                                : 'bg-gray-300 hover:bg-gray-400 text-black'  // Tampilan default (bisa di-click)
+                                ? 'bg-gray-400 text-black cursor-not-allowed'
+                                : 'bg-gray-300 hover:bg-gray-400 text-black'
                           } py-3 rounded-full text-sm font-semibold transition-colors flex justify-center items-center gap-2`}
                         >
                           {isClaiming ? (
@@ -578,9 +544,9 @@ const handleClaimTicket = async () => {
                               Processing...
                             </>
                           ) : eventDetail.close ? (
-                            "Claimed" // Teks jika status close: true
+                            "Claimed"
                           ) : (
-                            "Claim Your Ticket" // Teks default jika close: false
+                            "Claim Your Ticket"
                           )}
                         </button>
 
@@ -603,9 +569,7 @@ const handleClaimTicket = async () => {
         </div>
       </div>
 
-      {/* Main Content */}
       <div className="max-w-7xl mx-auto px-6 md:px-12 py-12 pb-24 space-y-12">
-        {/* Event Description */}
         <section>
           <h2 className="text-2xl font-bold text-white mb-6">Tentang Event Ini</h2>
           <div 
@@ -614,7 +578,6 @@ const handleClaimTicket = async () => {
           />
         </section>
 
-        {/* Related Events */}
         <section>
           <h2 className="text-2xl font-bold text-white mb-8">Related Event</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -643,7 +606,6 @@ const handleClaimTicket = async () => {
           </div>
         </section>
 
-        {/* On Going Events */}
         <section>
           <h2 className="text-2xl font-bold text-white mb-8">On Going Events</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
