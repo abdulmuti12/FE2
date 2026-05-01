@@ -125,11 +125,28 @@ export async function generateMetadata(
       process.env.APP_URL ||
       requestOrigin
 
-    const apiUrl = `${appBaseUrl.replace(/\/$/, '')}/api/awards/meta?id=${encodeURIComponent(id)}`
-    console.log('[awards/detail metadata] hit awards/meta', { id, apiUrl })
+    const base = appBaseUrl.replace(/\/$/, '')
+    const apiUrls = [
+      `${base}/api/awards/meta?id=${encodeURIComponent(id)}`,
+      `${base}/api/award/meta?id=${encodeURIComponent(id)}`,
+    ]
 
-    const response = await fetch(apiUrl, { cache: 'no-store' })
-    const json = await response.json()
+    let response: Response | null = null
+    let json: any = null
+    for (const apiUrl of apiUrls) {
+      console.log('[awards/detail metadata] hit awards/meta', { id, apiUrl })
+      const currentResponse = await fetch(apiUrl, { cache: 'no-store' })
+      const currentJson = await currentResponse.json()
+
+      if (currentResponse.ok && currentJson?.status === true && typeof currentJson?.data === 'string') {
+        response = currentResponse
+        json = currentJson
+        break
+      }
+
+      response = currentResponse
+      json = currentJson
+    }
 
     console.log('[awards/detail metadata] awards/meta response', {
       id,
@@ -161,6 +178,7 @@ export async function generateMetadata(
       const twitterCard = image ? 'summary_large_image' : (meta['twitter:card'] || 'summary')
       const twitterSite = meta['twitter:site'] || '@usky'
       const siteName = meta['og:site_name'] || 'USKY'
+      const fbAppId = process.env.NEXT_PUBLIC_FB_APP_ID || process.env.FB_APP_ID || ''
       const pageUrl = `${requestOrigin.replace(/\/$/, '')}/awards/detail?id=${encodeURIComponent(id)}`
       const imageType = detectImageMimeType(image)
 
@@ -183,6 +201,7 @@ export async function generateMetadata(
                       'twitter:image:src': image,
                     }
                   : {}),
+                ...(fbAppId ? { 'fb:app_id': fbAppId } : {}),
               },
             }
           : {}),

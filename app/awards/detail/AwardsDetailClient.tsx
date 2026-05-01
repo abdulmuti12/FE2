@@ -154,38 +154,48 @@ function AwardsDetailContent() {
       try {
         setIsLoading(true)
         const token = localStorage.getItem('user_token') || ''
+        const fetchWithFallback = async (paths: string[]) => {
+          for (const path of paths) {
+            const url = new URL(path, window.location.origin)
+            url.searchParams.set('id', awardId)
 
-        const url = new URL('/api/awards/detail', window.location.origin)
-        url.searchParams.set('id', awardId)
+            const response = await fetch(url.toString(), {
+              method: 'GET',
+              headers: token
+                ? {
+                    Authorization: `Bearer ${token}`,
+                    'Content-Type': 'application/json',
+                  }
+                : undefined,
+            })
 
-        const response = await fetch(url.toString(), {
-          method: 'GET',
-          headers: token
-            ? {
-                Authorization: `Bearer ${token}`,
-                'Content-Type': 'application/json',
-              }
-            : undefined,
-        })
+            const raw = await response.text()
+            let result: any = null
+            try {
+              result = raw ? JSON.parse(raw) : null
+            } catch {
+              result = null
+            }
 
-        const raw = await response.text()
-        let result: any = null
+            const detailData =
+              Array.isArray(result?.list) ? result.list[0]
+              : result?.list ?? result?.data ?? null
 
-        try {
-          result = raw ? JSON.parse(raw) : null
-        } catch {
-          result = null
+            if (response.ok && result?.status === true && detailData) {
+              return { response, result, raw, detailData }
+            }
+          }
+
+          return null
         }
 
-        const detailData =
-          Array.isArray(result?.list) ? result.list[0]
-          : result?.list ?? result?.data ?? null
+        const payload = await fetchWithFallback(['/api/awards/detail', '/api/award/detail'])
 
-        if (response.ok && result?.status === true && detailData) {
-          setAwardData(detailData)
-          setRating(normalizeRating(detailData.rates ?? detailData.rate))
+        if (payload?.detailData) {
+          setAwardData(payload.detailData)
+          setRating(normalizeRating(payload.detailData.rates ?? payload.detailData.rate))
         } else {
-          setError(result?.message || raw || 'Gagal mengambil detail award')
+          setError('Gagal mengambil detail award')
         }
       } catch (err) {
         console.error('Error fetching award detail:', err)
@@ -223,35 +233,48 @@ function AwardsDetailContent() {
 
       try {
         const token = localStorage.getItem('user_token') || ''
-        const url = new URL('/api/awards/meta', window.location.origin)
-        url.searchParams.set('id', awardId)
-        console.log('[awards-meta-debug] fetching meta from client', {
-          awardId,
-          endpoint: url.toString(),
-        })
+        const fetchMetaWithFallback = async (paths: string[]) => {
+          for (const path of paths) {
+            const url = new URL(path, window.location.origin)
+            url.searchParams.set('id', awardId)
+            console.log('[awards-meta-debug] fetching meta from client', {
+              awardId,
+              endpoint: url.toString(),
+            })
 
-        const response = await fetch(url.toString(), {
-          method: 'GET',
-          headers: token
-            ? {
-                Authorization: `Bearer ${token}`,
-                'Content-Type': 'application/json',
-              }
-            : undefined,
-        })
+            const response = await fetch(url.toString(), {
+              method: 'GET',
+              headers: token
+                ? {
+                    Authorization: `Bearer ${token}`,
+                    'Content-Type': 'application/json',
+                  }
+                : undefined,
+            })
 
-        const result = await response.json()
+            const result = await response.json()
+            if (response.ok && result?.status === true && typeof result?.data === 'string') {
+              return { response, result }
+            }
+          }
+
+          return null
+        }
+
+        const metaPayload = await fetchMetaWithFallback(['/api/awards/meta', '/api/award/meta'])
+        const response = metaPayload?.response
+        const result = metaPayload?.result
         console.log('[awards-meta-debug] meta response received', {
           awardId,
-          statusCode: response.status,
+          statusCode: response?.status,
           status: result?.status,
           hasData: typeof result?.data === 'string' && result.data.length > 0,
         })
 
-        if (!response.ok || result?.status !== true || typeof result?.data !== 'string') {
+        if (!response?.ok || result?.status !== true || typeof result?.data !== 'string') {
           console.warn('[awards-meta-debug] invalid meta response payload', {
             awardId,
-            statusCode: response.status,
+            statusCode: response?.status,
             status: result?.status,
           })
           return
