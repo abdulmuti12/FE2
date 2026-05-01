@@ -55,6 +55,10 @@ function EventDetailContent() {
   const [showShareToast, setShowShareToast] = useState(false)
   const [shareToastMessage, setShareToastMessage] = useState('Link copied to clipboard!')
   const shareToastTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const [showClaimToast, setShowClaimToast] = useState(false)
+  const [claimToastMessage, setClaimToastMessage] = useState('')
+  const [claimToastType, setClaimToastType] = useState<'success' | 'error'>('success')
+  const claimToastTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const createdMetaNodesRef = useRef<HTMLMetaElement[]>([])
   const updatedMetaNodesRef = useRef<Array<{ element: HTMLMetaElement; previousContent: string | null }>>([])
   const previousTitleRef = useRef<string | null>(null)
@@ -194,6 +198,9 @@ function EventDetailContent() {
       if (shareToastTimerRef.current) {
         clearTimeout(shareToastTimerRef.current)
       }
+      if (claimToastTimerRef.current) {
+        clearTimeout(claimToastTimerRef.current)
+      }
     }
   }, [])
 
@@ -240,6 +247,20 @@ function EventDetailContent() {
 
     shareToastTimerRef.current = setTimeout(() => {
       setShowShareToast(false)
+    }, 2200)
+  }
+
+  const showClaimToastCard = (message: string, type: 'success' | 'error') => {
+    setClaimToastMessage(message)
+    setClaimToastType(type)
+    setShowClaimToast(true)
+
+    if (claimToastTimerRef.current) {
+      clearTimeout(claimToastTimerRef.current)
+    }
+
+    claimToastTimerRef.current = setTimeout(() => {
+      setShowClaimToast(false)
     }, 2200)
   }
 
@@ -381,42 +402,39 @@ function EventDetailContent() {
 
   const handleClaimTicket = async () => {
     if (!eventDetail || !eventDetail.id) {
-       alert("Data event belum siap atau tidak ditemukan!");
-       return;
+      showClaimToastCard('Data event belum siap atau tidak ditemukan', 'error')
+      return
     }
 
     const token = localStorage.getItem('user_token')
     if (!token) {
-      alert("Anda harus login terlebih dahulu!")
+      showClaimToastCard('Anda harus login terlebih dahulu', 'error')
       return
     }
 
     setIsClaiming(true)
 
     try {
-      const formData = new FormData()
-      formData.append('id_event', eventDetail.id)
-      formData.append('id', eventDetail.id)
-
-      const response = await fetch('https://api.usky.ai/event/claim', {
+      const response = await fetch('/api/event/events/claim', {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${token}`
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
         },
-        body: formData,
+        body: JSON.stringify({ id: eventDetail.id }),
       })
 
       const result = await response.json()
-      
-      if (result.status) {
-        alert("Berhasil claim tiket!")
-        fetchEventDetail() 
+
+      if (response.ok && result.status) {
+        showClaimToastCard('Berhasil claim tiket', 'success')
+        fetchEventDetail()
       } else {
-        alert(result.message || "Gagal melakukan claim tiket.")
+        showClaimToastCard(result.message || 'Gagal melakukan claim tiket', 'error')
       }
     } catch (error) {
       console.error('Error claiming ticket:', error)
-      alert("Terjadi kesalahan pada saat menghubungi server.")
+      showClaimToastCard('Terjadi kesalahan pada saat menghubungi server', 'error')
     } finally {
       setIsClaiming(false)
     }
@@ -653,6 +671,18 @@ function EventDetailContent() {
         aria-live="polite"
       >
         {shareToastMessage}
+      </div>
+
+      <div
+        className={`fixed top-16 left-1/2 z-[120] -translate-x-1/2 rounded-xl px-4 py-2 text-sm font-medium text-white shadow-lg transition-all duration-300 ${
+          claimToastType === 'success'
+            ? 'border border-green-300/40 bg-green-600'
+            : 'border border-red-300/40 bg-red-600'
+        } ${showClaimToast ? 'opacity-100 translate-y-0' : 'pointer-events-none opacity-0 -translate-y-2'}`}
+        role="status"
+        aria-live="polite"
+      >
+        {claimToastMessage}
       </div>
     </div>
   )
