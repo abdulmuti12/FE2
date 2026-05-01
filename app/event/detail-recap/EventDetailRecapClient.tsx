@@ -5,7 +5,9 @@ import Image from 'next/image'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { Header } from '@/components/header'
 import { Footer } from '@/components/footer'
-import { Calendar, MapPin, Play, Clock } from 'lucide-react'
+import { ClipShare } from '@/components/clip/clip-share'
+import { Calendar, MapPin, Play, Clock, Share2 } from 'lucide-react'
+import { useRef } from 'react'
 
 interface EventDetailData {
   id: string
@@ -49,6 +51,10 @@ function EventDetailRecapContent() {
   const [eventDetail, setEventDetail] = useState<EventDetailData | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [showShare, setShowShare] = useState(false)
+  const [showShareToast, setShowShareToast] = useState(false)
+  const [shareToastMessage, setShareToastMessage] = useState('Link copied to clipboard!')
+  const shareToastTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   useEffect(() => {
     const idFromQuery = searchParams.get('id')
@@ -104,6 +110,78 @@ function EventDetailRecapContent() {
 
     fetchEventDetail()
   }, [eventId])
+
+  useEffect(() => {
+    return () => {
+      if (shareToastTimerRef.current) {
+        clearTimeout(shareToastTimerRef.current)
+      }
+    }
+  }, [])
+
+  const stripHtml = (value: string): string =>
+    value.replace(/<[^>]+>/g, ' ').replace(/&nbsp;/gi, ' ').replace(/\s+/g, ' ').trim()
+
+  const truncateText = (value: string, maxLength: number): string => {
+    if (value.length <= maxLength) return value
+    return `${value.slice(0, maxLength).trim()}...`
+  }
+
+  const showShareToastCard = (message: string) => {
+    setShareToastMessage(message)
+    setShowShareToast(true)
+
+    if (shareToastTimerRef.current) {
+      clearTimeout(shareToastTimerRef.current)
+    }
+
+    shareToastTimerRef.current = setTimeout(() => {
+      setShowShareToast(false)
+    }, 2200)
+  }
+
+  const handlePlatformShare = async (platform: string) => {
+    const url = window.location.href
+    const title = eventDetail?.title || 'Event Recap'
+    const rawDescription = stripHtml(eventDetail?.description || '')
+    const shortDescription = truncateText(rawDescription, 180)
+    const text = shortDescription
+      ? `${title}\n${shortDescription}`
+      : `Check out this event recap: ${title}`
+
+    switch (platform) {
+      case 'copy':
+        try {
+          await navigator.clipboard.writeText(url)
+          showShareToastCard('Link copied to clipboard!')
+        } catch {
+          showShareToastCard('Gagal menyalin link')
+        }
+        break
+      case 'whatsapp':
+        window.open(`https://wa.me/?text=${encodeURIComponent(text + ' ' + url)}`, '_blank')
+        break
+      case 'facebook':
+        window.open(
+          `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}&quote=${encodeURIComponent(text)}`,
+          '_blank'
+        )
+        break
+      case 'x':
+        window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}`, '_blank')
+        break
+      case 'telegram':
+        window.open(`https://t.me/share/url?url=${encodeURIComponent(url)}&text=${encodeURIComponent(text)}`, '_blank')
+        break
+      case 'linkedin':
+        window.open(`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(url)}`, '_blank')
+        break
+      default:
+        break
+    }
+
+    setShowShare(false)
+  }
 
   if (loading) {
     return (
@@ -185,6 +263,16 @@ function EventDetailRecapContent() {
             >
               Kembali ke Event
             </button>
+
+            <button
+              onClick={() => setShowShare(true)}
+              className="w-full mt-3 h-10 rounded-full border border-white/15 bg-white/5 hover:bg-white/10 transition-colors flex items-center justify-center gap-2"
+              title="Share"
+              aria-label="Share recap event"
+            >
+              <Share2 className="w-4 h-4" />
+              Share
+            </button>
           </aside>
         </div>
 
@@ -197,6 +285,24 @@ function EventDetailRecapContent() {
         </section>
       </main>
       <Footer />
+
+      <ClipShare
+        showShare={showShare}
+        clipId={eventDetail.id}
+        clipName={eventDetail.title}
+        onClose={() => setShowShare(false)}
+        onPlatformShare={handlePlatformShare}
+      />
+
+      <div
+        className={`fixed top-4 left-1/2 z-[120] -translate-x-1/2 rounded-xl border border-blue-300/40 bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow-lg transition-all duration-300 ${
+          showShareToast ? 'opacity-100 translate-y-0' : 'pointer-events-none opacity-0 -translate-y-2'
+        }`}
+        role="status"
+        aria-live="polite"
+      >
+        {shareToastMessage}
+      </div>
     </>
   )
 }
@@ -214,4 +320,3 @@ export default function EventDetailRecapClient() {
     </Suspense>
   )
 }
-
