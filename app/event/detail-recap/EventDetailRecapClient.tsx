@@ -25,6 +25,12 @@ interface EventDetailData {
   }
 }
 
+type MetaEntry = {
+  attr: 'name' | 'property'
+  key: string
+  content: string
+}
+
 const EVENT_ID_STORAGE_KEY = 'selected_event_id'
 
 const toSecureUrl = (url?: string) => {
@@ -55,6 +61,9 @@ function EventDetailRecapContent() {
   const [showShareToast, setShowShareToast] = useState(false)
   const [shareToastMessage, setShareToastMessage] = useState('Link copied to clipboard!')
   const shareToastTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const createdMetaNodesRef = useRef<HTMLMetaElement[]>([])
+  const updatedMetaNodesRef = useRef<Array<{ element: HTMLMetaElement; previousContent: string | null }>>([])
+  const previousTitleRef = useRef<string | null>(null)
 
   useEffect(() => {
     const idFromQuery = searchParams.get('id')
@@ -122,6 +131,31 @@ function EventDetailRecapContent() {
   const stripHtml = (value: string): string =>
     value.replace(/<[^>]+>/g, ' ').replace(/&nbsp;/gi, ' ').replace(/\s+/g, ' ').trim()
 
+  const decodeHtmlEntities = (text: string): string => {
+    const textarea = document.createElement('textarea')
+    textarea.innerHTML = text
+    return textarea.value
+  }
+
+  const parseMetaEntries = (metaBlob: string): MetaEntry[] => {
+    const normalized = metaBlob.replace(/\\\//g, '/').replace(/\\"/g, '"')
+    const regex = /<meta\s+(property|name)=["']([^"']+)["']\s+content=["']([^"']*)["'][^>]*>/gi
+    const entries: MetaEntry[] = []
+
+    let match: RegExpExecArray | null
+    while ((match = regex.exec(normalized)) !== null) {
+      const attrType = match[1]?.toLowerCase() as 'name' | 'property'
+      const key = match[2]?.trim()
+      const content = decodeHtmlEntities((match[3] || '').replace(/\s+/g, ' ').trim())
+
+      if (attrType && key && content) {
+        entries.push({ attr: attrType, key, content })
+      }
+    }
+
+    return entries
+  }
+
   const truncateText = (value: string, maxLength: number): string => {
     if (value.length <= maxLength) return value
     return `${value.slice(0, maxLength).trim()}...`
@@ -182,6 +216,99 @@ function EventDetailRecapContent() {
 
     setShowShare(false)
   }
+
+  useEffect(() => {
+    const cleanupAppliedMeta = () => {
+      createdMetaNodesRef.current.forEach((node) => node.remove())
+      createdMetaNodesRef.current = []
+
+      updatedMetaNodesRef.current.forEach(({ element, previousContent }) => {
+        if (previousContent === null) {
+          element.removeAttribute('content')
+        } else {
+          element.setAttribute('content', previousContent)
+        }
+      })
+      updatedMetaNodesRef.current = []
+
+      if (previousTitleRef.current !== null) {
+        document.title = previousTitleRef.current
+        previousTitleRef.current = null
+      }
+    }
+
+    const applyEventMeta = async () => {
+      if (!eventId) return
+
+      try {
+        cleanupAppliedMeta()
+
+        const token = localStorage.getItem('user_token')
+        const url = new URL('/api/event/meta', window.location.origin)
+        url.searchParams.set('id', eventId)
+
+        const response = await fetch(url.toString(), {
+          method: 'GET',
+          headers: token
+            ? {
+                Authorization: `Bearer ${token}`,
+                'Content-Type': 'application/json',
+              }
+            : undefined,
+        })
+
+        const result = await response.json()
+        if (!response.ok || result?.status !== true || typeof result?.data !== 'string') {
+          return
+        }
+
+        const entries = parseMetaEntries(result.data)
+
+        if (previousTitleRef.current === null) {
+          previousTitleRef.current = document.title
+        }
+
+        for (const entry of entries) {
+          const existing = Array.from(document.head.querySelectorAll(`meta[${entry.attr}]`)).find((node) => {
+            const value = node.getAttribute(entry.attr)
+            return typeof value === 'string' && value.toLowerCase() === entry.key.toLowerCase()
+          }) as HTMLMetaElement | undefined
+
+          if (existing) {
+            const alreadyTracked = updatedMetaNodesRef.current.some((item) => item.element === existing)
+            if (!alreadyTracked) {
+              updatedMetaNodesRef.current.push({
+                element: existing,
+                previousContent: existing.getAttribute('content'),
+              })
+            }
+            existing.setAttribute('content', entry.content)
+          } else {
+            const meta = document.createElement('meta')
+            meta.setAttribute(entry.attr, entry.key)
+            meta.setAttribute('content', entry.content)
+            meta.setAttribute('data-event-meta', '1')
+            document.head.appendChild(meta)
+            createdMetaNodesRef.current.push(meta)
+          }
+        }
+
+        const ogTitle = entries.find((e) => e.attr === 'property' && e.key.toLowerCase() === 'og:title')?.content
+        const twitterTitle = entries.find((e) => e.attr === 'name' && e.key.toLowerCase() === 'twitter:title')?.content
+        if (ogTitle || twitterTitle) {
+          document.title = ogTitle || twitterTitle || document.title
+        }
+      } catch (metaError) {
+        console.error('Error applying event recap meta tags:', metaError)
+      }
+    }
+
+    applyEventMeta()
+
+    return () => {
+      cleanupAppliedMeta()
+    }
+  }, [eventId])
 
   if (loading) {
     return (
