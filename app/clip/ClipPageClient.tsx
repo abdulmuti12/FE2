@@ -1,7 +1,7 @@
 'use client'
 
 import Image from 'next/image'
-import { Suspense, useState, useRef, useEffect, useCallback } from 'react'
+import { Suspense, useState, useRef, useEffect, useCallback, memo, lazy, useMemo } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import {
   Heart,
@@ -11,20 +11,18 @@ import {
   MessageCircle,
   ChevronDown,
   ChevronUp,
-  ChevronLeft,
-  ChevronRight,
   Music,
   Bookmark,
   Volume2,
   VolumeX,
-  Copy,
-  X,
-  Smartphone, 
-  Monitor,    
+  Smartphone,
+  Monitor,
 } from 'lucide-react'
 import { Header } from '@/components/header'
-import { ClipComments } from '@/components/clip/clip-comments'
-import { ClipShare } from '@/components/clip/clip-share'
+
+// Lazy load non-critical components (named export → wrapped as default)
+const ClipComments = lazy(() => import('@/components/clip/clip-comments').then(m => ({ default: m.ClipComments })))
+const ClipShare = lazy(() => import('@/components/clip/clip-share').then(m => ({ default: m.ClipShare })))
 
 // --- INTERFACES ---
 interface Movie {
@@ -157,7 +155,7 @@ const applyClipMetaToHead = (meta: MetaTagMap) => {
 }
 
 // --- KOMPONEN ITEM VIDEO ---
-const VideoItem = ({
+const VideoItem = memo(function VideoItem({
   clip,
   index,
   total,
@@ -173,7 +171,7 @@ const VideoItem = ({
   onActive: () => void
   isNearEnd?: boolean
   onNearEnd?: () => void
-}) => {
+}) {
   const desktopVideoRef = useRef<HTMLVideoElement>(null)
   const mobileVideoRef = useRef<HTMLVideoElement>(null)
   const containerRef = useRef<HTMLDivElement>(null)
@@ -741,22 +739,24 @@ const VideoItem = ({
         </div>
 
         {/* --- PANGGIL KOMPONEN COMMENTS DESKTOP --- */}
-        <ClipComments 
-          showComments={showComments}
-          comments={comments}
-          commentsLoading={commentsLoading}
-          commentInput={commentInput}
-          isSubmittingComment={isSubmittingComment}
-          showAllComments={showAllComments}
-          onClose={() => setShowComments(false)}
-          onCommentInputChange={setCommentInput}
-          onSubmitComment={handleSubmitComment}
-          onShowAllComments={setShowAllComments}
-          onLikeComment={handleLikeComment}
-          isMobile={false}
-          videoOrientation={videoOrientation}
-          onChangeOrientation={setVideoOrientation}
-        />
+        <Suspense fallback={null}>
+          <ClipComments
+            showComments={showComments}
+            comments={comments}
+            commentsLoading={commentsLoading}
+            commentInput={commentInput}
+            isSubmittingComment={isSubmittingComment}
+            showAllComments={showAllComments}
+            onClose={() => setShowComments(false)}
+            onCommentInputChange={setCommentInput}
+            onSubmitComment={handleSubmitComment}
+            onShowAllComments={setShowAllComments}
+            onLikeComment={handleLikeComment}
+            isMobile={false}
+            videoOrientation={videoOrientation}
+            onChangeOrientation={setVideoOrientation}
+          />
+        </Suspense>
 
       </div>
 
@@ -873,32 +873,36 @@ const VideoItem = ({
         </div>
 
         {/* --- PANGGIL KOMPONEN COMMENTS MOBILE --- */}
-        <ClipComments 
-          showComments={showComments}
-          comments={comments}
-          commentsLoading={commentsLoading}
-          commentInput={commentInput}
-          isSubmittingComment={isSubmittingComment}
-          showAllComments={showAllComments}
-          onClose={() => setShowComments(false)}
-          onCommentInputChange={setCommentInput}
-          onSubmitComment={handleSubmitComment}
-          onShowAllComments={setShowAllComments}
-          onLikeComment={handleLikeComment}
-          isMobile={true}
-          videoOrientation={videoOrientation}
-          onChangeOrientation={setVideoOrientation}
-        />
+        <Suspense fallback={null}>
+          <ClipComments
+            showComments={showComments}
+            comments={comments}
+            commentsLoading={commentsLoading}
+            commentInput={commentInput}
+            isSubmittingComment={isSubmittingComment}
+            showAllComments={showAllComments}
+            onClose={() => setShowComments(false)}
+            onCommentInputChange={setCommentInput}
+            onSubmitComment={handleSubmitComment}
+            onShowAllComments={setShowAllComments}
+            onLikeComment={handleLikeComment}
+            isMobile={true}
+            videoOrientation={videoOrientation}
+            onChangeOrientation={setVideoOrientation}
+          />
+        </Suspense>
       </div>
 
       {/* --- GLOBAL SHARE MODAL (Tampil untuk Desktop & Mobile) --- */}
-      <ClipShare
-        showShare={showShare}
-        clipId={clip.id}
-        clipName={clip.name}
-        onClose={() => setShowShare(false)}
-        onPlatformShare={handlePlatformShare}
-      />
+      <Suspense fallback={null}>
+        <ClipShare
+          showShare={showShare}
+          clipId={clip.id}
+          clipName={clip.name}
+          onClose={() => setShowShare(false)}
+          onPlatformShare={handlePlatformShare}
+        />
+      </Suspense>
 
       <div
         className={`fixed top-4 left-1/2 z-[120] -translate-x-1/2 rounded-xl border border-blue-300/40 bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow-lg transition-all duration-300 ${
@@ -911,7 +915,7 @@ const VideoItem = ({
       </div>
     </div>
   )
-}
+})
 
 // --- KOMPONEN UTAMA ---
 function ClipsContent() {
@@ -1081,34 +1085,29 @@ function ClipsContent() {
     setActiveVideoId(apiClips[0].id)
   }, [activeVideoId, pendingClipId, apiClips])
 
+  // Deferred metadata fetch — doesn't block initial paint
+  const fetchedMetaRef = useRef<Set<string>>(new Set())
   useEffect(() => {
     if (!activeVideoId) return
+    if (fetchedMetaRef.current.has(activeVideoId)) return
 
-    let cancelled = false
-
-    const fetchAndApplyMeta = async () => {
+    const timer = setTimeout(async () => {
       try {
         const response = await fetch(`/api/movie/meta?id=${encodeURIComponent(activeVideoId)}`, {
           method: 'GET',
           cache: 'no-store',
         })
         const json = await response.json()
-        if (cancelled) return
-
         if (json?.status === true && typeof json?.data === 'string') {
-          const meta = parseMetaContent(json.data)
-          applyClipMetaToHead(meta)
+          applyClipMetaToHead(parseMetaContent(json.data))
+          fetchedMetaRef.current.add(activeVideoId)
         }
       } catch (error) {
         console.error('[clip/meta] Error fetching clip metadata:', error)
       }
-    }
+    }, 600)
 
-    fetchAndApplyMeta()
-
-    return () => {
-      cancelled = true
-    }
+    return () => clearTimeout(timer)
   }, [activeVideoId])
 
   return (

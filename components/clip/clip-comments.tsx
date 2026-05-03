@@ -28,8 +28,10 @@ interface ClipCommentsProps {
   onCommentInputChange: (value: string) => void
   onSubmitComment: (e: React.FormEvent) => void
   onShowAllComments: (show: boolean) => void
-  onLikeComment: (commentId: string) => void // <-- Tambahan props untuk handle Like
+  onLikeComment: (commentId: string) => void
   isMobile?: boolean
+  videoOrientation?: 'portrait' | 'landscape'
+  onChangeOrientation?: (o: 'portrait' | 'landscape') => void
 }
 
 export function ClipComments({
