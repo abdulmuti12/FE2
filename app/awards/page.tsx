@@ -2,7 +2,7 @@
 
 import { Header } from '@/components/header'
 import { Footer } from '@/components/footer'
-import { Heart, Eye, Search, Plus, Clock, FileText, Trophy, Play, ThumbsUp } from 'lucide-react'
+import { Heart, Eye, Search, Plus, Clock, FileText, Trophy, Play, ThumbsUp, MessageCircle } from 'lucide-react'
 import { useState, useMemo, useEffect, useRef } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
@@ -16,6 +16,7 @@ interface AwardSubmission {
   vote?: number | string
   views?: number | string
   play?: number | string
+  comments?: number | string
 }
 
 const TABS = ['Films', 'Leaderboard', 'Details', 'Direction', 'Scoring', 'Rules', 'FAQ']
@@ -1244,6 +1245,10 @@ function FilmsContent({ stats, statsLoading }: { stats: AwardsStats; statsLoadin
                             <Eye className="w-3 h-3 md:w-3.5 md:h-3.5" />
                             <span className="text-[10px] md:text-xs font-medium">{related.views || 0}</span>
                           </div>
+                          <div className="flex items-center gap-1">
+                            <MessageCircle className="w-3 h-3 md:w-3.5 md:h-3.5" />
+                            <span className="text-[10px] md:text-xs font-medium">{related.comments || 0}</span>
+                          </div>
                         </div>
                       </div>
                       <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
@@ -1334,6 +1339,10 @@ function FilmsContent({ stats, statsLoading }: { stats: AwardsStats; statsLoadin
                       <div className="flex items-center gap-1">
                         <Eye className="w-3 h-3 md:w-3.5 md:h-3.5" />
                         <span className="text-[10px] md:text-xs font-medium">{submission.views || 0}</span>
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <MessageCircle className="w-3 h-3 md:w-3.5 md:h-3.5" />
+                        <span className="text-[10px] md:text-xs font-medium">{submission.comments || 0}</span>
                       </div>
                     </div>
                   </div>
