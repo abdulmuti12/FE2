@@ -19,6 +19,7 @@ interface EventItem {
   title: string
   image?: string
   image_url?: string
+  tgl_live?: string
   from_dates?: string
   start_date?: string
   event_category?: {
@@ -36,6 +37,7 @@ interface UpcomingEvent {
   title: string
   image?: string
   image_url?: string
+  tgl_live?: string
   from_dates?: string
   price?: string
   event_category?: {
@@ -48,6 +50,7 @@ interface CompletedEvent {
   title: string
   image_url?: string
   video_url?: string
+  tgl_live?: string
   start_date?: string
   end_date?: string
 }
@@ -204,6 +207,7 @@ export default function EventPage() {
           title: item.title || '',
           image_url: item.image_url || '',
           video_url: item.video_url || '',
+          tgl_live: item.tgl_live || '',
           start_date: item.start_date || '',
           end_date: item.end_date || '',
         }))
@@ -344,7 +348,7 @@ export default function EventPage() {
 
                     <div className="flex items-center text-xs text-gray-400 mt-2">
                       <Calendar className="w-3 h-3 mr-1" />
-                      {event.from_dates}
+                      {event.tgl_live || event.from_dates}
                     </div>
                   </div>
                 </div>
@@ -412,7 +416,7 @@ export default function EventPage() {
 
                       <div className="flex items-center text-sm md:text-xs text-gray-400 mt-3 md:mt-2">
                         <Calendar className="w-4 h-4 md:w-3 md:h-3 mr-2 md:mr-1" />
-                        {formatRecapDateTime(event.start_date)}
+                        {formatRecapDateTime(event.tgl_live || event.start_date)}
                       </div>
                     </div>
                   </div>

@@ -16,7 +16,10 @@ interface EventDetailData {
   address?: string
   image_url?: string
   video_url?: string
+  tgl_live?: string
   from_dates?: string
+  from_times_format?: string
+  to_times_format?: string
   from_times?: string
   to_times?: string
   event_category?: {
@@ -370,12 +373,13 @@ function EventDetailRecapContent() {
             <div className="space-y-3 text-sm text-white/80">
               <div className="flex items-start gap-2">
                 <Calendar className="w-4 h-4 mt-0.5 text-blue-300" />
-                <span>{formatDateLabel(eventDetail.from_dates)}</span>
+                <span>{formatDateLabel(eventDetail.tgl_live || eventDetail.from_dates)}</span>
               </div>
               <div className="flex items-start gap-2">
                 <Clock className="w-4 h-4 mt-0.5 text-blue-300" />
                 <span>
-                  {eventDetail.from_times || '-'} {eventDetail.to_times ? `- ${eventDetail.to_times}` : ''}
+                  {eventDetail.from_times_format || eventDetail.from_times || '-'}{' '}
+                  {(eventDetail.to_times_format || eventDetail.to_times) ? `- ${eventDetail.to_times_format || eventDetail.to_times}` : ''}
                 </span>
               </div>
               <div className="flex items-start gap-2">

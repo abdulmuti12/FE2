@@ -9,6 +9,7 @@ interface EventItem {
   title: string
   image?: string
   image_url?: string
+  tgl_live?: string
   from_dates?: string
   start_date?: string
   event_category?: {
@@ -88,7 +89,7 @@ export function AllEvents({
   }
 
   const getEventDate = (event: EventItem) => {
-    return event.from_dates || event.start_date || 'N/A'
+    return event.tgl_live || event.from_dates || event.start_date || 'N/A'
   }
 
   const getEventImage = (event: EventItem) => {
