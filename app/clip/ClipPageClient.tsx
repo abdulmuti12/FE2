@@ -163,6 +163,8 @@ const VideoItem = memo(function VideoItem({
   onActive,
   isNearEnd,
   onNearEnd,
+  videoOrientation,
+  setVideoOrientation,
 }: {
   clip: Movie
   index: number
@@ -171,6 +173,8 @@ const VideoItem = memo(function VideoItem({
   onActive: () => void
   isNearEnd?: boolean
   onNearEnd?: () => void
+  videoOrientation: 'portrait' | 'landscape'
+  setVideoOrientation: (o: 'portrait' | 'landscape') => void
 }) {
   const desktopVideoRef = useRef<HTMLVideoElement>(null)
   const mobileVideoRef = useRef<HTMLVideoElement>(null)
@@ -194,9 +198,6 @@ const VideoItem = memo(function VideoItem({
   // --- STATE UNTUK WATCHLIST ---
   const [isAddingWatchlist, setIsAddingWatchlist] = useState(false)
   const [isWatchlisted, setIsWatchlisted] = useState(clip.isWatchlisted || false)
-
-  // --- STATE UNTUK ORIENTASI VIDEO ---
-  const [videoOrientation, setVideoOrientation] = useState<'portrait' | 'landscape'>('portrait')
 
   // --- STATE UNTUK VIDEO LIKE ---
   const [videoLikes, setVideoLikes] = useState(parseInt(clip.favorit || '0'))
@@ -933,6 +934,7 @@ function ClipsContent() {
   const [currentPage, setCurrentPage] = useState(1)
   const [hasMore, setHasMore] = useState(true)
   const [pendingClipId, setPendingClipId] = useState<string | null>(initialClipId || null)
+  const [videoOrientation, setVideoOrientation] = useState<'portrait' | 'landscape'>('portrait')
 
   const fetchingRef = useRef(false) 
 
@@ -1189,6 +1191,8 @@ function ClipsContent() {
                       onActive={() => setActiveVideoId(clip.id)}
                       isNearEnd={isNearEnd}
                       onNearEnd={handleLoadMore}
+                      videoOrientation={videoOrientation}
+                      setVideoOrientation={setVideoOrientation}
                     />
                   )
                 })}
