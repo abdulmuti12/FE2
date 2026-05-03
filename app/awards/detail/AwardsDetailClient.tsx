@@ -142,6 +142,7 @@ function AwardsDetailContent() {
   const [shareToastType, setShareToastType] = useState<'success' | 'error'>('success')
   const shareToastTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const headMetaNodesRef = useRef<HTMLMetaElement[]>([])
+  const hasSentViewRef = useRef(false)
 
   useEffect(() => {
     const fetchAwardDetail = async () => {
@@ -226,6 +227,10 @@ function AwardsDetailContent() {
       console.error('Error submitting award play:', error)
     })
   }, [awardId])
+
+  useEffect(() => {
+    hasSentViewRef.current = false
+  }, [awardId, awardData?.video_url])
 
   useEffect(() => {
     const applyAwardMeta = async () => {
@@ -743,6 +748,39 @@ function AwardsDetailContent() {
     }
   }
 
+  const handleAwardVideoTimeUpdate = async (event: any) => {
+    if (!awardId) return
+    if (hasSentViewRef.current) return
+
+    const videoEl = event.currentTarget as HTMLVideoElement
+    if (!videoEl || videoEl.currentTime < 5) return
+
+    hasSentViewRef.current = true
+
+    try {
+      const token = localStorage.getItem('user_token') || ''
+      if (!token) return
+
+      const response = await fetch('/api/awards/view', {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          id: awardId,
+        }),
+      })
+
+      if (!response.ok) {
+        hasSentViewRef.current = false
+      }
+    } catch (error) {
+      console.error('Error submitting award view:', error)
+      hasSentViewRef.current = false
+    }
+  }
+
   if (isLoading) {
     return (
       <div className="min-h-screen bg-[#050B14] flex flex-col items-center justify-center text-white font-sans">
@@ -798,6 +836,7 @@ function AwardsDetailContent() {
                 controlsList="nodownload"
                 className="w-full h-full object-contain"
                 poster={convertToSecureUrl(awardData.image_landscape_url || awardData.image_url)}
+                onTimeUpdate={handleAwardVideoTimeUpdate}
               >
                 <source src={convertToSecureUrl(awardData.video_url)} type="video/mp4" />
                 Browser Anda tidak mendukung pemutar video ini.
