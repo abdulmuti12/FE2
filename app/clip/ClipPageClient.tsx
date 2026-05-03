@@ -612,7 +612,7 @@ const VideoItem = memo(function VideoItem({
       ref={containerRef}
       id={`clip-${clip.id}`}
       data-clip-id={clip.id}
-      className="w-full h-[100dvh] lg:h-full snap-start flex items-center justify-center lg:items-start lg:pt-10 lg:px-8 relative"
+      className="w-full h-[100dvh] lg:h-[calc(100dvh-64px)] snap-start flex items-start lg:items-center justify-center lg:px-8 relative pt-16 lg:pt-0"
     >
       
       {/* Navigasi kecil desktop */}
@@ -622,7 +622,7 @@ const VideoItem = memo(function VideoItem({
       </div>
 
       {/* --- DESKTOP LAYOUT --- */}
-      <div className={`hidden lg:grid grid-cols-12 gap-6 items-center w-full transition-all duration-500 lg:h-[82vh] ${showComments ? 'max-w-[1400px]' : 'max-w-6xl'}`}>
+      <div className={`hidden lg:grid grid-cols-12 gap-6 items-center w-full transition-all duration-500 lg:h-full ${showComments ? 'max-w-[1400px]' : 'max-w-6xl'}`}>
         
         {/* Kolom kiri: info */}
         <div className={`flex flex-col justify-center space-y-6 animate-in slide-in-from-left duration-700 fade-in col-span-3`}>
@@ -657,7 +657,7 @@ const VideoItem = memo(function VideoItem({
 
         {/* Kolom tengah: video dengan class responsif orientasi */}
         <div className={`${showComments ? 'col-span-4' : 'col-span-6'} h-full flex items-center justify-center py-4 transition-all duration-500`}>
-          <div className={`relative flex items-center justify-center h-full max-h-[82vh] ${videoOrientation === 'portrait' ? 'aspect-[9/16] w-auto' : 'aspect-video w-full'} rounded-3xl overflow-hidden border border-white/10 shadow-[0_0_50px_-12px_rgba(0,0,0,0.5)] group bg-black transition-all duration-500`}>
+          <div className={`relative flex items-center justify-center h-full max-h-[calc(100dvh-96px)] ${videoOrientation === 'portrait' ? 'aspect-[9/16] w-auto' : 'aspect-video w-full'} rounded-3xl overflow-hidden border border-white/10 shadow-[0_0_50px_-12px_rgba(0,0,0,0.5)] group bg-black transition-all duration-500`}>
             
             {/* --- TOMBOL TOGGLE ORIENTASI (DESKTOP) --- */}
             <div className="absolute top-4 left-4 z-30 flex bg-black/40 backdrop-blur-md rounded-lg p-1 border border-white/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
@@ -707,7 +707,7 @@ const VideoItem = memo(function VideoItem({
         </div>
 
         {/* Kolom kanan 1: actions */}
-        <div className={`${showComments ? 'col-span-1 items-center justify-end pb-8 pl-0' : 'col-span-3 pl-8 justify-center'} flex flex-col gap-8 h-[82vh] animate-in slide-in-from-right duration-700 fade-in transition-all duration-500`}>
+        <div className={`${showComments ? 'col-span-1 items-center justify-end pb-8 pl-0' : 'col-span-3 pl-8 justify-center'} flex flex-col gap-8 h-full animate-in slide-in-from-right duration-700 fade-in transition-all duration-500`}>
           
           <div onClick={handleLikeVideo} className={`flex items-center gap-4 group ${isLiking ? 'cursor-not-allowed opacity-80' : 'cursor-pointer'}`}>
             <div className={`w-14 h-14 rounded-full flex items-center justify-center backdrop-blur border border-white/10 group-hover:scale-110 transition-all shadow-lg ${isVideoLiked ? 'bg-white/10' : 'bg-[#1e293b]/80 group-hover:bg-white/10'}`}>
