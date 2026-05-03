@@ -2,11 +2,14 @@
 
 import { Header } from '@/components/header'
 import { Footer } from '@/components/footer'
-import { Heart, Eye, Search, Plus, Clock, FileText, Trophy, Play, ThumbsUp, MessageCircle } from 'lucide-react'
-import { useState, useMemo, useEffect, useRef } from 'react'
+import { Heart, Eye, Play, ThumbsUp, MessageCircle, Clock, FileText, Trophy, Plus } from 'lucide-react'
+import { useState, useMemo, useEffect, useRef, lazy, Suspense } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
-import FaqContent from '@/components/awards/FaqContent'
+
+// Lazy load non-critical tab content
+const FaqContent = lazy(() => import('@/components/awards/FaqContent'))
+const FaqSkeleton = lazy(() => import('./_FaqSkeleton'))
 
 interface AwardSubmission {
   id: string | number
@@ -533,6 +536,7 @@ function DetailsContent({ stats, statsLoading }: { stats: AwardsStats; statsLoad
                   fill
                   sizes="(max-width: 768px) 50vw, (max-width: 1200px) 33vw, 25vw"
                   className="object-cover object-top"
+                  loading="lazy"
                   onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }}
                 />
               </div>
@@ -1028,25 +1032,28 @@ function FilmsContent({ stats, statsLoading }: { stats: AwardsStats; statsLoadin
   }, [])
 
   useEffect(() => {
-    const controller = new AbortController()
-    const fetchAwardDetail = async () => {
-      try {
-        setAwardDetailLoading(true)
-        const response = await fetch('/api/awards/detail?id=', { signal: controller.signal })
-        const data = await response.json()
-        if (data.list) {
-          setAwardDetail(data.list)
-          setShowAwardDetail(true)
+    const timer = setTimeout(() => {
+      const controller = new AbortController()
+      const fetchAwardDetail = async () => {
+        try {
+          setAwardDetailLoading(true)
+          const response = await fetch('/api/awards/detail?id=', { signal: controller.signal })
+          const data = await response.json()
+          if (data.list) {
+            setAwardDetail(data.list)
+            setShowAwardDetail(true)
+          }
+        } catch (error: any) {
+          if (error.name === 'AbortError') return
+          console.error('[v0] Failed to fetch award detail:', error)
+        } finally {
+          setAwardDetailLoading(false)
         }
-      } catch (error: any) {
-        if (error.name === 'AbortError') return
-        console.error('[v0] Failed to fetch award detail:', error)
-      } finally {
-        setAwardDetailLoading(false)
       }
-    }
-    fetchAwardDetail()
-    return () => controller.abort()
+      fetchAwardDetail()
+      return () => controller.abort()
+    }, 400)
+    return () => clearTimeout(timer)
   }, [])
 
   useEffect(() => {
@@ -1533,17 +1540,19 @@ export default function AwardsPage() {
         {activeTab === 'Direction'   && <DirectionContent stats={stats} statsLoading={statsLoading} />}
         {activeTab === 'Scoring'     && <ScoringContent stats={stats} statsLoading={statsLoading} />}
         {activeTab === 'Rules'       && <RulesContent stats={stats} statsLoading={statsLoading} />}
-        {activeTab === 'FAQ'         && (
-          <FaqContent
-            statsBar={
-              <StatsBar
-                prizePool={stats.prizePool}
-                submission={stats.submission}
-                endIn={stats.endIn}
-                isLoading={statsLoading}
-              />
-            }
-          />
+        {activeTab === 'FAQ' && (
+          <Suspense fallback={<FaqSkeleton statsBar={ <StatsBar prizePool={stats.prizePool} submission={stats.submission} endIn={stats.endIn} isLoading={statsLoading} />} />}>
+            <FaqContent
+              statsBar={
+                <StatsBar
+                  prizePool={stats.prizePool}
+                  submission={stats.submission}
+                  endIn={stats.endIn}
+                  isLoading={statsLoading}
+                />
+              }
+            />
+          </Suspense>
         )}
       </div>
 
