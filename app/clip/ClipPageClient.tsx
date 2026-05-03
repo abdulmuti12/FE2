@@ -612,7 +612,7 @@ const VideoItem = memo(function VideoItem({
       ref={containerRef}
       id={`clip-${clip.id}`}
       data-clip-id={clip.id}
-      className="w-full h-[100dvh] lg:h-[calc(100dvh-64px)] snap-start flex items-start lg:items-center justify-center lg:px-8 relative pt-16 lg:pt-0"
+      className="w-full h-full snap-start flex items-center justify-center lg:px-8 relative"
     >
       
       {/* Navigasi kecil desktop */}
@@ -622,7 +622,7 @@ const VideoItem = memo(function VideoItem({
       </div>
 
       {/* --- DESKTOP LAYOUT --- */}
-      <div className={`hidden lg:grid grid-cols-12 gap-6 items-center w-full transition-all duration-500 lg:h-full ${showComments ? 'max-w-[1400px]' : 'max-w-6xl'}`}>
+      <div className={`hidden lg:grid grid-cols-12 gap-6 items-center w-full transition-all duration-500 h-full ${showComments ? 'max-w-[1400px]' : 'max-w-6xl'}`}>
         
         {/* Kolom kiri: info */}
         <div className={`flex flex-col justify-center space-y-6 animate-in slide-in-from-left duration-700 fade-in col-span-3`}>
@@ -657,7 +657,7 @@ const VideoItem = memo(function VideoItem({
 
         {/* Kolom tengah: video dengan class responsif orientasi */}
         <div className={`${showComments ? 'col-span-4' : 'col-span-6'} h-full flex items-center justify-center py-4 transition-all duration-500`}>
-          <div className={`relative flex items-center justify-center h-full max-h-[calc(100dvh-96px)] ${videoOrientation === 'portrait' ? 'aspect-[9/16] w-auto' : 'aspect-video w-full'} rounded-3xl overflow-hidden border border-white/10 shadow-[0_0_50px_-12px_rgba(0,0,0,0.5)] group bg-black transition-all duration-500`}>
+          <div className={`relative flex items-center justify-center h-full max-h-full ${videoOrientation === 'portrait' ? 'aspect-[9/16] w-auto' : 'aspect-video w-full'} rounded-3xl overflow-hidden border border-white/10 shadow-[0_0_50px_-12px_rgba(0,0,0,0.5)] group bg-black transition-all duration-500`}>
             
             {/* --- TOMBOL TOGGLE ORIENTASI (DESKTOP) --- */}
             <div className="absolute top-4 left-4 z-30 flex bg-black/40 backdrop-blur-md rounded-lg p-1 border border-white/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
@@ -1113,8 +1113,8 @@ function ClipsContent() {
   return (
     <>
       <Header />
-      <main className="min-h-screen bg-black">
-        <div className="flex h-screen">
+      <main className="min-h-screen bg-black pt-16 lg:pt-[64px]">
+        <div className="flex h-[calc(100dvh-64px)]">
           {/* Sidebar */}
           <div className="hidden lg:flex lg:w-64 lg:flex-col lg:border-r lg:border-white/10 bg-black overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:'none'] [scrollbar-width:'none']">
             <div className="p-6 space-y-4">
@@ -1148,7 +1148,7 @@ function ClipsContent() {
           </div>
 
           {/* Main content */}
-          <div className="flex-1 overflow-hidden relative">
+          <div className="flex-1 overflow-hidden relative h-full">
             {clipsLoading && apiClips.length === 0 ? (
               <div className="w-full h-full flex items-center justify-center bg-black">
                 <div className="text-center">
