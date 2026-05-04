@@ -21,6 +21,7 @@ interface AwardSubmission {
   views?: number | string
   play?: number | string
   comments?: number | string
+  creator?: { id?: string | number; name?: string; avatar_url?: string }
 }
 
 const TABS = ['Films', 'Leaderboard', 'Details', 'Direction', 'Scoring', 'Rules', 'FAQ']
@@ -721,7 +722,10 @@ function LeaderboardContent({ stats, statsLoading }: { stats: AwardsStats; stats
                   <tr key={`${creator.id}-${index}`} className="border-b border-white/5 hover:bg-white/[0.02] transition-colors">
                     <td className={`py-4 px-2 text-sm font-bold ${rankColor}`}>{rank}.</td>
                     <td className="py-4 px-2">
-                      <div className="flex items-center gap-2.5">
+                      <Link
+                        href={`/awards/creator-award/detail/${creator.id}`}
+                        className="flex items-center gap-2.5 hover:opacity-80 transition-opacity"
+                      >
                         {creator.avatar ? (
                           <img
                             src={`https://cdn.usky.ai/avatars/${creator.avatar}`}
@@ -736,10 +740,10 @@ function LeaderboardContent({ stats, statsLoading }: { stats: AwardsStats; stats
                             </span>
                           </div>
                         )}
-                        <span className="text-white text-sm font-medium truncate max-w-[140px]">
+                        <span className="text-white text-sm font-medium truncate max-w-[140px] hover:text-yellow-400 transition-colors">
                           {creator.name}
                         </span>
-                      </div>
+                      </Link>
                     </td>
                     <td className="py-4 px-4 text-gray-300 text-sm">{num(creator.vote).toLocaleString()}</td>
                     <td className="py-4 px-4 text-gray-300 text-sm">{num(creator.play).toLocaleString()}</td>
@@ -1335,6 +1339,15 @@ function FilmsContent({ stats, statsLoading }: { stats: AwardsStats; statsLoadin
                   <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent" />
                   <div className="absolute inset-0 flex flex-col justify-end p-2.5">
                     <h3 className="text-xs md:text-sm font-bold text-white leading-tight mb-0.5 line-clamp-2">{submission.name}</h3>
+                    {submission.creator?.name && (
+                      <Link
+                        href={`/awards/creator-award/detail/${submission.creator.id}`}
+                        onClick={(e) => e.stopPropagation()}
+                        className="text-[10px] md:text-xs text-yellow-400 hover:text-yellow-300 mb-1 truncate hover:underline"
+                      >
+                        @{submission.creator.name}
+                      </Link>
+                    )}
                     <div className="flex items-center gap-2 text-white/70">
                       <div className="flex items-center gap-1">
                         <Heart className="w-3 h-3 md:w-3.5 md:h-3.5" />
