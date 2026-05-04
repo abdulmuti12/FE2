@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useMemo, useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 import { Header } from '@/components/header'
 import { Footer } from '@/components/footer'
 import { ChevronRight, Play, Info } from 'lucide-react'
@@ -110,6 +111,15 @@ const groupFilmsByCategory = (
 // ============================================================================
 
 export default function FilmPage() {
+  const router = useRouter()
+
+  useEffect(() => {
+    const token = localStorage.getItem(UI.STORAGE_KEY)
+    if (!token) {
+      router.push('/login?redirect=/film')
+    }
+  }, [router])
+
   // State
   const [films, setFilms] = useState<Film[]>([])
   const [categories, setCategories] = useState<Category[]>([])

@@ -4,6 +4,7 @@ import { Header } from '@/components/header'
 import { Footer } from '@/components/footer'
 import { Heart, Eye, Play, ThumbsUp, MessageCircle, Clock, FileText, Trophy, Plus } from 'lucide-react'
 import { useState, useMemo, useEffect, useRef, lazy, Suspense } from 'react'
+import { useRouter } from 'next/navigation'
 import Image from 'next/image'
 import Link from 'next/link'
 
@@ -1414,6 +1415,15 @@ function FilmsContent({ stats, statsLoading }: { stats: AwardsStats; statsLoadin
 // ─────────────────────────────────────────────
 
 export default function AwardsPage() {
+  const router = useRouter()
+
+  useEffect(() => {
+    const token = localStorage.getItem('user_token')
+    if (!token) {
+      router.push('/login?redirect=/awards')
+    }
+  }, [router])
+
   const [activeTab, setActiveTab] = useState('Films')
   const [statsLoading, setStatsLoading] = useState(true)
   const [stats, setStats] = useState<AwardsStats>({

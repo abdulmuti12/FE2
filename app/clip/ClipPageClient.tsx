@@ -976,7 +976,7 @@ function ClipsContent() {
   useEffect(() => {
     const token = localStorage.getItem('user_token')
     if (!token) {
-      router.push('/')
+      router.push('/login?redirect=/clip')
       return
     }
     fetchMovies(token, currentPage, activeCategoryId)
