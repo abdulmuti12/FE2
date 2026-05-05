@@ -18,9 +18,9 @@ export async function GET(request: Request) {
 
     const query = id
       ? `id=${encodeURIComponent(id)}`
-      : `jud_url=${encodeURIComponent(String(judUrl))}`
+      : `judul=${encodeURIComponent(String(judUrl))}`
 
-    console.log('[EVENT META] Fetching meta with query:', query)
+    console.log('[EVENT META] Fetching meta with query:', query, { id, judul, judUrl })
 
     const response = await fetch(buildApiUrl(`/event/meta?${query}`), {
       method: 'GET',
