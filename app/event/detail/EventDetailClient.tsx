@@ -373,6 +373,73 @@ function EventDetailContent() {
       }
     }
 
+    // Fallback function untuk generate meta tags dari eventDetail data
+    const applyEventMetaFallback = () => {
+      if (!eventDetail) return
+
+      try {
+        cleanupAppliedMeta()
+
+        const title = eventDetail.title || 'Event'
+        const description = stripHtml(eventDetail.description || '').slice(0, 160)
+        const imageUrl = eventDetail.image_url || window.location.origin + '/og-image.png'
+        const eventUrl = window.location.href
+
+        // Update or create meta tags
+        const metaTags = [
+          { attr: 'property', key: 'og:title', content: title },
+          { attr: 'property', key: 'og:description', content: description },
+          { attr: 'property', key: 'og:image', content: imageUrl },
+          { attr: 'property', key: 'og:url', content: eventUrl },
+          { attr: 'property', key: 'og:type', content: 'article' },
+          { attr: 'name', key: 'twitter:title', content: title },
+          { attr: 'name', key: 'twitter:description', content: description },
+          { attr: 'name', key: 'twitter:image', content: imageUrl },
+          { attr: 'name', key: 'description', content: description },
+        ]
+
+        for (const tag of metaTags) {
+          const existing = Array.from(document.head.querySelectorAll(`meta[${tag.attr}]`)).find((node) => {
+            const value = node.getAttribute(tag.attr)
+            return typeof value === 'string' && value.toLowerCase() === tag.key.toLowerCase()
+          }) as HTMLMetaElement | undefined
+
+          if (existing) {
+            const alreadyTracked = updatedMetaNodesRef.current.some((item) => item.element === existing)
+            if (!alreadyTracked) {
+              updatedMetaNodesRef.current.push({
+                element: existing,
+                previousContent: existing.getAttribute('content'),
+              })
+            }
+            existing.setAttribute('content', tag.content)
+          } else {
+            const meta = document.createElement('meta')
+            meta.setAttribute(tag.attr, tag.key)
+            meta.setAttribute('content', tag.content)
+            meta.setAttribute('data-event-meta', '1')
+            document.head.appendChild(meta)
+            createdMetaNodesRef.current.push(meta)
+          }
+        }
+
+        // Update document title
+        if (previousTitleRef.current === null) {
+          previousTitleRef.current = document.title
+        }
+        document.title = title + ' | USKY'
+        
+        console.log('✅ Event meta tags applied successfully (fallback)', {
+          title,
+          description: description.slice(0, 50) + '...',
+          imageUrl,
+          tagsApplied: metaTags.length
+        })
+      } catch (error) {
+        console.error('Error applying event meta fallback:', error)
+      }
+    }
+
     // Injeksi manual di client ini tetap dibiarkan agar saat user pindah-pindah halaman secara SPA,
     // title browser dan meta-nya tetap berubah secara dinamis.
     const applyEventMeta = async () => {
@@ -387,20 +454,24 @@ function EventDetailContent() {
 
         const response = await fetch(url.toString(), {
           method: 'GET',
-          headers: token
-            ? {
-                Authorization: `Bearer ${token}`,
-                'Content-Type': 'application/json',
-              }
-            : undefined,
+          headers: {
+            ...(token ? { Authorization: `Bearer ${token}` } : {}),
+            'Content-Type': 'application/json',
+          },
         })
 
         const result = await response.json()
         if (!response.ok || result?.status !== true || typeof result?.data !== 'string') {
+          console.warn('Event meta API failed or returned invalid data:', { status: response.status, result })
+          // Fallback: generate meta tags manually from eventDetail if available
+          if (eventDetail) {
+            applyEventMetaFallback()
+          }
           return
         }
 
         const entries = parseMetaEntries(result.data)
+        console.log('✅ Event meta accessed from API', { judul: eventJudul, entriesCount: entries.length })
 
         if (previousTitleRef.current === null) {
           previousTitleRef.current = document.title
@@ -436,6 +507,12 @@ function EventDetailContent() {
         if (ogTitle || twitterTitle) {
           document.title = ogTitle || twitterTitle || document.title
         }
+        
+        console.log('✅ Event meta tags successfully applied from API', {
+          title: ogTitle || twitterTitle,
+          tagsApplied: entries.length,
+          newTitle: document.title
+        })
       } catch (error) {
         console.error('Error applying event meta tags:', error)
       }
@@ -446,7 +523,7 @@ function EventDetailContent() {
     return () => {
       cleanupAppliedMeta()
     }
-  }, [eventJudul])
+  }, [eventJudul, eventDetail])
 
   const handleClaimTicket = async () => {
     if (!eventDetail || !eventDetail.id) {

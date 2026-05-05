@@ -20,6 +20,8 @@ export async function GET(request: Request) {
       ? `id=${encodeURIComponent(id)}`
       : `jud_url=${encodeURIComponent(String(judUrl))}`
 
+    console.log('[EVENT META] Fetching meta with query:', query)
+
     const response = await fetch(buildApiUrl(`/event/meta?${query}`), {
       method: 'GET',
       headers: {
@@ -28,12 +30,21 @@ export async function GET(request: Request) {
       cache: 'no-store',
     })
 
-    const data = await response.json()
+    const data = await response.json().catch(() => null)
+    
+    if (!response.ok) {
+      console.error('[EVENT META] Backend API error:', { status: response.status, data })
+      return NextResponse.json(
+        data || { status: false, message: `Backend API error: ${response.statusText}` },
+        { status: response.status }
+      )
+    }
+
     return NextResponse.json(data, { status: response.status })
   } catch (error) {
     console.error('Error fetching event meta via proxy:', error)
     return NextResponse.json(
-      { status: false, message: 'Internal Server Error' },
+      { status: false, message: 'Internal Server Error', error: String(error) },
       { status: 500 }
     )
   }
