@@ -323,6 +323,13 @@ function EventDetailContent() {
       ? `${title}\n${shortDescription}`
       : `Check out this event: ${title}`
 
+    const openShareUrl = (shareUrl: string) => {
+      const popup = window.open(shareUrl, '_blank', 'noopener,noreferrer')
+      if (!popup) {
+        window.location.href = shareUrl
+      }
+    }
+
     switch (platform) {
       case 'copy':
         try {
@@ -333,22 +340,19 @@ function EventDetailContent() {
         }
         break
       case 'whatsapp':
-        window.open(`https://wa.me/?text=${encodeURIComponent(text + ' ' + url)}`, '_blank')
+        openShareUrl(`https://api.whatsapp.com/send?text=${encodeURIComponent(text + ' ' + url)}`)
         break
       case 'facebook':
-        window.open(
-          `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}&quote=${encodeURIComponent(text)}`,
-          '_blank'
-        )
+        openShareUrl(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`)
         break
       case 'x':
-        window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}`, '_blank')
+        openShareUrl(`https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}`)
         break
       case 'telegram':
-        window.open(`https://t.me/share/url?url=${encodeURIComponent(url)}&text=${encodeURIComponent(text)}`, '_blank')
+        openShareUrl(`https://t.me/share/url?url=${encodeURIComponent(url)}&text=${encodeURIComponent(text)}`)
         break
       case 'linkedin':
-        window.open(`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(url)}`, '_blank')
+        openShareUrl(`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(url)}`)
         break
     }
 
