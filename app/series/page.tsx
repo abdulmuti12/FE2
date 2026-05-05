@@ -138,7 +138,9 @@ export default function SeriesPage() {
       params.append('page', pageNum.toString())
       params.append('limit', ITEMS_PER_PAGE.toString())
 
-      const response = await fetch(`/api/series/series-list?${params.toString()}`, {
+      params.set('view_type', 'landscape')
+
+      const response = await fetch(`/api/series/list-group?${params.toString()}`, {
         method: 'GET',
         headers: {
           Authorization: `Bearer ${token}`,
@@ -196,11 +198,11 @@ export default function SeriesPage() {
             {seriesData.map((series) => (
               <Link 
                 key={series.id}
-                href={`/series/detail?id=${series.id}&id_group=${series.id}`}
+                href={`/series/detail?id_group=${series.id}`}
                 className="group relative block rounded-2xl md:rounded-xl overflow-hidden bg-[#0a1628] border border-white/5 hover:border-[#D4A84B]/50 transition-all duration-300"
               >
                 {/* Image Container */}
-                <div className="relative w-full aspect-[16/9] sm:aspect-[3/4] overflow-hidden bg-gray-900">
+                <div className="relative w-full aspect-[16/11] overflow-hidden bg-gray-900">
                   <Image
                     src={series.image_landscape_url || series.image_url || '/film/film2.png'}
                     alt={series.name}

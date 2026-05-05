@@ -5,11 +5,9 @@ export async function GET(request: NextRequest) {
   try {
     const searchParams = request.nextUrl.searchParams
     const sort = searchParams.get('sort') || 'latest'
-    const id_category = searchParams.get('id_category') || ''
     const page = searchParams.get('page') || '1'
-    const limit = searchParams.get('limit') || '5'
-    const view_type = searchParams.get('view_type') || 'potrait'
-    const folder_groups = searchParams.get('folder_groups') || ''
+    const limit = searchParams.get('limit') || '10'
+    const view_type = searchParams.get('view_type') || 'landscape'
 
     const authHeader = request.headers.get('authorization')
     const token = authHeader?.replace('Bearer ', '')
@@ -23,14 +21,11 @@ export async function GET(request: NextRequest) {
 
     const queryParams = new URLSearchParams()
     queryParams.append('sort', sort)
-    queryParams.append('id_category', id_category) 
     queryParams.append('page', page)
     queryParams.append('limit', limit)
     queryParams.append('view_type', view_type)
-    queryParams.append('folder_groups', folder_groups)
 
-    const apiUrl = buildApiUrl(`/series/list?${queryParams.toString()}`)
-
+    const apiUrl = buildApiUrl(`/series/list-group?${queryParams.toString()}`)
     const response = await fetch(apiUrl, {
       method: 'GET',
       headers: {
@@ -44,16 +39,16 @@ export async function GET(request: NextRequest) {
 
     try {
       data = JSON.parse(text)
-    } catch (error) {
+    } catch {
       data = { status: false, message: 'Invalid response format', raw: text }
     }
 
     return NextResponse.json(data, {
       status: response.status,
     })
-  } catch (error) {
+  } catch {
     return NextResponse.json(
-      { status: false, message: 'Failed to fetch series list' },
+      { status: false, message: 'Failed to fetch series group list' },
       { status: 500 }
     )
   }
