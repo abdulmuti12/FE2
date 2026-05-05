@@ -3,7 +3,7 @@
 import { Suspense, useCallback, useEffect, useRef, useState } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
-import { useSearchParams } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { Header } from '@/components/header'
 import { Footer } from '@/components/footer'
 import { ClipShare } from '@/components/clip/clip-share'
@@ -115,6 +115,7 @@ const parseMetaEntries = (metaBlob: string): MetaEntry[] => {
 }
 
 function AwardsDetailContent() {
+  const router = useRouter()
   const searchParams = useSearchParams()
   const awardId = searchParams.get('id')
 
@@ -781,6 +782,22 @@ function AwardsDetailContent() {
     }
   }
 
+  const handleAwardVideoEnded = () => {
+    const relatedAwards = awardData?.relate || []
+    if (!relatedAwards.length) return
+
+    const currentId = String(awardData?.id || awardId || '').trim()
+    const currentIndex = relatedAwards.findIndex((item) => String(item.id || '').trim() === currentId)
+    const nextCandidate =
+      currentIndex >= 0
+        ? relatedAwards[currentIndex + 1] || relatedAwards[0]
+        : relatedAwards[0]
+    const nextId = String(nextCandidate?.id || '').trim()
+
+    if (!nextId) return
+    router.push(`/awards/detail?id=${encodeURIComponent(nextId)}`)
+  }
+
   if (isLoading) {
     return (
       <div className="min-h-screen bg-[#050B14] flex flex-col items-center justify-center text-white font-sans">
@@ -832,11 +849,15 @@ function AwardsDetailContent() {
             {awardData.video_url ? (
               <video
                 key={awardData.video_url}
+                autoPlay
+                muted
+                playsInline
                 controls
                 controlsList="nodownload"
                 className="w-full h-full object-contain"
                 poster={convertToSecureUrl(awardData.image_landscape_url || awardData.image_url)}
                 onTimeUpdate={handleAwardVideoTimeUpdate}
+                onEnded={handleAwardVideoEnded}
               >
                 <source src={convertToSecureUrl(awardData.video_url)} type="video/mp4" />
                 Browser Anda tidak mendukung pemutar video ini.
