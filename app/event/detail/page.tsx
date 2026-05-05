@@ -1,4 +1,5 @@
 import { Metadata } from 'next'
+import { headers } from 'next/headers'
 import EventDetailClient from './EventDetailClient'
 
 type Props = {
@@ -35,7 +36,12 @@ function parseMetaContent(metaHtml: string): Record<string, string> {
 }
 
 export async function generateMetadata({ searchParams }: Props): Promise<Metadata> {
-  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://usky.ai'
+  const headerStore = await headers()
+  const host = headerStore.get('x-forwarded-host') || headerStore.get('host') || 'localhost:3000'
+  const protocol = headerStore.get('x-forwarded-proto') || (host.includes('localhost') ? 'http' : 'https')
+  const requestBaseUrl = `${protocol}://${host}`
+  const publicBaseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://usky.ai'
+  const baseUrl = requestBaseUrl
   const defaultTitle = 'Event Detail | USKY'
   const defaultDescription = 'Detail event terbaru di USKY.'
   const defaultImage = `${baseUrl}/og-image.png`
@@ -73,11 +79,21 @@ export async function generateMetadata({ searchParams }: Props): Promise<Metadat
 
   try {
     const query = id ? `id=${encodeURIComponent(id)}` : `judul=${encodeURIComponent(judul)}`
-    const apiUrl = `${baseUrl}/api/event/meta?${query}`
-    
-    // Panggil API di sisi server
-    const response = await fetch(apiUrl, { cache: 'no-store' })
-    const json = await response.json()
+    const apiUrls = [`${requestBaseUrl}/api/event/meta?${query}`, `${publicBaseUrl}/api/event/meta?${query}`]
+    let json: any = null
+
+    for (const apiUrl of apiUrls) {
+      try {
+        const response = await fetch(apiUrl, { cache: 'no-store' })
+        const body = await response.json()
+        if (response.ok && body?.status === true && typeof body?.data === 'string') {
+          json = body
+          break
+        }
+      } catch {
+        continue
+      }
+    }
 
     if (json?.status === true && typeof json?.data === 'string') {
       const meta = parseMetaContent(json.data)
