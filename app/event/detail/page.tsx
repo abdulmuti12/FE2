@@ -1,17 +1,21 @@
-import { Metadata, ResolvingMetadata } from 'next'
+import { Metadata } from 'next'
 import EventDetailClient from './EventDetailClient'
 
 type Props = {
   searchParams: { id?: string; judul?: string; jud_url?: string } | Promise<{ id?: string; judul?: string; jud_url?: string }>
 }
 
+export const dynamic = 'force-dynamic'
+export const revalidate = 0
+
 // Fungsi sederhana untuk parse HTML string dari API ke Object
 function parseMetaContent(metaHtml: string): Record<string, string> {
   const map: Record<string, string> = {}
+  const normalizedHtml = metaHtml.replace(/\\\//g, '/').replace(/\\"/g, '"')
   const metaTagRegex = /<meta\s+([^>]*?)\/?\s*>/gi
 
   let tagMatch: RegExpExecArray | null
-  while ((tagMatch = metaTagRegex.exec(metaHtml)) !== null) {
+  while ((tagMatch = metaTagRegex.exec(normalizedHtml)) !== null) {
     const attrs = tagMatch[1]
     const attrMap: Record<string, string> = {}
     const attrRegex = /([:\w-]+)\s*=\s*"([^"]*)"/g
@@ -21,7 +25,7 @@ function parseMetaContent(metaHtml: string): Record<string, string> {
       attrMap[attrMatch[1].toLowerCase()] = attrMatch[2]
     }
 
-    const key = attrMap.property || attrMap.name
+    const key = (attrMap.property || attrMap.name || '').toLowerCase()
     if (key && attrMap.content !== undefined) {
       map[key] = attrMap.content
     }
