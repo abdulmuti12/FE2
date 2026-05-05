@@ -5,10 +5,11 @@ export async function POST(request: Request) {
   try {
     const body = await request.json().catch(() => null)
     const id = body?.id
+    const judul = body?.judul || body?.jud_url
 
-    if (!id) {
+    if (!judul && !id) {
       return NextResponse.json(
-        { status: false, message: 'ID event diperlukan' },
+        { status: false, message: 'judul event atau id diperlukan' },
         { status: 400 }
       )
     }
@@ -22,7 +23,11 @@ export async function POST(request: Request) {
     }
 
     const formData = new FormData()
-    formData.append('id', String(id))
+    if (judul) {
+      formData.append('judul', String(judul))
+    } else {
+      formData.append('id', String(id))
+    }
 
     const backendResponse = await fetch(buildApiUrl('/event/detail'), {
       method: 'POST',

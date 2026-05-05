@@ -7,6 +7,7 @@ import { ChevronRight, ChevronLeft, Calendar, Filter, ChevronDown } from 'lucide
 interface EventItem {
   id: string
   title: string
+  jud_url?: string
   image?: string
   image_url?: string
   tgl_live?: string
@@ -98,9 +99,9 @@ export function AllEvents({
     return '/images/event/example.png'
   }
 
-  const openEventDetail = (eventId: string) => {
-    sessionStorage.setItem(EVENT_ID_STORAGE_KEY, eventId)
-    router.push(`/event/detail?id=${encodeURIComponent(eventId)}`)
+  const openEventDetail = (judul: string) => {
+    sessionStorage.setItem(EVENT_ID_STORAGE_KEY, judul)
+    router.push(`/event/detail?judul=${encodeURIComponent(judul)}`)
   }
 
   return (
@@ -213,7 +214,10 @@ export function AllEvents({
           allEvents.map((event) => (
             <div 
               key={event.id}
-              onClick={() => openEventDetail(event.id)}
+              onClick={() => {
+                if (!event.jud_url) return
+                openEventDetail(event.jud_url)
+              }}
               className="group cursor-pointer flex flex-col hover:opacity-80 transition-opacity"
             >
               {/* Poster Card */}

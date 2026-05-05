@@ -11,6 +11,7 @@ import { useRef } from 'react'
 
 interface EventDetailData {
   id: string
+  jud_url?: string
   title: string
   description?: string
   address?: string
@@ -69,7 +70,7 @@ function EventDetailRecapContent() {
   const previousTitleRef = useRef<string | null>(null)
 
   useEffect(() => {
-    const idFromQuery = searchParams.get('id')
+    const idFromQuery = searchParams.get('judul') || searchParams.get('jud_url') || searchParams.get('id')
     const storedId = sessionStorage.getItem(EVENT_ID_STORAGE_KEY)
     const resolvedId = idFromQuery || storedId || null
 
@@ -103,7 +104,7 @@ function EventDetailRecapContent() {
             Authorization: `Bearer ${token}`,
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify({ id: eventId }),
+          body: JSON.stringify({ judul: eventId }),
         })
 
         const result = await response.json()
@@ -241,14 +242,14 @@ function EventDetailRecapContent() {
     }
 
     const applyEventMeta = async () => {
-      if (!eventId) return
+      if (!eventDetail?.jud_url) return
 
       try {
         cleanupAppliedMeta()
 
         const token = localStorage.getItem('user_token')
         const url = new URL('/api/event/meta', window.location.origin)
-        url.searchParams.set('id', eventId)
+        url.searchParams.set('judul', eventDetail.jud_url)
 
         const response = await fetch(url.toString(), {
           method: 'GET',
@@ -311,7 +312,7 @@ function EventDetailRecapContent() {
     return () => {
       cleanupAppliedMeta()
     }
-  }, [eventId])
+  }, [eventDetail])
 
   if (loading) {
     return (

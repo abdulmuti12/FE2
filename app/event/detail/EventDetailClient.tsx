@@ -31,6 +31,7 @@ interface EventDetailData {
 
 interface EventCard {
   id: number
+  jud_url?: string
   title: string
   subtitle: string
   date: string
@@ -48,7 +49,7 @@ const EVENT_ID_STORAGE_KEY = 'selected_event_id'
 function EventDetailContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
-  const [eventId, setEventId] = useState<string | null>(null)
+  const [eventJudul, setEventJudul] = useState<string | null>(null)
 
   const [eventDetail, setEventDetail] = useState<EventDetailData | null>(null)
   const [ongoingEvents, setOngoingEvents] = useState<EventCard[]>([])
@@ -68,33 +69,75 @@ function EventDetailContent() {
 
   const [isClaiming, setIsClaiming] = useState(false)
 
+  const resolveJudulFromId = async (id: string): Promise<string | null> => {
+    const token = localStorage.getItem('user_token')
+    try {
+      const response = await fetch('/api/event/event-detail', {
+        method: 'POST',
+        headers: {
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ id }),
+      })
+      if (!response.ok) return null
+      const result = await response.json()
+      const judUrl = result?.data?.jud_url
+      return typeof judUrl === 'string' && judUrl.trim() ? judUrl : null
+    } catch {
+      return null
+    }
+  }
+
   useEffect(() => {
-    const idFromQuery = searchParams.get('id')
+    const idFromQuery = searchParams.get('judul') || searchParams.get('jud_url') || searchParams.get('id')
     const storedId = sessionStorage.getItem(EVENT_ID_STORAGE_KEY)
     const resolvedId = idFromQuery || storedId || null
 
-    setEventId(resolvedId)
+    setEventJudul(resolvedId)
     if (resolvedId) {
       sessionStorage.setItem(EVENT_ID_STORAGE_KEY, resolvedId)
     }
   }, [searchParams])
 
   useEffect(() => {
-    if (!eventId) return
-    const currentIdInQuery = searchParams.get('id')
-    if (currentIdInQuery === eventId) return
-    router.replace(`/event/detail?id=${encodeURIComponent(eventId)}`)
-  }, [eventId, router, searchParams])
+    const syncJudulInUrl = async () => {
+      if (!eventJudul) return
 
-  const openEventDetail = (id: string | number) => {
-    const nextId = String(id)
-    sessionStorage.setItem(EVENT_ID_STORAGE_KEY, nextId)
-    setEventId(nextId)
-    router.push(`/event/detail?id=${encodeURIComponent(nextId)}`)
+      let normalizedJudul = eventJudul
+      if (/^\d+$/.test(eventJudul)) {
+        const resolvedJudul = await resolveJudulFromId(eventJudul)
+        if (resolvedJudul) {
+          normalizedJudul = resolvedJudul
+          setEventJudul(resolvedJudul)
+          sessionStorage.setItem(EVENT_ID_STORAGE_KEY, resolvedJudul)
+        }
+      }
+
+      const currentIdInQuery = searchParams.get('judul')
+      if (currentIdInQuery === normalizedJudul) return
+      router.replace(`/event/detail?judul=${encodeURIComponent(normalizedJudul)}`)
+    }
+
+    syncJudulInUrl()
+  }, [eventJudul, router, searchParams])
+
+  const openEventDetail = async (idOrJudul: string | number) => {
+    const rawValue = String(idOrJudul)
+    let nextJudul = rawValue
+
+    if (/^\d+$/.test(rawValue)) {
+      const resolvedJudul = await resolveJudulFromId(rawValue)
+      if (resolvedJudul) nextJudul = resolvedJudul
+    }
+
+    sessionStorage.setItem(EVENT_ID_STORAGE_KEY, nextJudul)
+    setEventJudul(nextJudul)
+    router.push(`/event/detail?judul=${encodeURIComponent(nextJudul)}`)
   }
 
   const fetchEventDetail = async () => {
-    if (!eventId) {
+    if (!eventJudul) {
       setLoading(false)
       return
     }
@@ -108,7 +151,7 @@ function EventDetailContent() {
           Authorization: `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ id: eventId }),
+        body: JSON.stringify({ judul: eventJudul }),
       })
 
       const result = await response.json()
@@ -142,6 +185,7 @@ function EventDetailContent() {
       if (result.status && result.list) {
         const formattedEvents = result.list.map((event: any) => ({
           id: Number(event.id),
+          jud_url: event.jud_url,
           title: event.title,
           subtitle: event.event_category?.name || "Event",
           date: `${event.from_dates} - ${event.to_dates}`,
@@ -174,6 +218,7 @@ function EventDetailContent() {
       if (result.status && result.list) {
         const formattedEvents = result.list.map((event: any) => ({
           id: Number(event.id),
+          jud_url: event.jud_url,
           title: event.title,
           subtitle: event.event_category?.name || "Event",
           date: `${event.from_dates} - ${event.to_dates}`,
@@ -189,12 +234,12 @@ function EventDetailContent() {
   }
 
   useEffect(() => {
-    if (!eventId) return
+    if (!eventJudul) return
     setLoading(true)
     fetchEventDetail();
     fetchOngoingEvents();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [eventId])
+  }, [eventJudul])
 
   useEffect(() => {
     return () => {
@@ -331,14 +376,14 @@ function EventDetailContent() {
     // Injeksi manual di client ini tetap dibiarkan agar saat user pindah-pindah halaman secara SPA,
     // title browser dan meta-nya tetap berubah secara dinamis.
     const applyEventMeta = async () => {
-      if (!eventId) return
+      if (!eventJudul) return
 
       try {
         cleanupAppliedMeta()
 
         const token = localStorage.getItem('user_token')
         const url = new URL('/api/event/meta', window.location.origin)
-        url.searchParams.set('id', eventId)
+        url.searchParams.set('judul', eventJudul)
 
         const response = await fetch(url.toString(), {
           method: 'GET',
@@ -401,7 +446,7 @@ function EventDetailContent() {
     return () => {
       cleanupAppliedMeta()
     }
-  }, [eventId])
+  }, [eventJudul])
 
   const handleClaimTicket = async () => {
     if (!eventDetail || !eventDetail.id) {
@@ -607,7 +652,7 @@ function EventDetailContent() {
             {relatedEvents.map((event) => (
               <button
                 key={event.id}
-                onClick={() => openEventDetail(event.id)}
+                onClick={() => openEventDetail(event.jud_url || String(event.id))}
                 className="group block text-left"
               >
                 <div className="relative aspect-[3/4] rounded-xl overflow-hidden mb-4">
@@ -635,7 +680,7 @@ function EventDetailContent() {
             {ongoingEvents.map((event) => (
               <button
                 key={event.id}
-                onClick={() => openEventDetail(event.id)}
+                onClick={() => openEventDetail(event.jud_url || String(event.id))}
                 className="group block text-left"
               >
                 <div className="relative aspect-[3/4] rounded-xl overflow-hidden mb-4">

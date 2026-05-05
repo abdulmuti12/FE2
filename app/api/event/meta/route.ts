@@ -5,16 +5,22 @@ export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url)
     const id = searchParams.get('id')
+    const judul = searchParams.get('judul')
+    const judUrl = searchParams.get('jud_url') || judul
     const authorization = request.headers.get('authorization')
 
-    if (!id) {
+    if (!id && !judUrl) {
       return NextResponse.json(
-        { status: false, message: 'Parameter id diperlukan' },
+        { status: false, message: 'Parameter id atau judul/jud_url diperlukan' },
         { status: 400 }
       )
     }
 
-    const response = await fetch(buildApiUrl(`/event/meta?id=${encodeURIComponent(id)}`), {
+    const query = id
+      ? `id=${encodeURIComponent(id)}`
+      : `jud_url=${encodeURIComponent(String(judUrl))}`
+
+    const response = await fetch(buildApiUrl(`/event/meta?${query}`), {
       method: 'GET',
       headers: {
         ...(authorization ? { Authorization: authorization } : {}),

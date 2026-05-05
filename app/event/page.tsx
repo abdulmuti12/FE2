@@ -17,6 +17,7 @@ const recapEvents = []
 interface EventItem {
   id: string
   title: string
+  jud_url?: string
   image?: string
   image_url?: string
   tgl_live?: string
@@ -35,6 +36,7 @@ interface Category {
 interface UpcomingEvent {
   id: string
   title: string
+  jud_url?: string
   image?: string
   image_url?: string
   tgl_live?: string
@@ -47,6 +49,7 @@ interface UpcomingEvent {
 
 interface CompletedEvent {
   id: string
+  jud_url?: string
   title: string
   image_url?: string
   video_url?: string
@@ -103,14 +106,14 @@ export default function EventPage() {
     return `${year}-${month}-${day}`
   }
 
-  const openEventDetail = (eventId: string) => {
-    sessionStorage.setItem(EVENT_ID_STORAGE_KEY, eventId)
-    router.push(`/event/detail?id=${encodeURIComponent(eventId)}`)
+  const openEventDetail = (judul: string) => {
+    sessionStorage.setItem(EVENT_ID_STORAGE_KEY, judul)
+    router.push(`/event/detail?judul=${encodeURIComponent(judul)}`)
   }
 
-  const openEventRecapDetail = (eventId: string) => {
-    sessionStorage.setItem(EVENT_ID_STORAGE_KEY, eventId)
-    router.push(`/event/detail-recap?id=${encodeURIComponent(eventId)}`)
+  const openEventRecapDetail = (judul: string) => {
+    sessionStorage.setItem(EVENT_ID_STORAGE_KEY, judul)
+    router.push(`/event/detail-recap?judul=${encodeURIComponent(judul)}`)
   }
 
   useEffect(() => {
@@ -204,6 +207,7 @@ export default function EventPage() {
       if (data.status && data.list && Array.isArray(data.list)) {
         const recaps = data.list.map((item: any) => ({
           id: String(item.id || ''),
+          jud_url: item.jud_url || '',
           title: item.title || '',
           image_url: item.image_url || '',
           video_url: item.video_url || '',
@@ -331,7 +335,10 @@ export default function EventPage() {
                 <div
                   key={event.id}
                   className="w-[220px] rounded-xl overflow-hidden border border-white/10 cursor-pointer"
-                  onClick={() => openEventDetail(event.id)}
+                  onClick={() => {
+                    if (!event.jud_url) return
+                    openEventDetail(event.jud_url)
+                  }}
                 >
                   <div className="relative w-full h-[280px]">
                     <Image
@@ -390,7 +397,10 @@ export default function EventPage() {
                   <div
                     key={event.id}
                     className="w-[85vw] md:w-[220px] flex-shrink-0 snap-center md:snap-align-none rounded-xl overflow-hidden border border-white/10 cursor-pointer relative bg-[#0a1424]"
-                    onClick={() => openEventRecapDetail(event.id)}
+                    onClick={() => {
+                      if (!event.jud_url) return
+                      openEventRecapDetail(event.jud_url)
+                    }}
                   >
                     <div className="relative h-[420px] md:h-[280px] bg-black">
                       {event.video_url ? (

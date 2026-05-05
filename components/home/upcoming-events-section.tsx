@@ -7,6 +7,7 @@ import { useRouter } from 'next/navigation'
 
 interface EventData {
   id: string
+  jud_url?: string
   title: string
   image_url?: string
   tgl_live?: string
@@ -33,9 +34,9 @@ export function UpcomingEventsSection({
     el.scrollBy({ left: dir === 'right' ? amount : -amount, behavior: 'smooth' })
   }
 
-  const openEventDetail = (eventId: string) => {
-    sessionStorage.setItem(EVENT_ID_STORAGE_KEY, eventId)
-    router.push('/event/detail')
+  const openEventDetail = (judul: string) => {
+    sessionStorage.setItem(EVENT_ID_STORAGE_KEY, judul)
+    router.push(`/event/detail?judul=${encodeURIComponent(judul)}`)
   }
 
   return (
@@ -57,7 +58,10 @@ export function UpcomingEventsSection({
           {items.map((event) => (
             <button
               key={event.id}
-              onClick={() => openEventDetail(event.id)}
+              onClick={() => {
+                if (!event.jud_url) return
+                openEventDetail(event.jud_url)
+              }}
               className="flex flex-shrink-0 flex-col gap-3 text-left"
               type="button"
             >
