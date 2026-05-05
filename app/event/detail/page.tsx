@@ -2,7 +2,7 @@ import { Metadata, ResolvingMetadata } from 'next'
 import EventDetailClient from './EventDetailClient'
 
 type Props = {
-  searchParams: { id?: string } | Promise<{ id?: string }>
+  searchParams: { id?: string; judul?: string; jud_url?: string } | Promise<{ id?: string; judul?: string; jud_url?: string }>
 }
 
 // Fungsi sederhana untuk parse HTML string dari API ke Object
@@ -31,18 +31,45 @@ function parseMetaContent(metaHtml: string): Record<string, string> {
 }
 
 export async function generateMetadata({ searchParams }: Props): Promise<Metadata> {
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://usky.ai'
+  const defaultTitle = 'Event Detail | USKY'
+  const defaultDescription = 'Detail event terbaru di USKY.'
+  const defaultImage = `${baseUrl}/og-image.png`
+  const defaultMetadata: Metadata = {
+    metadataBase: new URL(baseUrl),
+    title: defaultTitle,
+    description: defaultDescription,
+    openGraph: {
+      title: defaultTitle,
+      description: defaultDescription,
+      images: [
+        {
+          url: defaultImage,
+          width: 1200,
+          height: 630,
+        },
+      ],
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: defaultTitle,
+      description: defaultDescription,
+      images: [defaultImage],
+    },
+  }
+
   // Tunggu searchParams selesai di-resolve (wajib di Next.js 14/15)
   const resolvedParams = await Promise.resolve(searchParams)
   const id = resolvedParams?.id
+  const judul = resolvedParams?.judul || resolvedParams?.jud_url
 
-  if (!id) {
-    return { title: 'Event Detail | USKY' }
+  if (!id && !judul) {
+    return defaultMetadata
   }
 
   try {
-    // Pastikan env NEXT_PUBLIC_APP_URL tersetting (contoh: https://usky.ai)
-    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://usky.ai'
-    const apiUrl = `${baseUrl}/api/event/meta?id=${encodeURIComponent(id)}`
+    const query = id ? `id=${encodeURIComponent(id)}` : `judul=${encodeURIComponent(judul)}`
+    const apiUrl = `${baseUrl}/api/event/meta?${query}`
     
     // Panggil API di sisi server
     const response = await fetch(apiUrl, { cache: 'no-store' })
@@ -82,7 +109,7 @@ export async function generateMetadata({ searchParams }: Props): Promise<Metadat
     console.error('Gagal load metadata event di server:', error)
   }
 
-  return { title: 'Event Detail | USKY' }
+  return defaultMetadata
 }
 
 export default function Page() {

@@ -263,19 +263,21 @@ function EventDetailContent() {
 
   const parseMetaEntries = (metaBlob: string): MetaEntry[] => {
     const normalized = metaBlob.replace(/\\\//g, '/').replace(/\\"/g, '"')
-    const regex = /<meta\s+(property|name)=["']([^"']+)["']\s+content=["']([^"']*)["'][^>]*>/gi
     const entries: MetaEntry[] = []
+    const container = document.createElement('div')
+    container.innerHTML = normalized
 
-    let match: RegExpExecArray | null
-    while ((match = regex.exec(normalized)) !== null) {
-      const attrType = match[1]?.toLowerCase() as 'name' | 'property'
-      const key = match[2]?.trim()
-      const content = decodeHtmlEntities((match[3] || '').replace(/\s+/g, ' ').trim())
+    container.querySelectorAll('meta').forEach((meta) => {
+      const propertyKey = meta.getAttribute('property')
+      const nameKey = meta.getAttribute('name')
+      const attrType = propertyKey ? 'property' : nameKey ? 'name' : null
+      const key = (propertyKey || nameKey || '').trim()
+      const content = decodeHtmlEntities((meta.getAttribute('content') || '').replace(/\s+/g, ' ').trim())
 
       if (attrType && key && content) {
         entries.push({ attr: attrType, key, content })
       }
-    }
+    })
 
     return entries
   }
