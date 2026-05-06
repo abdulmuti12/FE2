@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { cookies } from 'next/headers'
 import { buildApiUrl } from '@/app/api/_utils'
 
 export async function GET(request: NextRequest) {
@@ -19,7 +20,19 @@ export async function GET(request: NextRequest) {
     }
 
     const authHeader = request.headers.get('authorization')
-    const token = authHeader?.replace('Bearer ', '')
+    const tokenFromHeader = authHeader?.replace(/^Bearer\s+/i, '').trim()
+    const cookieStore = await cookies()
+    const tokenFromCookie =
+      cookieStore.get('token')?.value ||
+      cookieStore.get('auth_token')?.value ||
+      cookieStore.get('access_token')?.value
+    const token =
+      tokenFromHeader ||
+      tokenFromCookie ||
+      process.env.USKY_API_TOKEN ||
+      process.env.NEXT_PUBLIC_API_TOKEN ||
+      process.env.API_TOKEN ||
+      ''
 
     if (!token) {
       return NextResponse.json(
