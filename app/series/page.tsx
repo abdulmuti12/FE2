@@ -200,7 +200,7 @@ export default function SeriesPage() {
                 className="group relative block rounded-2xl md:rounded-xl overflow-hidden bg-[#0a1628] border border-white/5 hover:border-[#D4A84B]/50 transition-all duration-300"
               >
                 {/* Image Container */}
-                <div className="relative w-full aspect-[16/9] sm:aspect-[3/4] overflow-hidden bg-gray-900">
+                <div className="relative w-full aspect-[16/10] overflow-hidden bg-gray-900">
                   <Image
                     src={series.image_landscape_url || series.image_url || '/film/film2.png'}
                     alt={series.name}
@@ -209,7 +209,7 @@ export default function SeriesPage() {
                   />
 
                   {/* Play Button */}
-                  <div className="absolute inset-0 flex items-center justify-center z-10 pointer-events-none pb-8 md:pb-0">
+                  <div className="absolute inset-0 flex items-center justify-center z-10 pointer-events-none">
                     <div className="w-10 h-10 md:w-12 md:h-12 rounded-full bg-black/40 backdrop-blur-sm flex items-center justify-center border border-white/20 group-hover:bg-[#D4A84B]/90 group-hover:border-[#D4A84B] transition-all duration-300">
                       <Play className="w-4 h-4 md:w-5 md:h-5 text-white fill-white ml-1" />
                     </div>
@@ -219,16 +219,16 @@ export default function SeriesPage() {
                   <div className="absolute inset-0 bg-gradient-to-t from-[#050B14] via-[#050B14]/70 to-transparent opacity-90" />
 
                   {/* Text Content Area */}
-                  <div className="absolute inset-x-0 bottom-0 p-4 flex flex-col justify-end z-20">
-                    <h3 className="text-base md:text-sm lg:text-lg font-bold text-white leading-tight mb-1">
+                  <div className="absolute inset-x-0 bottom-0 p-3 md:p-4 flex flex-col justify-end z-20">
+                    <h3 className="text-sm md:text-sm lg:text-base font-bold text-white leading-tight mb-1">
                       {series.name || '[Judul Series]'}
                     </h3>
                     
-                    <p className="text-gray-300 text-xs md:text-[11px] lg:text-sm leading-snug mb-2 md:mb-3 min-h-[16px] md:min-h-[36px]">
-                      {truncateText(series.description || series.synopsis, 80)}
+                    <p className="text-gray-300 text-xs md:text-[11px] lg:text-xs leading-snug mb-2 min-h-[16px] md:min-h-[30px]">
+                      {truncateText(series.description || series.synopsis, 64)}
                     </p>
 
-                    <div className="hidden md:flex items-center justify-between text-gray-400 text-[10px] lg:text-xs">
+                    <div className="flex items-center justify-between text-gray-400 text-[10px] lg:text-xs">
                       <span className="truncate pr-2">{series.cats || '[Genre]'}</span>
                       <span className="shrink-0">{series.run_time_format || '1h 0m'}</span>
                     </div>
