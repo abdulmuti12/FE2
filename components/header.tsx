@@ -277,6 +277,8 @@ export function Header() {
                         router.push(`/series?q=${encodeURIComponent(searchValue)}`)
                       } else if (pathname.startsWith('/film')) {
                         router.push(`/film?q=${encodeURIComponent(searchValue)}`)
+                      } else if (pathname.startsWith('/clip')) {
+                        router.push(`/clip/list?q=${encodeURIComponent(searchValue)}`)
                       }
                       setIsSearchActive(false)
                       setSearchValue('')
@@ -411,6 +413,8 @@ export function Header() {
                           router.push(`/series?q=${encodeURIComponent(searchValue)}`)
                         } else if (pathname.startsWith('/film')) {
                           router.push(`/film?q=${encodeURIComponent(searchValue)}`)
+                        } else if (pathname.startsWith('/clip')) {
+                          router.push(`/clip/list?q=${encodeURIComponent(searchValue)}`)
                         }
                         setIsSearchActive(false)
                         setSearchValue('')

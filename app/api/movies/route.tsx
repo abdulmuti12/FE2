@@ -11,6 +11,7 @@ export async function GET(request: NextRequest) {
     const idCreator = searchParams.get('id_creator') || ''
     const page = searchParams.get('page') || '1'
     const limit = searchParams.get('limit') || '5'
+    const q = searchParams.get('q') || ''
 
     // Get token from Authorization header
     const authHeader = request.headers.get('Authorization') || ''
@@ -31,12 +32,17 @@ export async function GET(request: NextRequest) {
       limit: limit,
     })
 
+    if (q) {
+      params.append('q', q)
+    }
+
     console.log('[v0] Fetching movies with params:', {
       sort,
       id_category: idCategory,
       id_creator: idCreator,
       page,
       limit,
+      q,
     })
 
     const response = await fetch(

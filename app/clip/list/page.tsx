@@ -1,9 +1,9 @@
 'use client'
 
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState, Suspense } from 'react'
 import Image from 'next/image'
 import { Play } from 'lucide-react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { Header } from '@/components/header'
 
 interface ClipCategory {
@@ -24,8 +24,11 @@ interface ClipItem {
 const STORAGE_KEY = 'user_token'
 const MAX_DISPLAY_ITEMS = 15
 
-export default function ClipListPage() {
+function ClipListContent() {
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const [searchQuery, setSearchQuery] = useState(searchParams.get('q') || '')
+
   const [categories, setCategories] = useState<ClipCategory[]>([])
   const [activeCategoryId, setActiveCategoryId] = useState<string>('')
   const [activeCategoryName, setActiveCategoryName] = useState<string>('All Clips')
@@ -38,6 +41,12 @@ export default function ClipListPage() {
   const [hoveredClipId, setHoveredClipId] = useState<string | null>(null)
   const scrollContainerRef = useRef<HTMLElement | null>(null)
   const loadMoreRef = useRef<HTMLDivElement | null>(null)
+
+  // Sinkronisasi searchQuery saat ?q= berubah di URL (dari header search)
+  useEffect(() => {
+    const q = searchParams.get('q') || ''
+    setSearchQuery(q)
+  }, [searchParams])
 
   useEffect(() => {
     const fetchCategories = async (token: string) => {
@@ -96,6 +105,10 @@ export default function ClipListPage() {
           limit: MAX_DISPLAY_ITEMS.toString(),
         })
 
+        if (searchQuery) {
+          params.append('q', searchQuery)
+        }
+
         const response = await fetch(`/api/movies?${params.toString()}`, {
           headers: { Authorization: `Bearer ${token}` },
         })
@@ -145,7 +158,7 @@ export default function ClipListPage() {
     }
 
     fetchClips(token)
-  }, [activeCategoryId, page])
+  }, [activeCategoryId, page, searchQuery])
 
   useEffect(() => {
     if (!hasMore || loadingClips || loadingMore) return
@@ -346,5 +359,18 @@ export default function ClipListPage() {
         </div>
       </main>
     </>
+  )
+}
+
+// Wrapper dengan Suspense untuk useSearchParams() support
+export default function ClipListPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-black text-white flex items-center justify-center">
+        <div className="w-10 h-10 border-4 border-white/20 border-t-white rounded-full animate-spin"></div>
+      </div>
+    }>
+      <ClipListContent />
+    </Suspense>
   )
 }
