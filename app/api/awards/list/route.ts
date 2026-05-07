@@ -10,6 +10,7 @@ export async function GET(request: NextRequest) {
     const page = searchParams.get('page') || '1'
     const limit = searchParams.get('limit') || '15'
     const view_type = searchParams.get('view_type') || 'potrait'
+    const q = searchParams.get('q') || ''
 
     const authHeader = request.headers.get('authorization')
     const tokenFromHeader = authHeader?.replace(/^Bearer\s+/i, '').trim()
@@ -31,6 +32,9 @@ export async function GET(request: NextRequest) {
     })
     if (id_category && id_category.trim()) {
       params.append('id_category', id_category)
+    }
+    if (q) {
+      params.append('q', q)
     }
 
     const url = buildApiUrl(`/award/list?${params.toString()}`)

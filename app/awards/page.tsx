@@ -4,7 +4,7 @@ import { Header } from '@/components/header'
 import { Footer } from '@/components/footer'
 import { Heart, Eye, Play, ThumbsUp, MessageCircle, Clock, FileText, Trophy, Plus } from 'lucide-react'
 import { useState, useMemo, useEffect, useRef, lazy, Suspense } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import Image from 'next/image'
 import Link from 'next/link'
 
@@ -975,10 +975,9 @@ interface Category {
   name: string
 }
 
-function FilmsContent({ stats, statsLoading }: { stats: AwardsStats; statsLoading: boolean }) {
+function FilmsContent({ stats, statsLoading, searchQuery }: { stats: AwardsStats; statsLoading: boolean; searchQuery?: string }) {
   const [filterBy, setFilterBy] = useState('Latest')
   const [selectedCategory, setSelectedCategory] = useState('')
-  const [searchQuery, setSearchQuery] = useState('')
   
   // Inisialisasi awal bersih (array kosong) agar tidak meload dummy data sebelum Fetch API selesai
   const [submissions, setSubmissions] = useState<AwardSubmission[]>([])
@@ -1097,6 +1096,7 @@ function FilmsContent({ stats, statsLoading }: { stats: AwardsStats; statsLoadin
           view_type: 'potrait',
         })
         if (selectedCategory) params.append('id_category', selectedCategory)
+        if (searchQuery) params.append('q', searchQuery)
 
         const response = await fetch(`/api/awards/list?${params.toString()}`, {
           method: 'GET',
@@ -1134,7 +1134,7 @@ function FilmsContent({ stats, statsLoading }: { stats: AwardsStats; statsLoadin
     }
     fetchAwards()
     return () => controller.abort()
-  }, [filterBy, selectedCategory, currentPage])
+  }, [filterBy, selectedCategory, currentPage, searchQuery])
 
   const filteredSubmissions = useMemo(() => {
     if (!searchQuery) return submissions
@@ -1427,8 +1427,15 @@ function FilmsContent({ stats, statsLoading }: { stats: AwardsStats; statsLoadin
 // PAGE
 // ─────────────────────────────────────────────
 
-export default function AwardsPage() {
+function AwardsPageContent() {
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const [searchQuery, setSearchQuery] = useState(searchParams.get('q') || '')
+
+  useEffect(() => {
+    const q = searchParams.get('q') || ''
+    setSearchQuery(q)
+  }, [searchParams])
 
   useEffect(() => {
     const token = localStorage.getItem('user_token')
@@ -1557,7 +1564,7 @@ export default function AwardsPage() {
 
       {/* ── TAB CONTENT ── */}
       <div className="px-6 md:px-8 pb-20 mt-6 space-y-6">
-        {activeTab === 'Films'       && <FilmsContent stats={stats} statsLoading={statsLoading} />}
+        {activeTab === 'Films'       && <FilmsContent stats={stats} statsLoading={statsLoading} searchQuery={searchQuery} />}
         {activeTab === 'Leaderboard' && <LeaderboardContent stats={stats} statsLoading={statsLoading} />}
         {activeTab === 'Details'     && <DetailsContent stats={stats} statsLoading={statsLoading} />}
         {activeTab === 'Direction'   && <DirectionContent stats={stats} statsLoading={statsLoading} />}
@@ -1581,6 +1588,19 @@ export default function AwardsPage() {
 
       <Footer />
     </div>
+  )
+}
+
+// Wrapper dengan Suspense untuk useSearchParams() support
+export default function AwardsPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-[#050d1a] text-white flex items-center justify-center">
+        <div className="w-10 h-10 border-4 border-yellow-400/20 border-t-yellow-400 rounded-full animate-spin"></div>
+      </div>
+    }>
+      <AwardsPageContent />
+    </Suspense>
   )
 }
 
