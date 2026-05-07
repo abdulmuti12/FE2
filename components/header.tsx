@@ -273,9 +273,9 @@ export function Header() {
                   onChange={(e) => setSearchValue(e.target.value)}
                   onKeyDown={(e) => {
                     if (e.key === 'Enter') {
-                      if (pathname === '/series') {
+                      if (pathname.startsWith('/series')) {
                         router.push(`/series?q=${encodeURIComponent(searchValue)}`)
-                      } else if (pathname === '/film') {
+                      } else if (pathname.startsWith('/film')) {
                         router.push(`/film?q=${encodeURIComponent(searchValue)}`)
                       }
                       setIsSearchActive(false)
@@ -407,9 +407,9 @@ export function Header() {
                     onChange={(e) => setSearchValue(e.target.value)}
                     onKeyDown={(e) => {
                       if (e.key === 'Enter') {
-                        if (pathname === '/series') {
+                        if (pathname.startsWith('/series')) {
                           router.push(`/series?q=${encodeURIComponent(searchValue)}`)
-                        } else if (pathname === '/film') {
+                        } else if (pathname.startsWith('/film')) {
                           router.push(`/film?q=${encodeURIComponent(searchValue)}`)
                         }
                         setIsSearchActive(false)
