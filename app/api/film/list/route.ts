@@ -8,6 +8,7 @@ export async function GET(request: NextRequest) {
   const page = searchParams.get('page') || '1'
   const limit = searchParams.get('limit') || '10'
   const view_type = searchParams.get('view_type') || 'portrait'
+  const q = searchParams.get('q') || ''
 
   const authHeader = request.headers.get('Authorization')
   const token = authHeader?.replace('Bearer ', '')
@@ -26,9 +27,12 @@ export async function GET(request: NextRequest) {
   externalUrl.searchParams.append('page', page)
   externalUrl.searchParams.append('limit', limit)
   externalUrl.searchParams.append('view_type', view_type)
+  if (q) {
+    externalUrl.searchParams.append('q', q)
+  }
 
   console.log('[v0] Fetching from external API:', externalUrl.toString())
-  console.log('[v0] Request params:', { sort, id_category, page, limit, view_type })
+  console.log('[v0] Request params:', { sort, id_category, page, limit, view_type, q })
 
   try {
     const response = await fetch(externalUrl.toString(), {

@@ -2,23 +2,23 @@ import { NextResponse } from 'next/server'
 import { buildFilmApiUrl } from '../_utils'
 
 export async function GET(request: Request) {
-  // 1. Ambil parameter 'id' dari URL request internal
+  // 1. Ambil parameter 'judul' dari URL request internal
   const { searchParams } = new URL(request.url)
-  const id = searchParams.get('id')
+  const judul = searchParams.get('judul')
 
   // 2. Ambil token Authorization dari request frontend
   const authHeader = request.headers.get('Authorization')
 
-  if (!id) {
+  if (!judul) {
     return NextResponse.json(
-      { status: false, message: 'Parameter ID film diperlukan' },
+      { status: false, message: 'Parameter judul film diperlukan' },
       { status: 400 }
     )
   }
 
   try {
     // 3. Hit ke endpoint uSky API dari SERVER (Bypass CORS)
-    const response = await fetch(`${buildFilmApiUrl('/films/detail')}?id=${id}`, {
+    const response = await fetch(`${buildFilmApiUrl('/films/detail')}?judul=${encodeURIComponent(judul)}`, {
       method: 'GET',
       headers: {
         // Teruskan token ke server uSky
@@ -26,7 +26,7 @@ export async function GET(request: Request) {
         'Content-Type': 'application/json'
       },
       // Matikan cache agar data selalu fresh
-      cache: 'no-store' 
+      cache: 'no-store'
     })
 
     const data = await response.json()

@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
-import { useRouter } from 'next/navigation' // 1. Import useRouter
+import { useRouter, useSearchParams } from 'next/navigation' // 1. Import useRouter
 import { Header } from '@/components/header'
 import { Footer } from '@/components/footer'
 import { Play, Search, ChevronDown } from 'lucide-react'
@@ -50,8 +50,10 @@ const truncateText = (text: string | null | undefined, maxLength: number = 75) =
 }
 
 export default function SeriesPage() {
-  const router = useRouter() 
+  const router = useRouter()
+  const searchParams = useSearchParams()
 
+  const [searchQuery, setSearchQuery] = useState(searchParams.get('q') || '')
   const [genres, setGenres] = useState<Category[]>([])
   const [selectedGenre, setSelectedGenre] = useState('All Genre')
   const [selectedGenreId, setSelectedGenreId] = useState('')
@@ -60,11 +62,17 @@ export default function SeriesPage() {
   const [searchGenre, setSearchGenre] = useState('')
   const [isGenreDropdownOpen, setIsGenreDropdownOpen] = useState(false)
   const [loadingCategories, setLoadingCategories] = useState(true)
-  
+
   const [seriesData, setSeriesData] = useState<SeriesItem[]>([])
   const [loadingSeries, setLoadingSeries] = useState(false)
   const [currentPage, setCurrentPage] = useState(1)
   const [pagination, setPagination] = useState<PaginationMeta | null>(null)
+
+  // Sinkronisasi searchQuery saat ?q= berubah di URL (dari header search)
+  useEffect(() => {
+    const q = searchParams.get('q') || ''
+    setSearchQuery(q)
+  }, [searchParams])
 
   useEffect(() => {
     const previousTitle = document.title
@@ -135,6 +143,9 @@ export default function SeriesPage() {
       if (selectedGenreId) {
         params.append('id_category', selectedGenreId)
       }
+      if (searchQuery) {
+        params.append('q', searchQuery)
+      }
       params.append('page', pageNum.toString())
       params.append('limit', ITEMS_PER_PAGE.toString())
 
@@ -171,7 +182,7 @@ export default function SeriesPage() {
 
   useEffect(() => {
     fetchSeries(1)
-  }, [selectedGenreId, selectedSort, router])
+  }, [selectedGenreId, selectedSort, searchQuery, router])
 
   return (
     <div className="min-h-screen bg-[#050B14] text-white font-sans">

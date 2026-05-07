@@ -44,6 +44,7 @@ interface FilmData {
   image_url: string
   video_url: string
   relate: RelatedFilm[]
+  jud_url?: string
 }
 
 interface CommentItem {
@@ -120,7 +121,7 @@ const truncateText = (value: string, maxLength: number): string => {
 
 function DetailContent() {
   const searchParams = useSearchParams()
-  const filmId = searchParams.get('id')
+  const filmJudul = searchParams.get('judul')
 
   // State
   const [filmData, setFilmData] = useState<FilmData | null>(null)
@@ -149,8 +150,8 @@ function DetailContent() {
   // Effects - Fetch Film Detail
   useEffect(() => {
     const fetchFilmDetail = async () => {
-      if (!filmId) {
-        setError('ID Film tidak ditemukan di URL')
+      if (!filmJudul) {
+        setError('Judul film tidak ditemukan di URL')
         setIsLoading(false)
         return
       }
@@ -160,7 +161,7 @@ function DetailContent() {
         const token = localStorage.getItem(API.STORAGE_KEY)
 
         const url = new URL(API.ENDPOINTS.FILM_DETAIL, window.location.origin)
-        url.searchParams.set('id', filmId)
+        url.searchParams.set('judul', filmJudul)
 
         const response = await fetch(url.toString(), {
           method: 'GET',
@@ -186,22 +187,22 @@ function DetailContent() {
     }
 
     fetchFilmDetail()
-  }, [filmId])
+  }, [filmJudul])
 
   useEffect(() => {
     const sendFilmPlay = async () => {
-      if (!filmId || playedFilmIdsRef.current.has(filmId)) return
+      if (!filmJudul || playedFilmIdsRef.current.has(filmJudul)) return
 
       const token = localStorage.getItem(API.STORAGE_KEY)
       if (!token) return
 
-      playedFilmIdsRef.current.add(filmId)
+      playedFilmIdsRef.current.add(filmJudul)
 
       try {
         await fetch(API.ENDPOINTS.FILM_PLAY, {
           method: 'POST',
           headers: getAuthHeaders(token),
-          body: JSON.stringify({ id: filmId }),
+          body: JSON.stringify({ id: filmJudul }),
         })
       } catch (error) {
         console.error('Error sending film play:', error)
@@ -209,15 +210,15 @@ function DetailContent() {
     }
 
     sendFilmPlay()
-  }, [filmId])
+  }, [filmJudul])
 
   // Effects - Fetch Comments
   const fetchComments = async () => {
-    if (!filmId) return
+    if (!filmJudul) return
     try {
       setLoadingComments(true)
       const token = localStorage.getItem(API.STORAGE_KEY) || ''
-      const response = await fetch(`${API.ENDPOINTS.FILM_COMMENT}?id=${filmId}`, {
+      const response = await fetch(`${API.ENDPOINTS.FILM_COMMENT}?id=${filmJudul}`, {
         method: 'GET',
         headers: getAuthHeaders(token),
       })
@@ -236,10 +237,10 @@ function DetailContent() {
   }
 
   useEffect(() => {
-    if (filmId) {
+    if (filmJudul) {
       fetchComments()
     }
-  }, [filmId])
+  }, [filmJudul])
 
   useEffect(() => {
     if (!filmData?.name) return
@@ -278,7 +279,7 @@ function DetailContent() {
 
   // Comment Submission Handler
   const handleSubmitComment = async () => {
-    if (!reviewText.trim() || !filmId) {
+    if (!reviewText.trim() || !filmJudul) {
       alert('Komentar tidak boleh kosong')
       return
     }
@@ -295,7 +296,7 @@ function DetailContent() {
         method: 'POST',
         headers: getAuthHeaders(token),
         body: JSON.stringify({
-          id: filmId,
+          id: filmJudul,
           comment: reviewText.trim()
         })
       })
@@ -360,7 +361,7 @@ function DetailContent() {
   const handleLoveFilm = async () => {
     try {
       const token = localStorage.getItem(API.STORAGE_KEY)
-      if (!token || !filmId) {
+      if (!token || !filmJudul) {
         alert('Silakan login terlebih dahulu untuk menambahkan favorit')
         return
       }
@@ -369,7 +370,7 @@ function DetailContent() {
         method: 'POST',
         headers: getAuthHeaders(token),
         body: JSON.stringify({
-          id: filmId,
+          id: filmJudul,
         }),
       })
 
@@ -389,7 +390,7 @@ function DetailContent() {
   const handleAddToWatchlist = async () => {
     try {
       const token = localStorage.getItem(API.STORAGE_KEY)
-      if (!token || !filmId) {
+      if (!token || !filmJudul) {
         // alert('Silakan login terlebih dahulu untuk menambahkan watchlist')
         return
       }
@@ -398,7 +399,7 @@ function DetailContent() {
         method: 'POST',
         headers: getAuthHeaders(token),
         body: JSON.stringify({
-          id: filmId,
+          id: filmJudul,
         }),
       })
 
@@ -430,8 +431,8 @@ function DetailContent() {
       }, 2500)
     }
 
-    if (!filmId) {
-      showRatingToast('ID Film tidak ditemukan di URL', 'error')
+    if (!filmJudul) {
+      showRatingToast('Judul film tidak ditemukan di URL', 'error')
       return
     }
 
@@ -448,7 +449,7 @@ function DetailContent() {
         method: 'POST',
         headers: getAuthHeaders(token),
         body: JSON.stringify({
-          id: filmId,
+          id: filmJudul,
           stars,
         }),
       })
@@ -729,7 +730,7 @@ function DetailContent() {
 
       <ClipShare
         showShare={showShare}
-        clipId={filmId || ''}
+        clipId={filmJudul || ''}
         clipName={filmData?.name || 'Film'}
         onClose={() => setShowShare(false)}
         onPlatformShare={handlePlatformShare}

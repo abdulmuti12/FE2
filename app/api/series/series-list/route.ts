@@ -10,6 +10,7 @@ export async function GET(request: NextRequest) {
     const id_category = searchParams.get('id_category') || ''
     const page = searchParams.get('page') || '1'
     const limit = searchParams.get('limit') || '8'
+    const q = searchParams.get('q') || ''
 
     const authHeader = request.headers.get('authorization')
     const token = authHeader?.replace('Bearer ', '')
@@ -23,9 +24,12 @@ export async function GET(request: NextRequest) {
 
     const queryParams = new URLSearchParams()
     queryParams.append('sort', sort)
-    queryParams.append('id_category', id_category) 
+    queryParams.append('id_category', id_category)
     queryParams.append('page', page)
     queryParams.append('limit', limit)
+    if (q) {
+      queryParams.append('q', q)
+    }
 
     const apiUrl = buildApiUrl(`/series/list-group?${queryParams.toString()}`)
 

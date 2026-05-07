@@ -13,6 +13,7 @@ export function Header() {
   const [userDropdownOpen, setUserDropdownOpen] = useState(false) // desktop dropdown
   const [mobileUserMenuOpen, setMobileUserMenuOpen] = useState(false) // mobile drawer
   const [isSearchActive, setIsSearchActive] = useState(false)
+  const [searchValue, setSearchValue] = useState('')
   const [displayName, setDisplayName] = useState('User')
   const [username, setUsername] = useState('user')
 
@@ -268,6 +269,19 @@ export function Header() {
                 <input
                   ref={searchInputRef}
                   type="text"
+                  value={searchValue}
+                  onChange={(e) => setSearchValue(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      if (pathname === '/series') {
+                        router.push(`/series?q=${encodeURIComponent(searchValue)}`)
+                      } else if (pathname === '/film') {
+                        router.push(`/film?q=${encodeURIComponent(searchValue)}`)
+                      }
+                      setIsSearchActive(false)
+                      setSearchValue('')
+                    }
+                  }}
                   placeholder="Search..."
                   className="bg-transparent border-none outline-none text-white w-full text-sm placeholder:text-gray-500"
                 />
@@ -389,6 +403,19 @@ export function Header() {
                   <input
                     ref={searchInputRef}
                     type="text"
+                    value={searchValue}
+                    onChange={(e) => setSearchValue(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        if (pathname === '/series') {
+                          router.push(`/series?q=${encodeURIComponent(searchValue)}`)
+                        } else if (pathname === '/film') {
+                          router.push(`/film?q=${encodeURIComponent(searchValue)}`)
+                        }
+                        setIsSearchActive(false)
+                        setSearchValue('')
+                      }
+                    }}
                     placeholder="Search..."
                     className="bg-transparent border-none outline-none text-white w-full text-sm placeholder:text-gray-500"
                   />

@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useMemo, useState, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { Header } from '@/components/header'
 import { Footer } from '@/components/footer'
 import { ChevronRight, Play, Info } from 'lucide-react'
@@ -22,6 +22,7 @@ interface Film {
   synopsis: string
   genre: string
   cats?: string
+  jud_url?: string
 }
 
 interface Category {
@@ -65,7 +66,8 @@ const getAuthHeaders = (token: string) => ({
 
 const buildFilmsUrl = (
   categoryId: string,
-  page: number
+  page: number,
+  q?: string
 ): string => {
   const params = new URLSearchParams({
     sort: API_PARAMS.FILMS_SORT,
@@ -74,6 +76,9 @@ const buildFilmsUrl = (
     limit: API_PARAMS.FILMS_LIMIT.toString(),
     view_type: API_PARAMS.FILMS_VIEW_TYPE,
   })
+  if (q) {
+    params.append('q', q)
+  }
   return `${API_ENDPOINTS.FILMS_LIST}?${params}`
 }
 
@@ -112,15 +117,9 @@ const groupFilmsByCategory = (
 
 export default function FilmPage() {
   const router = useRouter()
+  const searchParams = useSearchParams()
 
-  useEffect(() => {
-    const token = localStorage.getItem(UI.STORAGE_KEY)
-    if (!token) {
-      router.push('/login?redirect=/film')
-    }
-  }, [router])
-
-  // State
+  const [searchQuery, setSearchQuery] = useState(searchParams.get('q') || '')
   const [films, setFilms] = useState<Film[]>([])
   const [categories, setCategories] = useState<Category[]>([])
   const [selectedCategory, setSelectedCategory] = useState<string>(UI.CATEGORY_ALL)
@@ -128,6 +127,12 @@ export default function FilmPage() {
   const [expandedCategories, setExpandedCategories] = useState<Record<string, boolean>>({})
   const [loading, setLoading] = useState(true)
   const [page, setPage] = useState(1)
+
+  // Sinkronisasi searchQuery saat ?q= berubah di URL (dari header search)
+  useEffect(() => {
+    const q = searchParams.get('q') || ''
+    setSearchQuery(q)
+  }, [searchParams])
 
   useEffect(() => {
     const previousTitle = document.title
@@ -151,7 +156,7 @@ export default function FilmPage() {
         }
 
         const categoryId = selectedCategory === UI.CATEGORY_ALL ? '' : selectedCategory
-        const url = buildFilmsUrl(categoryId, page)
+        const url = buildFilmsUrl(categoryId, page, searchQuery)
 
         const response = await fetch(url, {
           method: 'GET',
@@ -174,7 +179,7 @@ export default function FilmPage() {
     }
 
     fetchFilms()
-  }, [selectedCategory, page])
+  }, [selectedCategory, page, searchQuery])
 
   // Effects - Fetch Categories
   useEffect(() => {
@@ -280,7 +285,7 @@ export default function FilmPage() {
                     onMouseEnter={() => setHoveredFilmId(film.id)}
                     onMouseLeave={() => setHoveredFilmId(null)}
                   >
-                    <Link href={`/film/detail?id=${film.id}`} className="block">
+                    <Link href={`/film/detail?judul=${film.jud_url || film.id}`} className="block">
                       <div
                         className="relative rounded-xl overflow-hidden bg-[#0f172a] transition-all duration-300 ease-out w-full aspect-[2/3]"
                       >
@@ -376,7 +381,7 @@ export default function FilmPage() {
                               onMouseEnter={() => setHoveredFilmId(film.id)}
                               onMouseLeave={() => setHoveredFilmId(null)}
                             >
-                              <Link href={`/film/detail?id=${film.id}`} className="block">
+                              <Link href={`/film/detail?judul=${film.jud_url || film.id}`} className="block">
                                 <div
                                   className="relative rounded-xl overflow-hidden bg-[#0f172a] transition-all duration-300 ease-out w-full aspect-[2/3]"
                                 >

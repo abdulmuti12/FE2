@@ -4,7 +4,7 @@ import FilmDetailClient from './FilmDetailClient'
 import { buildFilmApiUrl } from '@/app/api/film/_utils'
 
 type Props = {
-  searchParams: { id?: string } | Promise<{ id?: string }>
+  searchParams: { judul?: string } | Promise<{ judul?: string }>
 }
 
 type MetaTagMap = Record<string, string>
@@ -112,14 +112,14 @@ export async function generateMetadata(
   const requestOrigin = `${proto}://${host}`
 
   const resolvedSearchParams = await Promise.resolve(searchParams)
-  const id = resolvedSearchParams?.id
+  const judul = resolvedSearchParams?.judul
 
-  if (!id) {
+  if (!judul) {
     return { title: 'Film | USKY' }
   }
 
   try {
-    const apiUrl = `${buildFilmApiUrl('/films/meta')}?id=${encodeURIComponent(id)}`
+    const apiUrl = `${buildFilmApiUrl('/films/meta')}?judul=${encodeURIComponent(judul)}`
     const response = await fetch(apiUrl, { cache: 'no-store' })
     const json = await response.json()
 
@@ -135,7 +135,7 @@ export async function generateMetadata(
           meta['keywords'] ||
           ''
       )
-      const image = toCrawlerSafeImageUrl(meta['og:image'] || meta['twitter:image'] || '', id)
+      const image = toCrawlerSafeImageUrl(meta['og:image'] || meta['twitter:image'] || '', judul)
       const videoUrl = toShareUrl(meta['og:video'] || meta['twitter:url'] || '')
       const secureVideoUrl = toShareUrl(meta['og:video:secure_url'] || videoUrl)
       const videoType = meta['og:video:type'] || 'video/mp4'
@@ -146,7 +146,7 @@ export async function generateMetadata(
       const twitterCard = image ? 'summary_large_image' : (meta['twitter:card'] || 'summary')
       const twitterSite = meta['twitter:site'] || '@usky'
       const siteName = meta['og:site_name'] || 'USKY'
-      const pageUrl = `${requestOrigin.replace(/\/$/, '')}/film/detail?id=${encodeURIComponent(id)}`
+      const pageUrl = `${requestOrigin.replace(/\/$/, '')}/film/detail?judul=${encodeURIComponent(judul)}`
 
       return {
         title,
