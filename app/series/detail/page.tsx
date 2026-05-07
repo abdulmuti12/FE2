@@ -4,7 +4,7 @@ import { headers } from 'next/headers'
 import SeriesDetailClient from './SeriesDetailClient'
 
 type Props = {
-  searchParams: { id_group?: string; id?: string } | Promise<{ id_group?: string; id?: string }>
+  searchParams: { id_group?: string; id?: string; judul?: string } | Promise<{ id_group?: string; id?: string; judul?: string }>
 }
 
 type MetaTagMap = Record<string, string>
@@ -72,9 +72,10 @@ export async function generateMetadata(
   const requestOrigin = `${proto}://${host}`
 
   const resolvedSearchParams = await Promise.resolve(searchParams)
+  const idGroup = resolvedSearchParams?.id_group
   const idVideo = resolvedSearchParams?.id
 
-  if (!idVideo) {
+  if (!idGroup && !idVideo) {
     return { title: 'Series | USKY' }
   }
 
@@ -83,12 +84,14 @@ export async function generateMetadata(
       process.env.NEXT_PUBLIC_APP_URL ||
       process.env.APP_URL ||
       requestOrigin
-    const apiUrl = `${appBaseUrl.replace(/\/$/, '')}/api/series/meta?id=${encodeURIComponent(idVideo)}`
-    console.log('[series/detail metadata] hit series/meta', { idVideo, apiUrl })
+    // Pakai id_group sebagai identifier utama, fallback ke id
+    const identifier = idGroup || idVideo
+    const apiUrl = `${appBaseUrl.replace(/\/$/, '')}/api/series/meta?judul=${encodeURIComponent(identifier)}`
+    console.log('[series/detail metadata] hit series/meta', { identifier, apiUrl })
     const response = await fetch(apiUrl, { cache: 'no-store' })
     const json = await response.json()
     console.log('[series/detail metadata] series/meta response', {
-      idVideo,
+      identifier: identifier || '',
       httpStatus: response.status,
       status: json?.status,
       message: json?.message,

@@ -3,19 +3,19 @@ import { buildApiUrl } from '@/app/api/_utils'
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url)
-  const id = searchParams.get('id')
+  const judul = searchParams.get('judul')
   const authHeader = request.headers.get('authorization')
 
-  if (!id) {
+  if (!judul) {
     return NextResponse.json(
-      { status: false, message: 'Parameter ID series diperlukan' },
+      { status: false, message: 'Parameter judul series diperlukan' },
       { status: 400 }
     )
   }
 
   try {
     const response = await fetch(
-      `${buildApiUrl('/series/meta')}?id=${encodeURIComponent(id)}`,
+      `${buildApiUrl('/series/meta')}?judul=${encodeURIComponent(judul)}`,
       {
         method: 'GET',
         headers: {
