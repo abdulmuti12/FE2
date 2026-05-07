@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useMemo, useState, useEffect } from 'react'
+import React, { useMemo, useState, useEffect, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { Header } from '@/components/header'
 import { Footer } from '@/components/footer'
@@ -115,7 +115,7 @@ const groupFilmsByCategory = (
 // Component
 // ============================================================================
 
-export default function FilmPage() {
+function FilmPageContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
 
@@ -445,5 +445,18 @@ export default function FilmPage() {
 
       <Footer />
     </div>
+  )
+}
+
+// Wrapper dengan Suspense untuk useSearchParams() support
+export default function FilmPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-[#020817] text-white font-sans flex items-center justify-center">
+        <div className="w-10 h-10 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+      </div>
+    }>
+      <FilmPageContent />
+    </Suspense>
   )
 }

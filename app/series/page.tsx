@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, Suspense } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation' // 1. Import useRouter
@@ -49,7 +49,7 @@ const truncateText = (text: string | null | undefined, maxLength: number = 75) =
   return plainText.substring(0, maxLength).trim() + '...'
 }
 
-export default function SeriesPage() {
+function SeriesPageContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
 
@@ -306,5 +306,18 @@ export default function SeriesPage() {
 
       <Footer />
     </div>
+  )
+}
+
+// Wrapper dengan Suspense untuk useSearchParams() support
+export default function SeriesPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-[#050B14] text-white font-sans flex items-center justify-center">
+        <div className="w-10 h-10 border-4 border-[#D4A84B]/20 border-t-[#D4A84B] rounded-full animate-spin"></div>
+      </div>
+    }>
+      <SeriesPageContent />
+    </Suspense>
   )
 }
