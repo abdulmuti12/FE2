@@ -124,6 +124,7 @@ function DetailContent() {
   const filmJudul = searchParams.get('judul')
 
   // State
+  const [filmId, setFilmId] = useState<string>('')
   const [filmData, setFilmData] = useState<FilmData | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -172,6 +173,7 @@ function DetailContent() {
 
         if (result.status === true && result.data) {
           setFilmData(result.data)
+          setFilmId(result.data.id) // Simpan id untuk endpoint play, love, comment, rating
           setIsFavorite(result.data.my_favorit === '1')
           setIsInWatchlist(result.data.watch_me === '1')
           setRating(normalizeRating(result.data.rates))
@@ -191,18 +193,18 @@ function DetailContent() {
 
   useEffect(() => {
     const sendFilmPlay = async () => {
-      if (!filmJudul || playedFilmIdsRef.current.has(filmJudul)) return
+      if (!filmId || playedFilmIdsRef.current.has(filmId)) return
 
       const token = localStorage.getItem(API.STORAGE_KEY)
       if (!token) return
 
-      playedFilmIdsRef.current.add(filmJudul)
+      playedFilmIdsRef.current.add(filmId)
 
       try {
         await fetch(API.ENDPOINTS.FILM_PLAY, {
           method: 'POST',
           headers: getAuthHeaders(token),
-          body: JSON.stringify({ id: filmJudul }),
+          body: JSON.stringify({ id: filmId }),
         })
       } catch (error) {
         console.error('Error sending film play:', error)
@@ -210,15 +212,15 @@ function DetailContent() {
     }
 
     sendFilmPlay()
-  }, [filmJudul])
+  }, [filmId])
 
   // Effects - Fetch Comments
   const fetchComments = async () => {
-    if (!filmJudul) return
+    if (!filmId) return
     try {
       setLoadingComments(true)
       const token = localStorage.getItem(API.STORAGE_KEY) || ''
-      const response = await fetch(`${API.ENDPOINTS.FILM_COMMENT}?id=${filmJudul}`, {
+      const response = await fetch(`${API.ENDPOINTS.FILM_COMMENT}?id=${filmId}`, {
         method: 'GET',
         headers: getAuthHeaders(token),
       })
@@ -237,10 +239,10 @@ function DetailContent() {
   }
 
   useEffect(() => {
-    if (filmJudul) {
+    if (filmId) {
       fetchComments()
     }
-  }, [filmJudul])
+  }, [filmId])
 
   useEffect(() => {
     if (!filmData?.name) return
@@ -279,7 +281,7 @@ function DetailContent() {
 
   // Comment Submission Handler
   const handleSubmitComment = async () => {
-    if (!reviewText.trim() || !filmJudul) {
+    if (!reviewText.trim() || !filmId) {
       alert('Komentar tidak boleh kosong')
       return
     }
@@ -296,7 +298,7 @@ function DetailContent() {
         method: 'POST',
         headers: getAuthHeaders(token),
         body: JSON.stringify({
-          id: filmJudul,
+          id: filmId,
           comment: reviewText.trim()
         })
       })
@@ -361,7 +363,7 @@ function DetailContent() {
   const handleLoveFilm = async () => {
     try {
       const token = localStorage.getItem(API.STORAGE_KEY)
-      if (!token || !filmJudul) {
+      if (!token || !filmId) {
         alert('Silakan login terlebih dahulu untuk menambahkan favorit')
         return
       }
@@ -370,7 +372,7 @@ function DetailContent() {
         method: 'POST',
         headers: getAuthHeaders(token),
         body: JSON.stringify({
-          id: filmJudul,
+          id: filmId,
         }),
       })
 
@@ -390,7 +392,7 @@ function DetailContent() {
   const handleAddToWatchlist = async () => {
     try {
       const token = localStorage.getItem(API.STORAGE_KEY)
-      if (!token || !filmJudul) {
+      if (!token || !filmId) {
         // alert('Silakan login terlebih dahulu untuk menambahkan watchlist')
         return
       }
@@ -399,7 +401,7 @@ function DetailContent() {
         method: 'POST',
         headers: getAuthHeaders(token),
         body: JSON.stringify({
-          id: filmJudul,
+          id: filmId,
         }),
       })
 
@@ -431,8 +433,8 @@ function DetailContent() {
       }, 2500)
     }
 
-    if (!filmJudul) {
-      showRatingToast('Judul film tidak ditemukan di URL', 'error')
+    if (!filmId) {
+      showRatingToast('ID film tidak ditemukan', 'error')
       return
     }
 
@@ -449,7 +451,7 @@ function DetailContent() {
         method: 'POST',
         headers: getAuthHeaders(token),
         body: JSON.stringify({
-          id: filmJudul,
+          id: filmId,
           stars,
         }),
       })
@@ -730,7 +732,7 @@ function DetailContent() {
 
       <ClipShare
         showShare={showShare}
-        clipId={filmJudul || ''}
+        clipId={filmId || ''}
         clipName={filmData?.name || 'Film'}
         onClose={() => setShowShare(false)}
         onPlatformShare={handlePlatformShare}
