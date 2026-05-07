@@ -281,6 +281,8 @@ export function Header() {
                         router.push(`/clip/list?q=${encodeURIComponent(searchValue)}`)
                       } else if (pathname.startsWith('/awards')) {
                         router.push(`/awards?q=${encodeURIComponent(searchValue)}`)
+                      } else if (pathname.startsWith('/event')) {
+                        router.push(`/event?q=${encodeURIComponent(searchValue)}`)
                       }
                       setIsSearchActive(false)
                       setSearchValue('')
@@ -419,6 +421,8 @@ export function Header() {
                           router.push(`/clip/list?q=${encodeURIComponent(searchValue)}`)
                         } else if (pathname.startsWith('/awards')) {
                           router.push(`/awards?q=${encodeURIComponent(searchValue)}`)
+                        } else if (pathname.startsWith('/event')) {
+                          router.push(`/event?q=${encodeURIComponent(searchValue)}`)
                         }
                         setIsSearchActive(false)
                         setSearchValue('')

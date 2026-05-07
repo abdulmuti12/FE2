@@ -4,9 +4,9 @@ import { Header } from '@/components/header'
 import { Footer } from '@/components/footer'
 // import { ChevronRight, Calendar, Play } from 'lucide-react'
 import { AllEvents } from '@/components/event/all-events'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 // import { useState, useEffect } from 'react'
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, Suspense } from 'react'
 import { ChevronRight, ChevronLeft, Calendar, Play } from 'lucide-react'
 import Image from 'next/image'
 
@@ -60,8 +60,10 @@ interface CompletedEvent {
 
 const EVENT_ID_STORAGE_KEY = 'selected_event_id'
 
-export default function EventPage() {
+function EventPageContent() {
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const [searchQuery, setSearchQuery] = useState(searchParams.get('q') || '')
 
   const [upcomingEventsList, setUpcomingEventsList] = useState<UpcomingEvent[]>([])
   const [completedEventsList, setCompletedEventsList] = useState<CompletedEvent[]>([])
@@ -78,6 +80,12 @@ export default function EventPage() {
   const [idCategory, setIdCategory] = useState('')
   const [idPartner, setIdPartner] = useState('')
   const [sortBy, setSortBy] = useState('latest')
+
+  // Sinkronisasi searchQuery saat ?q= berubah di URL (dari header search)
+  useEffect(() => {
+    const q = searchParams.get('q') || ''
+    setSearchQuery(q)
+  }, [searchParams])
 
   // Referensi untuk membidik container scroll
   const scrollContainerRef = useRef<HTMLDivElement>(null)
@@ -129,8 +137,8 @@ export default function EventPage() {
     fetchCategories(token)
     fetchUpcomingEvents(token)
     fetchCompletedEvents(token)
-    fetchEvents(token, currentPage, idCategory, idPartner, sortBy)
-  }, [currentPage, idCategory, idPartner, sortBy, router])
+    fetchEvents(token, currentPage, idCategory, idPartner, sortBy, searchQuery)
+  }, [currentPage, idCategory, idPartner, sortBy, searchQuery, router])
 
   const fetchCategories = async (token: string) => {
     try {
@@ -229,7 +237,8 @@ export default function EventPage() {
     page: number,
     category: string,
     partner: string,
-    sort: string
+    sort: string,
+    q?: string
   ) => {
     try {
       setLoading(true)
@@ -241,6 +250,10 @@ export default function EventPage() {
         page: page.toString(),
         limit: LIMIT.toString(),
       })
+
+      if (q) {
+        params.append('q', q)
+      }
 
       const url = `/api/event/events?${params.toString()}`
 
@@ -470,5 +483,18 @@ export default function EventPage() {
       <Footer />
 
     </div>
+  )
+}
+
+// Wrapper dengan Suspense untuk useSearchParams() support
+export default function EventPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-[#050d1a] text-white flex items-center justify-center">
+        <div className="w-10 h-10 border-4 border-white/20 border-t-white rounded-full animate-spin"></div>
+      </div>
+    }>
+      <EventPageContent />
+    </Suspense>
   )
 }

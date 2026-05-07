@@ -11,6 +11,7 @@ export async function GET(request: NextRequest) {
     const id_partner = searchParams.get('id_partner') || ''
     const page = searchParams.get('page') || '1'
     const limit = searchParams.get('limit') || '15'
+    const q = searchParams.get('q') || ''
 
     const authHeader = request.headers.get('authorization')
     const token = authHeader?.replace('Bearer ', '')
@@ -29,6 +30,9 @@ export async function GET(request: NextRequest) {
     url.searchParams.set('id_partner', id_partner)
     url.searchParams.set('page', page)
     url.searchParams.set('limit', limit)
+    if (q) {
+      url.searchParams.set('q', q)
+    }
 
     console.log('[v0] Proxy request →', url.toString())
 
