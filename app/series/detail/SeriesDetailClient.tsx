@@ -12,6 +12,7 @@ import { ClipShare } from '@/components/clip/clip-share'
 
 interface GroupEpisode {
   id: string
+  jud_url?: string
   name: string
   description: string
   run_time: string
@@ -726,7 +727,7 @@ function SeriesDetailContent() {
           <div className="w-full lg:w-[35%]">
             <h2 className="text-xl font-bold mb-6">Recommended</h2>
             {seriesData.recomen?.map((item) => (
-              <Link key={item.id} href={`/series/detail?id=${item.id}&id_group=${item.id}`} className="flex gap-4 mb-4 group">
+              <Link key={item.id} href={`/series/detail?id=${item.id}&id_group=${item.jud_url || item.id}`} className="flex gap-4 mb-4 group">
                 <div className="relative w-32 aspect-video rounded-lg overflow-hidden shrink-0">
                   <Image src={item.image_url || '/placeholder-poster.png'} alt={item.name} fill className="object-cover" />
                 </div>
