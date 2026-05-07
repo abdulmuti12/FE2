@@ -119,14 +119,25 @@ export async function generateMetadata(
   }
 
   try {
-    const apiUrl = `${buildFilmApiUrl('/films/meta')}?judul=${encodeURIComponent(judul)}`
-    const response = await fetch(apiUrl, { cache: 'no-store' })
-    const json = await response.json()
+    // 1. Fetch detail dulu untuk dapat id (meta endpoint butuh id, bukan judul)
+    const detailUrl = `${buildFilmApiUrl('/films/detail')}?judul=${encodeURIComponent(judul)}`
+    const detailResponse = await fetch(detailUrl, { cache: 'no-store' })
+    const detailJson = await detailResponse.json()
+
+    // Ambil id dari response detail
+    const filmId = detailJson?.data?.id || ''
+    const filmName = detailJson?.data?.name || 'Film Detail | USKY'
+    const filmImage = detailJson?.data?.image_url || ''
+
+    // 2. Fetch meta endpoint pakai id
+    const metaUrl = `${buildFilmApiUrl('/films/meta')}?id=${encodeURIComponent(filmId)}`
+    const metaResponse = await fetch(metaUrl, { cache: 'no-store' })
+    const json = await metaResponse.json()
 
     if (json?.status === true && typeof json?.data === 'string') {
       const meta = parseMetaContent(json.data)
 
-      const title = meta['og:title'] || meta['twitter:title'] || 'Film Detail | USKY'
+      const title = meta['og:title'] || meta['twitter:title'] || filmName
       const description = toMetaDescription(
         meta['og:description'] ||
           meta['twitter:description'] ||
@@ -135,7 +146,8 @@ export async function generateMetadata(
           meta['keywords'] ||
           ''
       )
-      const image = toCrawlerSafeImageUrl(meta['og:image'] || meta['twitter:image'] || '', judul)
+      // Pakai filmId sebagai version agar tidak merusak URL gambar
+      const image = toCrawlerSafeImageUrl(meta['og:image'] || meta['twitter:image'] || filmImage, filmId)
       const videoUrl = toShareUrl(meta['og:video'] || meta['twitter:url'] || '')
       const secureVideoUrl = toShareUrl(meta['og:video:secure_url'] || videoUrl)
       const videoType = meta['og:video:type'] || 'video/mp4'
@@ -198,6 +210,28 @@ export async function generateMetadata(
           title,
           description,
           ...(image ? { images: [image] } : {}),
+        },
+      }
+    }
+
+    // Fallback: jika meta gagal, coba pakai data dari detail
+    if (filmImage) {
+      const image = toCrawlerSafeImageUrl(filmImage, filmId)
+      return {
+        title: filmName,
+        alternates: {
+          canonical: pageUrl,
+        },
+        openGraph: {
+          siteName: 'USKY',
+          url: pageUrl,
+          title: filmName,
+          images: [{ url: image }],
+        },
+        twitter: {
+          card: 'summary_large_image' as any,
+          title: filmName,
+          images: [image],
         },
       }
     }
