@@ -671,7 +671,7 @@ function EventDetailContent() {
                       </div>
 
                       <button className="w-full bg-yellow-400 hover:bg-yellow-500 text-black font-extrabold py-3 rounded-lg transition-all transform hover:scale-[1.02] text-sm uppercase tracking-wide shadow-[0_0_15px_rgba(250,204,21,0.3)]">
-                        Register Now
+                        Join Now
                       </button>
 
                       <div className="flex items-center gap-3">
