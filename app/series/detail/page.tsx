@@ -2,6 +2,7 @@
 import { Metadata, ResolvingMetadata } from 'next'
 import { headers } from 'next/headers'
 import SeriesDetailClient from './SeriesDetailClient'
+import { buildApiUrl } from '@/app/api/_utils'
 
 type Props = {
   searchParams: { id_group?: string; id?: string; judul?: string } | Promise<{ id_group?: string; id?: string; judul?: string }>
@@ -80,29 +81,54 @@ export async function generateMetadata(
   }
 
   try {
-    const appBaseUrl =
-      process.env.NEXT_PUBLIC_APP_URL ||
-      process.env.APP_URL ||
-      requestOrigin
-
     // Pakai id_group sebagai identifier utama, fallback ke id
     const identifier = idGroup || idVideo
 
-    // Langsung fetch dari series detail API (tanpa meta API)
-    const apiUrl = `${appBaseUrl.replace(/\/$/, '')}/api/series/series-detail?id_group=${encodeURIComponent(identifier || '')}`
-    console.log('[series/detail metadata] hit series-detail', { identifier, apiUrl })
-    const response = await fetch(apiUrl, { cache: 'no-store' })
-    const json = await response.json()
+    // Flow seperti film: hit upstream detail-group, lalu metagroup.
+    const baseIdentifier = String(identifier || '').trim()
+    let detailIdentifier = baseIdentifier
+    let detailUrl = `${buildApiUrl('/series/detail-group')}?id_group=${encodeURIComponent(detailIdentifier)}`
+    console.log('[series/detail metadata] hit series-detail upstream', { identifier: detailIdentifier, detailUrl })
+    let response = await fetch(detailUrl, { cache: 'no-store' })
+    let json = await response.json()
+
+    if ((!response.ok || json?.status !== true || !json?.data) && detailIdentifier && !detailIdentifier.includes('-part-')) {
+      detailIdentifier = `${detailIdentifier}-part-1`
+      detailUrl = `${buildApiUrl('/series/detail-group')}?id_group=${encodeURIComponent(detailIdentifier)}`
+      console.log('[series/detail metadata] fallback hit series-detail upstream', { identifier: detailIdentifier, detailUrl })
+      response = await fetch(detailUrl, { cache: 'no-store' })
+      json = await response.json()
+    }
     console.log('[series/detail metadata] series-detail response', {
       identifier: identifier || '',
       httpStatus: response.status,
       status: json?.status,
     })
 
+    const isDetailGroupSuccess = response.ok && json?.status === true && Boolean(json?.data)
     const series = json?.data
+    const judulForMeta = String(series?.jud_url || detailIdentifier || baseIdentifier || '').trim()
+    let titleFromMeta = ''
+
+    if (judulForMeta) {
+      const metaUrl = `${buildApiUrl('/series/meta')}?judul=${encodeURIComponent(judulForMeta)}`
+      console.log('[series/detail metadata] hit series/meta upstream', {
+        judulForMeta,
+        metaUrl,
+        detailGroupSuccess: isDetailGroupSuccess,
+      })
+
+      const metaResponse = await fetch(metaUrl, { cache: 'no-store' })
+      const metaJson = await metaResponse.json()
+      const metaRaw = typeof metaJson?.data === 'string' ? metaJson.data : ''
+      const parsedMeta = metaRaw ? parseMetaContent(metaRaw) : {}
+      titleFromMeta = parsedMeta['og:title'] || parsedMeta['twitter:title'] || ''
+    } else {
+      console.log('ga ke hit metanya')
+    }
 
     if (series) {
-      const seriesName = String(series.name || 'Series Detail | USKY')
+      const seriesName = String(titleFromMeta || series.name || 'Series Detail | USKY')
       const seriesDescription = String(series.description || series.synopsis || '')
       const seriesImage = toSecureUrl(String(series.image_landscape_url || series.image_url || ''))
       const seriesVideoUrl = toSecureUrl(String(series.video_url || ''))

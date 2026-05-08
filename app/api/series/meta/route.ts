@@ -14,7 +14,7 @@ export async function GET(request: Request) {
   }
 
   try {
-    const upstreamUrl = `${buildApiUrl('/series/metagroup')}?judul=${encodeURIComponent(judul)}`
+    const upstreamUrl = `${buildApiUrl('/series/meta')}?judul=${encodeURIComponent(judul)}`
     const response = await fetch(upstreamUrl, {
       method: 'GET',
       headers: {
