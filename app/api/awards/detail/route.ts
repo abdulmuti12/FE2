@@ -5,10 +5,11 @@ export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url)
     const id = searchParams.get('id')
+    const judul = searchParams.get('judul')
 
-    if (!id) {
+    if (!id && !judul) {
       return NextResponse.json(
-        { status: false, message: 'id is required' },
+        { status: false, message: 'id atau judul is required' },
         { status: 400 }
       )
     }
@@ -29,7 +30,11 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    const response = await fetch(buildApiUrl(`/award/detail?id=${id}`), {
+    const query = judul
+      ? `judul=${encodeURIComponent(judul)}`
+      : `id=${encodeURIComponent(String(id))}`
+
+    const response = await fetch(buildApiUrl(`/award/detail?${query}`), {
       method: 'GET',
       headers: {
         Authorization: `Bearer ${token}`,

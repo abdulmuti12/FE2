@@ -14,6 +14,7 @@ const FaqSkeleton = lazy(() => import('./_FaqSkeleton'))
 
 interface AwardSubmission {
   id: string | number
+  jud_url?: string
   name: string
   image_url: string
   likes?: number | string
@@ -1041,7 +1042,7 @@ function FilmsContent({ stats, statsLoading, searchQuery }: { stats: AwardsStats
       const fetchAwardDetail = async () => {
         try {
           setAwardDetailLoading(true)
-          const response = await fetch('/api/awards/detail?id=', { signal: controller.signal })
+          const response = await fetch('/api/awards/detail?judul=', { signal: controller.signal })
           const data = await response.json()
           if (data.list) {
             setAwardDetail(data.list)
@@ -1228,7 +1229,7 @@ function FilmsContent({ stats, statsLoading, searchQuery }: { stats: AwardsStats
                 {awardDetail.relate.map((related: any) => (
                   <Link
                     key={related.id}
-                    href={`/awards/detail?id=${related.id}`}
+                    href={`/awards/detail?judul=${related.jud_url || related.id}`}
                     prefetch={false}
                     className="group relative overflow-hidden rounded-lg bg-[#1e293b] hover:shadow-lg transition-all duration-300 cursor-pointer"
                     onClick={() => handleCardClick(related.id)}
@@ -1322,7 +1323,7 @@ function FilmsContent({ stats, statsLoading, searchQuery }: { stats: AwardsStats
             {filteredSubmissions.map((submission, index) => (
               <Link
                 key={submission.id}
-                href={`/awards/detail?id=${submission.id}`}
+                href={`/awards/detail?judul=${submission.jud_url || submission.id}`}
                 prefetch={false}
                 className="group relative overflow-hidden rounded-xl bg-[#0f172a] hover:shadow-lg transition-all duration-300 cursor-pointer w-full border border-white/8 hover:border-white/20"
                 onClick={() => handleCardClick(submission.id)}

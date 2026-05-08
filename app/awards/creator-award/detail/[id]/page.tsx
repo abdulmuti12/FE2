@@ -699,7 +699,7 @@ export default function CreatorDetailPage() {
                         {clip.id ? (
                           <button
                             type="button"
-                            onClick={() => router.push(`/awards/detail?id=${clip.id}`)}
+                            onClick={() => router.push(`/awards/detail?judul=${encodeURIComponent(clip.jud_url || clip.id)}`)}
                             className="max-w-[320px] truncate text-left text-white hover:text-blue-400 hover:underline transition-colors"
                             title={clip.name || '-'}
                           >

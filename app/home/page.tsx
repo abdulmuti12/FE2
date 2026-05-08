@@ -67,6 +67,7 @@ interface FilmData {
 
 interface LatestClipData {
   id: string
+  jud_url?: string
   name: string
   short_desc?: string | null
   description?: string
@@ -153,7 +154,7 @@ function LatestClipSection({ items = [] }: { items?: any[] }) {
         >
           {items.map((clip) => (
             <div key={clip.id} className="w-[200px] md:w-[280px] flex-shrink-0">
-              <Link href={`/clip?id=${clip.id}`} className="block">
+              <Link href={`/clip?id=${clip.jud_url || clip.id}`} className="block">
                 <div className="group relative aspect-[3/4] overflow-hidden rounded-2xl bg-black">
                   <Image src={clip.image || '/placeholder.svg'} alt={clip.title} fill className="object-cover transition-transform group-hover:scale-105" />
                   <div className="absolute inset-0 flex items-center justify-center">
@@ -310,6 +311,7 @@ export default function DashboardPage() {
 
   const displayClips = latestClips.map(c => ({
     id: c.id,
+    jud_url: c.jud_url,
     title: c.name,
     image: c.image_url || '/placeholder.svg',
     description: stripHtml(c.short_desc || c.description).substring(0, 70) + '...',

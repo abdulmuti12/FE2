@@ -3,7 +3,7 @@ import { headers } from 'next/headers'
 import AwardsDetailClient from './AwardsDetailClient'
 
 type Props = {
-  searchParams: { id?: string } | Promise<{ id?: string }>
+  searchParams: { id?: string; judul?: string } | Promise<{ id?: string; judul?: string }>
 }
 
 type MetaTagMap = Record<string, string>
@@ -113,7 +113,7 @@ export async function generateMetadata(
   const requestOrigin = `${proto}://${host}`
 
   const resolvedSearchParams = await Promise.resolve(searchParams)
-  const id = resolvedSearchParams?.id
+  const id = resolvedSearchParams?.judul || resolvedSearchParams?.id
 
   if (!id) {
     return { title: 'Awards Detail | USKY' }
@@ -127,8 +127,8 @@ export async function generateMetadata(
 
     const base = appBaseUrl.replace(/\/$/, '')
     const apiUrls = [
-      `${base}/api/awards/meta?id=${encodeURIComponent(id)}`,
-      `${base}/api/award/meta?id=${encodeURIComponent(id)}`,
+      `${base}/api/awards/meta?judul=${encodeURIComponent(id)}`,
+      `${base}/api/award/meta?judul=${encodeURIComponent(id)}`,
     ]
 
     let response: Response | null = null
@@ -179,7 +179,7 @@ export async function generateMetadata(
       const twitterSite = meta['twitter:site'] || '@usky'
       const siteName = meta['og:site_name'] || 'USKY'
       const fbAppId = process.env.NEXT_PUBLIC_FB_APP_ID || process.env.FB_APP_ID || ''
-      const pageUrl = `${requestOrigin.replace(/\/$/, '')}/awards/detail?id=${encodeURIComponent(id)}`
+      const pageUrl = `${requestOrigin.replace(/\/$/, '')}/awards/detail?judul=${encodeURIComponent(id)}`
       const imageType = detectImageMimeType(image)
 
       return {

@@ -3,7 +3,7 @@ import { headers } from 'next/headers'
 import ClipPageClient from './ClipPageClient'
 
 type Props = {
-  searchParams: { id?: string } | Promise<{ id?: string }>
+  searchParams: { id?: string; jud_url?: string } | Promise<{ id?: string; jud_url?: string }>
 }
 
 type MetaTagMap = Record<string, string>
@@ -71,9 +71,9 @@ export async function generateMetadata(
   const requestOrigin = `${proto}://${host}`
 
   const resolvedSearchParams = await Promise.resolve(searchParams)
-  const id = resolvedSearchParams?.id
+  const judUrl = resolvedSearchParams?.jud_url || resolvedSearchParams?.id
 
-  if (!id) {
+  if (!judUrl) {
     return { title: 'Clip | USKY' }
   }
 
@@ -83,12 +83,12 @@ export async function generateMetadata(
       process.env.APP_URL ||
       requestOrigin
 
-    const apiUrl = `${appBaseUrl.replace(/\/$/, '')}/api/movie/meta?id=${encodeURIComponent(id)}`
-    console.log('[clip/detail metadata] hit movie/meta', { id, apiUrl })
+    const apiUrl = `${appBaseUrl.replace(/\/$/, '')}/api/movie/meta?judul=${encodeURIComponent(judUrl)}`
+    console.log('[clip/detail metadata] hit movie/meta', { judUrl, apiUrl })
     const response = await fetch(apiUrl, { cache: 'no-store' })
     const json = await response.json()
     console.log('[clip/detail metadata] movie/meta response', {
-      id,
+      judUrl,
       httpStatus: response.status,
       status: json?.status,
       message: json?.message,
@@ -99,7 +99,7 @@ export async function generateMetadata(
     if (json?.status === true && typeof json?.data === 'string') {
       const meta = parseMetaContent(json.data)
       console.log('[clip/detail metadata] parsed fields', {
-        id,
+        judUrl,
         ogTitle: meta['og:title'] || '',
         hasOgDescription: Boolean(meta['og:description']),
         hasOgImage: Boolean(meta['og:image']),

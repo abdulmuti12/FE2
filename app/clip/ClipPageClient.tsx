@@ -27,6 +27,7 @@ const ClipShare = lazy(() => import('@/components/clip/clip-share').then(m => ({
 // --- INTERFACES ---
 interface Movie {
   id: string
+  jud_url?: string
   name: string
   video_url: string
   image_url?: string
@@ -284,6 +285,8 @@ const VideoItem = memo(function VideoItem({
       setShowShareToast(false)
     }, 2200)
   }
+
+  const clipIdentifier = clip.jud_url || clip.id
 
   const togglePlay = () => {
     const vids = [desktopVideoRef.current, mobileVideoRef.current].filter(Boolean) as HTMLVideoElement[]
@@ -560,13 +563,13 @@ const VideoItem = memo(function VideoItem({
   const handlePlatformShare = async (platform: string) => {
     try {
       const token = localStorage.getItem('user_token')
-      const shareUrl = encodeURIComponent(`${window.location.origin}/clip?id=${clip.id}`)
+      const shareUrl = encodeURIComponent(`${window.location.origin}/clip?id=${clipIdentifier}`)
       const shareText = encodeURIComponent(`Tonton video keren ini: ${clip.name}`)
 
       switch (platform) {
         case 'copy':
           try {
-            await navigator.clipboard.writeText(`${window.location.origin}/clip?id=${clip.id}`)
+            await navigator.clipboard.writeText(`${window.location.origin}/clip?id=${clipIdentifier}`)
             showShareToastCard('Link berhasil disalin!')
           } catch {
             showShareToastCard('Gagal menyalin link')
@@ -1063,11 +1066,13 @@ function ClipsContent() {
   useEffect(() => {
     if (!pendingClipId) return
 
-    const found = apiClips.some((clip) => clip.id === pendingClipId)
-    if (found) {
-      setActiveVideoId(pendingClipId)
+    const matchedClip = apiClips.find(
+      (clip) => clip.id === pendingClipId || clip.jud_url === pendingClipId
+    )
+    if (matchedClip) {
+      setActiveVideoId(matchedClip.id)
 
-      const targetClipId = pendingClipId
+      const targetClipId = matchedClip.id
       setTimeout(() => {
         const targetEl = document.getElementById(`clip-${targetClipId}`)
         targetEl?.scrollIntoView({ behavior: 'smooth', block: 'start' })
@@ -1087,22 +1092,37 @@ function ClipsContent() {
     setActiveVideoId(apiClips[0].id)
   }, [activeVideoId, pendingClipId, apiClips])
 
+  useEffect(() => {
+    if (!activeVideoId) return
+    const activeClip = apiClips.find((clip) => clip.id === activeVideoId)
+    if (!activeClip) return
+
+    const identifier = activeClip.jud_url || activeClip.id
+    const params = new URLSearchParams(searchParams.toString())
+    if (params.get('id') === identifier) return
+
+    params.set('id', identifier)
+    router.replace(`/clip?${params.toString()}`, { scroll: false })
+  }, [activeVideoId, apiClips, router, searchParams])
+
   // Deferred metadata fetch — doesn't block initial paint
   const fetchedMetaRef = useRef<Set<string>>(new Set())
   useEffect(() => {
     if (!activeVideoId) return
-    if (fetchedMetaRef.current.has(activeVideoId)) return
+    const activeClip = apiClips.find((clip) => clip.id === activeVideoId)
+    const activeIdentifier = activeClip?.jud_url || activeClip?.id || activeVideoId
+    if (fetchedMetaRef.current.has(activeIdentifier)) return
 
     const timer = setTimeout(async () => {
       try {
-        const response = await fetch(`/api/movie/meta?id=${encodeURIComponent(activeVideoId)}`, {
+        const response = await fetch(`/api/movie/meta?jud_url=${encodeURIComponent(activeIdentifier)}`, {
           method: 'GET',
           cache: 'no-store',
         })
         const json = await response.json()
         if (json?.status === true && typeof json?.data === 'string') {
           applyClipMetaToHead(parseMetaContent(json.data))
-          fetchedMetaRef.current.add(activeVideoId)
+          fetchedMetaRef.current.add(activeIdentifier)
         }
       } catch (error) {
         console.error('[clip/meta] Error fetching clip metadata:', error)
@@ -1110,7 +1130,7 @@ function ClipsContent() {
     }, 600)
 
     return () => clearTimeout(timer)
-  }, [activeVideoId])
+  }, [activeVideoId, apiClips])
 
   return (
     <>
@@ -1166,6 +1186,7 @@ function ClipsContent() {
 
                   const transformedClip = {
                     id: clip.id,
+                    jud_url: clip.jud_url,
                     name: clip.name,
                     video_url: clip.video_url,
                     image_url: clip.image_url,

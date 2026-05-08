@@ -117,7 +117,7 @@ const parseMetaEntries = (metaBlob: string): MetaEntry[] => {
 function AwardsDetailContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
-  const awardId = searchParams.get('id')
+  const awardId = searchParams.get('judul') || searchParams.get('id')
 
   const [awardData, setAwardData] = useState<AwardDetailData | null>(null)
   const [isLoading, setIsLoading] = useState(true)
@@ -159,7 +159,7 @@ function AwardsDetailContent() {
         const fetchWithFallback = async (paths: string[]) => {
           for (const path of paths) {
             const url = new URL(path, window.location.origin)
-            url.searchParams.set('id', awardId)
+            url.searchParams.set('judul', awardId)
 
             const response = await fetch(url.toString(), {
               method: 'GET',
@@ -242,7 +242,7 @@ function AwardsDetailContent() {
         const fetchMetaWithFallback = async (paths: string[]) => {
           for (const path of paths) {
             const url = new URL(path, window.location.origin)
-            url.searchParams.set('id', awardId)
+            url.searchParams.set('judul', awardId)
             console.log('[awards-meta-debug] fetching meta from client', {
               awardId,
               endpoint: url.toString(),
@@ -353,7 +353,7 @@ function AwardsDetailContent() {
       }
 
       const url = new URL('/api/awards/comment', window.location.origin)
-      url.searchParams.set('id', awardId)
+      url.searchParams.set('judul', awardId)
 
       const response = await fetch(url.toString(), {
         method: 'GET',
@@ -792,10 +792,10 @@ function AwardsDetailContent() {
       currentIndex >= 0
         ? relatedAwards[currentIndex + 1] || relatedAwards[0]
         : relatedAwards[0]
-    const nextId = String(nextCandidate?.id || '').trim()
+    const nextId = String(nextCandidate?.jud_url || nextCandidate?.id || '').trim()
 
     if (!nextId) return
-    router.push(`/awards/detail?id=${encodeURIComponent(nextId)}`)
+    router.push(`/awards/detail?judul=${encodeURIComponent(nextId)}`)
   }
 
   if (isLoading) {
@@ -1196,7 +1196,7 @@ function AwardsDetailContent() {
                  {awardData.relate.map((related) => (
                    <Link
                      key={related.id}
-                     href={`/awards/detail?id=${related.id}`}
+                     href={`/awards/detail?judul=${related.jud_url || related.id}`}
                      className="snap-start shrink-0 w-[280px] md:w-[320px] aspect-[16/9] relative rounded-xl overflow-hidden group/card block cursor-pointer bg-gray-800"
                    >
                      {/* Image */}

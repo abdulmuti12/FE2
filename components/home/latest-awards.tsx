@@ -6,6 +6,7 @@ import Link from 'next/link'
 
 interface AwardItem {
   id: string
+  jud_url?: string
   title?: string
   name?: string
   description?: string
@@ -54,7 +55,7 @@ export function LatestAwards({ title, viewAllLink = '#', items = [] }: LatestAwa
           style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
         >
           {items.map((award) => (
-            <Link key={award.id} href={`/awards/detail?id=${award.id}`} className="flex flex-shrink-0 flex-col gap-3">
+            <Link key={award.id} href={`/awards/detail?judul=${award.jud_url || award.id}`} className="flex flex-shrink-0 flex-col gap-3">
               <div className="relative h-80 w-60 overflow-hidden rounded-2xl md:h-96 md:w-64 lg:w-80 bg-gray-900">
                 <Image
                   src={award.image_url || award.image || '/placeholder.svg'}

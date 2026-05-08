@@ -14,6 +14,7 @@ interface ClipCategory {
 
 interface ClipItem {
   id: string
+  jud_url?: string
   name: string
   image_url: string
   cats?: string
@@ -297,7 +298,7 @@ function ClipListContent() {
                         onMouseEnter={() => setHoveredClipId(clip.id)}
                         onMouseLeave={() => setHoveredClipId(null)}
                         onClick={() => {
-                          const params = new URLSearchParams({ id: clip.id })
+                          const params = new URLSearchParams({ id: clip.jud_url || clip.id })
                           if (activeCategoryId) {
                             params.set('category', activeCategoryId)
                           }
