@@ -137,6 +137,8 @@ export async function generateMetadata(
     const series = json?.data
     const judulForMeta = String(series?.jud_url || baseIdentifier || '').trim()
     let titleFromMeta = ''
+    let descriptionFromMeta = ''
+    let imageFromMeta = ''
 
     if (judulForMeta) {
       const metaUrl = `${buildApiUrl('/series/metagroup')}?judul=${encodeURIComponent(judulForMeta)}`
@@ -168,6 +170,12 @@ export async function generateMetadata(
         hasOgImage: Boolean(parsedMeta['og:image']),
       })
       titleFromMeta = parsedMeta['og:title'] || parsedMeta['twitter:title'] || ''
+      descriptionFromMeta =
+        parsedMeta['og:description'] ||
+        parsedMeta['twitter:description'] ||
+        parsedMeta['description'] ||
+        ''
+      imageFromMeta = parsedMeta['og:image'] || parsedMeta['twitter:image'] || ''
     } else {
       console.log('[series/detail metadata] SKIP meta: detail-group not success or jud_url empty', {
         detailGroupSuccess: isDetailGroupSuccess,
@@ -178,11 +186,11 @@ export async function generateMetadata(
       })
     }
 
-    if (series) {
-      const seriesName = String(titleFromMeta || series.name || 'Series Detail | USKY')
-      const seriesDescription = String(series.description || series.synopsis || '')
-      const seriesImage = toSecureUrl(String(series.image_landscape_url || series.image_url || ''))
-      const seriesVideoUrl = toSecureUrl(String(series.video_url || ''))
+    if (series || titleFromMeta) {
+      const seriesName = String(titleFromMeta || series?.name || 'Series Detail | USKY')
+      const seriesDescription = String(descriptionFromMeta || series?.description || series?.synopsis || '')
+      const seriesImage = toSecureUrl(String(imageFromMeta || series?.image_landscape_url || series?.image_url || ''))
+      const seriesVideoUrl = toSecureUrl(String(series?.video_url || ''))
 
       // Buat og:image URL dengan cache busting
       const ogImage = seriesImage
@@ -208,8 +216,8 @@ export async function generateMetadata(
               }
             : {}),
           'og:type': 'video.tv_show',
-          'og:release_date': series.years || '',
-          'og:genre': series.cats || '',
+          'og:release_date': series?.years || '',
+          'og:genre': series?.cats || '',
         },
         openGraph: {
           siteName: 'USKY',
