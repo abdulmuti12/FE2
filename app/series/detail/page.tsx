@@ -89,15 +89,29 @@ export async function generateMetadata(
   const resolvedSearchParams = await Promise.resolve(searchParams)
   const idGroup = resolvedSearchParams?.id_group
   const idVideo = resolvedSearchParams?.id
+  const identifier = String(idGroup || idVideo || '').trim()
+  const pageUrl = `${requestOrigin.replace(/\/$/, '')}/series/detail?id_group=${encodeURIComponent(identifier)}`
 
   if (!idGroup && !idVideo) {
-    return { title: 'Series | USKY' }
+    return {
+      title: 'Series | USKY',
+      alternates: { canonical: `${requestOrigin.replace(/\/$/, '')}/series` },
+      openGraph: {
+        siteName: 'USKY',
+        url: `${requestOrigin.replace(/\/$/, '')}/series`,
+        title: 'Series | USKY',
+        description: 'Series detail on USKY.',
+      },
+      twitter: {
+        card: 'summary_large_image',
+        site: '@usky',
+        title: 'Series | USKY',
+        description: 'Series detail on USKY.',
+      },
+    }
   }
 
   try {
-    // Pakai id_group sebagai identifier utama, fallback ke id
-    const identifier = idGroup || idVideo
-
     // Flow seperti film: hit upstream detail-group, lalu metagroup.
     const baseIdentifier = String(identifier || '').trim()
     let detailIdentifier = baseIdentifier
@@ -175,8 +189,6 @@ export async function generateMetadata(
         ? `${seriesImage}${seriesImage.includes('?') ? '&' : '?'}v=${encodeURIComponent(identifier)}`
         : ''
 
-      const pageUrl = `${requestOrigin.replace(/\/$/, '')}/series/detail?id_group=${encodeURIComponent(identifier)}`
-
       return {
         title: seriesName,
         description: seriesDescription,
@@ -229,7 +241,24 @@ export async function generateMetadata(
     console.error('Gagal load metadata series:', error)
   }
 
-  return { title: 'Series Detail | USKY' }
+  const fallbackTitle = identifier ? `Series Detail | ${identifier}` : 'Series Detail | USKY'
+  return {
+    title: fallbackTitle,
+    alternates: { canonical: pageUrl },
+    description: 'Series detail on USKY.',
+    openGraph: {
+      siteName: 'USKY',
+      url: pageUrl,
+      title: fallbackTitle,
+      description: 'Series detail on USKY.',
+    },
+    twitter: {
+      card: 'summary_large_image',
+      site: '@usky',
+      title: fallbackTitle,
+      description: 'Series detail on USKY.',
+    },
+  }
 }
 
 export default function Page() {
