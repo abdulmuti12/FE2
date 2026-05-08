@@ -14,19 +14,33 @@ export async function GET(request: Request) {
   }
 
   try {
-    const response = await fetch(
-      `${buildApiUrl('/series/meta')}?judul=${encodeURIComponent(judul)}`,
-      {
-        method: 'GET',
-        headers: {
-          ...(authHeader ? { Authorization: authHeader } : {}),
-          'Content-Type': 'application/json',
-        },
-        cache: 'no-store',
-      }
-    )
+    const upstreamUrl = `${buildApiUrl('/series/metagroup')}?judul=${encodeURIComponent(judul)}`
+    const response = await fetch(upstreamUrl, {
+      method: 'GET',
+      headers: {
+        ...(authHeader ? { Authorization: authHeader } : {}),
+        'Content-Type': 'application/json',
+      },
+      cache: 'no-store',
+    })
 
     const data = await response.json()
+    if (response.ok && data?.status !== false) {
+      console.log('[series/meta proxy] berhasil hit series/metagroup', {
+        judul,
+        upstreamUrl,
+        httpStatus: response.status,
+      })
+    } else {
+      console.log('[series/meta proxy] gagal hit series/metagroup', {
+        judul,
+        upstreamUrl,
+        httpStatus: response.status,
+        upstreamStatus: data?.status,
+        message: data?.message,
+      })
+    }
+
     return NextResponse.json(data, { status: response.status })
   } catch (error) {
     console.error('Error fetching series meta proxy:', error)
