@@ -107,24 +107,43 @@ export async function generateMetadata(
 
     const isDetailGroupSuccess = response.ok && json?.status === true && Boolean(json?.data)
     const series = json?.data
-    const judulForMeta = String(series?.jud_url || detailIdentifier || baseIdentifier || '').trim()
+    const judulForMeta = String(series?.jud_url || baseIdentifier || '').trim()
     let titleFromMeta = ''
 
     if (judulForMeta) {
-      const metaUrl = `${buildApiUrl('/series/meta')}?judul=${encodeURIComponent(judulForMeta)}`
-      console.log('[series/detail metadata] hit series/meta upstream', {
+      const metaUrl = `${buildApiUrl('/series/metagroup')}?judul=${encodeURIComponent(judulForMeta)}`
+      console.log('[series/detail metadata] hit series/metagroup upstream', {
         judulForMeta,
         metaUrl,
-        detailGroupSuccess: isDetailGroupSuccess,
       })
 
       const metaResponse = await fetch(metaUrl, { cache: 'no-store' })
       const metaJson = await metaResponse.json()
+      const metaOk = metaResponse.ok && metaJson?.status === true
+      if (metaOk) {
+        console.log('[series/detail metadata] series/metagroup SUCCESS', {
+          httpStatus: metaResponse.status,
+          judulForMeta,
+        })
+      } else {
+        console.log('[series/detail metadata] series/metagroup FAILED', {
+          httpStatus: metaResponse.status,
+          upstreamStatus: metaJson?.status,
+          message: metaJson?.message,
+          judulForMeta,
+        })
+      }
       const metaRaw = typeof metaJson?.data === 'string' ? metaJson.data : ''
       const parsedMeta = metaRaw ? parseMetaContent(metaRaw) : {}
       titleFromMeta = parsedMeta['og:title'] || parsedMeta['twitter:title'] || ''
     } else {
-      console.log('ga ke hit metanya')
+      console.log('[series/detail metadata] SKIP meta: detail-group not success or jud_url empty', {
+        detailGroupSuccess: isDetailGroupSuccess,
+        detailHttpStatus: response.status,
+        detailStatus: json?.status,
+        detailMessage: json?.message,
+        judulForMeta,
+      })
     }
 
     if (series) {
