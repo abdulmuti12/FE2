@@ -36,6 +36,20 @@ function parseMetaContent(metaHtml: string): MetaTagMap {
   return map
 }
 
+function normalizeMetaMapFromUnknown(input: unknown): MetaTagMap {
+  if (typeof input === 'string') return parseMetaContent(input)
+  if (!input || typeof input !== 'object') return {}
+
+  const obj = input as Record<string, unknown>
+  const map: MetaTagMap = {}
+  for (const [key, value] of Object.entries(obj)) {
+    if (typeof value === 'string' && value.trim()) {
+      map[String(key).toLowerCase()] = value.trim()
+    }
+  }
+  return map
+}
+
 function toPositiveNumber(value?: string): number | undefined {
   if (!value) return undefined
   const parsed = Number(value)
@@ -133,8 +147,12 @@ export async function generateMetadata(
           judulForMeta,
         })
       }
-      const metaRaw = typeof metaJson?.data === 'string' ? metaJson.data : ''
-      const parsedMeta = metaRaw ? parseMetaContent(metaRaw) : {}
+      const parsedMeta = normalizeMetaMapFromUnknown(metaJson?.data)
+      console.log('[series/detail metadata] parsed metagroup keys', {
+        keys: Object.keys(parsedMeta).slice(0, 15),
+        hasOgTitle: Boolean(parsedMeta['og:title']),
+        hasOgImage: Boolean(parsedMeta['og:image']),
+      })
       titleFromMeta = parsedMeta['og:title'] || parsedMeta['twitter:title'] || ''
     } else {
       console.log('[series/detail metadata] SKIP meta: detail-group not success or jud_url empty', {
