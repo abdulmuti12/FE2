@@ -119,7 +119,7 @@ export async function generateMetadata(
   }
 
   try {
-    // 1. Fetch detail dulu untuk dapat id (meta endpoint butuh id, bukan judul)
+    // 1. Fetch detail dulu untuk dapat data fallback bila diperlukan
     const detailUrl = `${buildFilmApiUrl('/films/detail')}?judul=${encodeURIComponent(judul)}`
     const detailResponse = await fetch(detailUrl, { cache: 'no-store' })
     const detailJson = await detailResponse.json()
@@ -129,10 +129,17 @@ export async function generateMetadata(
     const filmName = detailJson?.data?.name || 'Film Detail | USKY'
     const filmImage = detailJson?.data?.image_url || ''
 
-    // 2. Fetch meta endpoint pakai id
-    const metaUrl = `${buildFilmApiUrl('/films/meta')}?id=${encodeURIComponent(filmId)}`
-    const metaResponse = await fetch(metaUrl, { cache: 'no-store' })
-    const json = await metaResponse.json()
+    // 2. Hit meta saat buka halaman detail: utamakan judul/jud_url
+    let metaUrl = `${buildFilmApiUrl('/films/meta')}?judul=${encodeURIComponent(judul)}`
+    let metaResponse = await fetch(metaUrl, { cache: 'no-store' })
+    let json = await metaResponse.json()
+
+    // Fallback ke id jika hasil meta by judul tidak valid dan id tersedia
+    if ((json?.status !== true || typeof json?.data !== 'string') && filmId) {
+      metaUrl = `${buildFilmApiUrl('/films/meta')}?id=${encodeURIComponent(filmId)}`
+      metaResponse = await fetch(metaUrl, { cache: 'no-store' })
+      json = await metaResponse.json()
+    }
 
     if (json?.status === true && typeof json?.data === 'string') {
       const meta = parseMetaContent(json.data)
