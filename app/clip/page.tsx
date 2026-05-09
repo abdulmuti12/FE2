@@ -127,14 +127,28 @@ export async function generateMetadata(
       const twitterCard = image ? 'summary_large_image' : (meta['twitter:card'] || 'summary')
       const twitterSite = meta['twitter:site'] || '@usky'
       const siteName = meta['og:site_name'] || 'USKY'
+      const pageUrl = `${requestOrigin.replace(/\/$/, '')}/clip?id=${encodeURIComponent(judUrl)}`
       return {
         title,
         description,
-        ...(description ? { other: { Description: description } } : {}),
+        alternates: {
+          canonical: pageUrl,
+        },
+        other: {
+          title,
+          ...(description ? { Description: description } : {}),
+          ...(image
+            ? {
+                'og:image:secure_url': image,
+                'twitter:image:src': image,
+              }
+            : {}),
+        },
         keywords,
         ...(author ? { authors: [{ name: author }] } : {}),
         openGraph: {
           siteName,
+          url: pageUrl,
           title,
           description,
           ...(image ? { images: [{ url: image }] } : {}),
