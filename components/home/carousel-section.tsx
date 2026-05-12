@@ -14,6 +14,7 @@ interface CarouselSectionProps {
   viewAllLink?: string
   items?: any[]
   layout?: 'default' | 'category' | 'creator'
+  detailQueryParam?: 'id' | 'judul'
 }
 
 export function CarouselSection({
@@ -21,7 +22,12 @@ export function CarouselSection({
   viewAllLink = '/film',
   items = [],
   layout = 'default',
+  detailQueryParam = 'id',
 }: CarouselSectionProps) {
+  const getFilmDetailHref = (film: any) => {
+    const value = detailQueryParam === 'judul' ? film?.jud_url : film?.id
+    return `/film/detail?${detailQueryParam}=${encodeURIComponent(String(value || ''))}`
+  }
   
   // Referensi untuk container scroll
   const scrollContainerRef = useRef<HTMLDivElement>(null)
@@ -78,7 +84,7 @@ export function CarouselSection({
                     TAMPILAN KHUSUS MOBILE (SESUAI REFERENSI GAMBAR)
                     ========================================= */}
                 <div className="overflow-hidden rounded-2xl bg-[#0a1122] md:hidden shadow-lg border border-white/5">
-                  <Link href={`/film/detail?id=${film.id}`}>
+                  <Link href={getFilmDetailHref(film)}>
                     {/* Menggunakan aspect-[4/3] agar gambar lebih tinggi dan proporsional seperti di web */}
                     <div className="relative aspect-[4/3] w-full">
                       <Image
@@ -92,7 +98,7 @@ export function CarouselSection({
 
                   <div className="p-4 md:p-5">
                     <div className="mb-2">
-                      <Link href={`/film/detail?id=${film.id}`}>
+                      <Link href={getFilmDetailHref(film)}>
                         {/* Judul lebih besar dan tebal */}
                         <p className="line-clamp-1 text-[22px] font-bold tracking-wide text-white hover:text-blue-400 transition-colors">
                           {film.title}
@@ -158,7 +164,7 @@ export function CarouselSection({
                     TAMPILAN KHUSUS DESKTOP 
                     ========================================= */}
                 <div className="hidden md:block">
-                  <Link href={`/film/detail?id=${film.id}`}>
+                  <Link href={getFilmDetailHref(film)}>
                     <div className="group relative mb-2 h-60 overflow-hidden rounded-lg md:mb-4 cursor-pointer">
                       <Image
                         src={film.image || '/placeholder.svg'}
@@ -170,7 +176,7 @@ export function CarouselSection({
                   </Link>
 
                   <div className="mb-1">
-                    <Link href={`/film/detail?id=${film.id}`}>
+                    <Link href={getFilmDetailHref(film)}>
                       <p className="line-clamp-1 text-base font-semibold text-foreground hover:text-blue-400 transition-colors cursor-pointer">
                         {film.title}
                       </p>
@@ -207,7 +213,7 @@ export function CarouselSection({
                       </Button>
                     ) : (
                       <>
-                        <Link href={`/film/detail?id=${film.id}`}>
+                        <Link href={getFilmDetailHref(film)}>
                           <Button
                             size="sm"
                             className="rounded-full bg-white px-4 text-xs text-black hover:bg-gray-200 font-semibold"

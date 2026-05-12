@@ -5,6 +5,7 @@ import { CarouselSection } from '@/components/home/carousel-section'
 interface Film {
   id: string
   title: string
+  jud_url?: string
   image?: string
   year?: number
   description?: string
@@ -19,7 +20,7 @@ interface LatestFilmProps {
 export function LatestFilm({ items = [] }: LatestFilmProps) {
   return (
     <div className="block">
-      <CarouselSection title="Latest Films" items={items} />
+      <CarouselSection title="Latest Films" items={items} detailQueryParam="judul" />
     </div>
   )
 }

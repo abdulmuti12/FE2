@@ -54,6 +54,7 @@ interface EventData {
 
 interface FilmData {
   id: string
+  jud_url?: string
   name: string
   image_url?: string
   image?: string
@@ -299,6 +300,7 @@ export default function DashboardPage() {
   // --- Transformers ---
   const displayFilms = latestFilms.map(f => ({
     id: f.id,
+    jud_url: f.jud_url,
     title: f.name,
     image: f.image_url ,
     description: f.synopsis || stripHtml(f.description) || 'Watch groundbreaking films.',
