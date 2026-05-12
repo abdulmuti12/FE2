@@ -109,7 +109,7 @@ export function AllEvents({
       {/* Header Title */}
       <div className="mb-6">
         <h2 className="text-xl md:text-2xl font-bold text-white md:border-l-4 md:border-yellow-500 md:pl-4">
-         ALL Event
+         All Event
         </h2>
       </div>
 
